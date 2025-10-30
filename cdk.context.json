@@ -1,0 +1,12 @@
+{
+  "hosted-zone:account=008499722334:domainName=sandbox.uxbrew.jp:region=us-east-1": {
+    "Id": "/hostedzone/Z0399238FKFPOE5B42II",
+    "Name": "sandbox.uxbrew.jp."
+  },
+  "hosted-zone:account=008499722334:domainName=sandbox.uxbrew.jp:region=ap-northeast-1": {
+    "Id": "/hostedzone/Z0399238FKFPOE5B42II",
+    "Name": "sandbox.uxbrew.jp."
+  },
+  "ssm:account=008499722334:parameterName=/NanaPhoto/sandbox/cfd/VerifyToken:region=ap-northeast-1": "AQICAHhHcOtsFhHlFPSD6wSkMA2oR432DAScVtMdnvvWZe76/AETTxicq1RTGFzqtZ0TZmdUAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMOhicSDViYJbXAOhBAgEQgDvj3avVybN/Ms49gbiHnG7lE/hKxKaVH1ux9NHs6dktSlZpK01FNRrxkbpgKJ8kz/HfVgiKnbDtygwwdA==",
+  "ssm:account=008499722334:parameterName=/NanaPhoto/sandbox/cfd/VerifyToken/admin:region=ap-northeast-1": "AQICAHhHcOtsFhHlFPSD6wSkMA2oR432DAScVtMdnvvWZe76/AFM4NbLO20eofZs7ltIqyumAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM35u1Rh+DElKZ7DpnAgEQgDv35A+SlNrK6cClcX2ojHHnCwlq+mOKsX1ieB7NA9pcUvl5aQw3nSlwB9v6q02IbNU207HPeQwtoy7PyA=="
+}

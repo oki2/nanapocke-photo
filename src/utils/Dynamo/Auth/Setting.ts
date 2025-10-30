@@ -1,0 +1,5 @@
+export const Setting = {
+  TABLE_NAME_AUTHFLOW: process.env.TABLE_NAME_AUTHFLOW || "",
+  FLOW_ID_LENGTH: 32,
+  CHALLENGE_SESSION_EXPIRATION: 600, // 10分
+};
