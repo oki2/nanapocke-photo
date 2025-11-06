@@ -20,13 +20,13 @@ export interface Props extends cdk.StackProps {
   readonly Config: any;
   readonly lambdaFnPublic: LambdaFunctions;
 
-  // readonly ProviderAuthPool: UserPool;
-  // readonly ProviderAuthPoolClient: UserPoolClient;
+  readonly NanapockeAuthPool: UserPool;
+  readonly NanapockeAuthPoolClient: UserPoolClient;
   // readonly OrganizationAuthPool: UserPool;
   // readonly OrganizationAuthPoolClient: UserPoolClient;
 
   // readonly MainTable: Table;
-  // readonly AuthFlowTable: Table;
+  readonly NanapockeUserTable: Table;
 }
 
 interface LambdaFunctions {
@@ -49,14 +49,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       params.CfdVerifyTokenPath
     );
 
+    const functionPrefix = `${props.Config.ProjectName}-${props.Config.Stage}`;
+
     // ==========================================================
     // オーソライザーの設定
     // ==========================================================
     // CloudFront の Verify Token のみを判定するオーソライザー
-    const AuthorizerVerifyTokenCheckOnlyFn = new NodejsFunction(
+    const AuthorizerPublicVerifyTokenFn = new NodejsFunction(
       this,
-      "AuthorizerVerifyTokenCheckOnlyFn",
+      "AuthorizerPublicVerifyTokenFn",
       {
+        functionName: `${functionPrefix}-AuthorizerPublicVerifyToken`,
+        description: `${functionPrefix}-AuthorizerPublicVerifyToken`,
         entry: "src/handlers/authorizer/common.verifyTokenCheckOnly.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
@@ -66,12 +70,55 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         },
       }
     );
-    const AuthorizerVerifyTokenCheckOnly = new HttpLambdaAuthorizer(
-      "HttpLambdaAuthorizerVerifyTokenCheckOnly",
-      AuthorizerVerifyTokenCheckOnlyFn,
+    const AuthorizerPublicVerifyToken = new HttpLambdaAuthorizer(
+      "AuthorizerPublicVerifyToken",
+      AuthorizerPublicVerifyTokenFn,
       {
         responseTypes: [HttpLambdaResponseType.SIMPLE],
         identitySource: ["$request.header.x-origin-verify-token"],
+        // 必要に応じてキャッシュを有効化
+        resultsCacheTtl: cdk.Duration.seconds(60),
+      }
+    );
+
+    // Access Token : Principal（園長）を判定するオーソライザー
+    const AuthorizerPrincipalVeifyFn = new NodejsFunction(
+      this,
+      "AuthorizerPrincipalVeifyFn",
+      {
+        functionName: `${functionPrefix}-AuthorizerPrincipalVeify`,
+        description: `${functionPrefix}-AuthorizerPrincipalVeify`,
+        entry: "src/handlers/authorizer/principal.veify.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      }
+    );
+    const AuthorizerPrincipalVeify = new HttpLambdaAuthorizer(
+      "AuthorizerPrincipalVeify",
+      AuthorizerPrincipalVeifyFn,
+      {
+        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        identitySource: [
+          "$request.header.Authorization",
+          "$request.header.x-origin-verify-token",
+        ],
         // 必要に応じてキャッシュを有効化
         resultsCacheTtl: cdk.Duration.seconds(60),
       }
@@ -100,19 +147,41 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "nanapockeAuthFn",
         props.lambdaFnPublic.nanapockeAuthFn
       ),
-      authorizer: AuthorizerVerifyTokenCheckOnly,
+      authorizer: AuthorizerPublicVerifyToken,
     });
 
-    // // 認証必須ルート（テスト用）
-    // this.httpApi.addRoutes({
-    //   path: "/api/secure",
-    //   methods: [apigwv2.HttpMethod.GET],
-    //   integration: new HttpLambdaIntegration(
-    //     "SecureIntegration",
-    //     props.lambdaFnConsole.helloFn
-    //   ),
-    //   authorizer: AuthorizerConsoleVeify,
-    // });
+    // リフレッシュ
+    this.httpApi.addRoutes({
+      path: "/api/auth/refresh",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "AuthRefreshIntegration",
+        props.lambdaFnPublic.authRefreshFn
+      ),
+      authorizer: AuthorizerPublicVerifyToken,
+    });
+
+    // Photographer 登録
+    this.httpApi.addRoutes({
+      path: "/api/principal/photographer",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "PrincipaPhotographerCreate",
+        props.lambdaFnPublic.photographerCreateFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // アルバム一覧
+    this.httpApi.addRoutes({
+      path: "/api/principal/album/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PrincipaAlbumListIntegration",
+        props.lambdaFnPublic.principaAlbumListFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
 
     // // ログイン
     // this.httpApi.addRoutes({

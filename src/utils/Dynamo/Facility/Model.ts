@@ -1,11 +1,8 @@
 import {docClient} from "../dynamo";
-
-import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import {
-  DynamoDBDocumentClient,
   PutCommand,
   QueryCommand,
-  // GetCommand,
+  GetCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {Setting} from "./Setting";
@@ -133,4 +130,20 @@ export async function update(
   // コマンド実行
   const result = await docClient().send(command);
   return result.Attributes;
+}
+
+export async function get(
+  code: string
+): Promise<Record<string, any> | undefined> {
+  const command = new GetCommand({
+    TableName: Setting.TABLE_NAME_MAIN,
+    Key: {
+      pk: "FACILITY",
+      sk: code,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
 }

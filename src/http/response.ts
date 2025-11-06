@@ -69,6 +69,13 @@ export const badRequest = (issues: Record<string, string>) =>
     issues,
   });
 
+export const notFound = (message = "Resource not found") =>
+  problem(404, {
+    title: "Resource not found",
+    code: "RESOURCE_NOT_FOUND",
+    detail: message,
+  });
+
 export const serverError = (message = "Internal Server Error") =>
   problem(500, {
     title: "Internal Server Error",

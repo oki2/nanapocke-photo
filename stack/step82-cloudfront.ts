@@ -133,6 +133,22 @@ export class Step82CloudfrontStack extends cdk.Stack {
           responseHeadersPolicy:
             cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS,
         },
+        "/api/*": {
+          origin: new origins.HttpOrigin(
+            `${props.httpApiPublic.apiId}.execute-api.${props.Config.MainRegion}.amazonaws.com`,
+            {
+              customHeaders: {
+                "x-origin-verify-token": props.cfdPublicVerifyToken,
+              },
+            }
+          ),
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+          cachePolicy: cachePolicyForApiGwAuth,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          responseHeadersPolicy:
+            cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS,
+        },
       },
       errorResponses: [
         {

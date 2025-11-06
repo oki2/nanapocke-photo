@@ -108,8 +108,8 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
   // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
   // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
-  // MainTable: stackStep12.MainTable,
-  // AuthFlowTable: stackStep12.AuthFlowTable,
+  MainTable: stackStep15.MainTable,
+  NanapockeUserTable: stackStep15.NanapockeUserTable,
 });
 
 const stackStep71 = new Step71HttpApiAdminStack(
@@ -133,12 +133,10 @@ const stackStep72 = new Step72HttpApiPublicStack(
     env: {account: account, region: REGION.TOKYO},
     Config,
     lambdaFnPublic: stackStep22.lambdaFn,
-    // ProviderAuthPool: stackStep11.ProviderAuthPool,
-    // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
-    // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
-    // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
+    NanapockeAuthPool: stackStep12.NanapockeAuthPool,
+    NanapockeAuthPoolClient: stackStep12.NanapockeAuthPoolClient,
     // MainTable: stackStep12.MainTable,
-    // AuthFlowTable: stackStep12.AuthFlowTable,
+    NanapockeUserTable: stackStep15.NanapockeUserTable,
   }
 );
 
@@ -162,8 +160,10 @@ const stackStep82 = new Step82CloudfrontStack(app, "Step82CloudfrontStack", {
 // 実行の主従関係設定
 // =======================
 stackStep21.addDependency(stackStep11);
+stackStep21.addDependency(stackStep15);
 
 stackStep22.addDependency(stackStep12);
+stackStep22.addDependency(stackStep15);
 
 stackStep71.addDependency(stackStep21);
 

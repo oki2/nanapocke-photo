@@ -37,10 +37,10 @@ Authorization: Bearer {{accessToken}}
 content-type: application/json
 
 {
-  "code": "hoge5678",
-  "name": "fuge",
+  "code": "T0001",
+  "name": "テスト保育園0001",
   "nbf": "2025-10-25T07:49:01Z",
-  "exp": "2025-10-25T07:49:02Z"
+  "exp": "2026-10-25T07:49:02Z"
 }
 
 ### 施設一覧取得

@@ -1,9 +1,10 @@
 import {CognitoJwtVerifier} from "aws-jwt-verify";
 import {CloudFrontVerifyTokenCheck} from "../../utils/Authorizer";
+import * as User from "../../utils/Dynamo/User";
 
-const PROVIDER_AUTHPOOL_ID = process.env.PROVIDER_AUTHPOOL_ID || "";
-const PROVIDER_AUTHPOOL_CLIENT_ID =
-  process.env.PROVIDER_AUTHPOOL_CLIENT_ID || "";
+const NANAPOCKE_AUTHPOOL_ID = process.env.NANAPOCKE_AUTHPOOL_ID || "";
+const NANAPOCKE_AUTHPOOL_CLIENT_ID =
+  process.env.NANAPOCKE_AUTHPOOL_CLIENT_ID || "";
 
 export const handler = async (event: any = {}): Promise<any> => {
   // CloudFrontのVerify Token チェック
@@ -26,24 +27,34 @@ export const handler = async (event: any = {}): Promise<any> => {
   }
 
   const verifier = CognitoJwtVerifier.create({
-    userPoolId: PROVIDER_AUTHPOOL_ID,
+    userPoolId: NANAPOCKE_AUTHPOOL_ID,
     tokenUse: "access",
-    clientId: PROVIDER_AUTHPOOL_CLIENT_ID,
+    clientId: NANAPOCKE_AUTHPOOL_CLIENT_ID,
   });
 
   try {
     const payload = await verifier.verify(token);
     console.log("Token is valid. Payload:", payload);
-    return {
-      isAuthorized: true,
-      context: {
-        userId: payload.sub,
-        role: "ADMIN",
-        // role: payload["custom:role"] ?? "",
-      },
-    };
-  } catch {
-    console.log("Token not valid!");
+
+    const userInfo = await User.get(payload.sub);
+    console.log("userInfo", userInfo);
+
+    // User の Role を確認、PRINCIPAL なら認可
+    if (userInfo.userRole === User.Setting.ROLE.PRINCIPAL) {
+      return {
+        isAuthorized: true,
+        context: {
+          userId: payload.sub,
+          userCode: userInfo.userCode,
+          userName: userInfo.userName,
+          facilityCode: userInfo.facilityCode,
+          role: userInfo.userRole,
+        },
+      };
+    }
+    return {isAuthorized: false};
+  } catch (e: any) {
+    console.error(e);
     return {isAuthorized: false};
   }
 };

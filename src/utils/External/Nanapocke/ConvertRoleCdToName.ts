@@ -3,17 +3,17 @@ export function ConvertRoleCdToName(roleCd: number): string {
     case 2:
     case 3:
     case 8:
-      return "Principal"; // 園長
+      return "PRINCIPAL"; // 園長
     case 4:
     case 5:
     case 6:
     case 9:
-      return "Teacher"; // 保育士
+      return "TEACHER"; // 保育士
     case 0:
-      return "Guardian"; // 保護者
+      return "GUARDIAN"; // 保護者
     case 1:
     case 7:
     default:
-      return "unknown"; // 不明・利用不可
+      return "UNKNOWN"; // 不明・利用不可
   }
 }

@@ -88,6 +88,8 @@ export class Step71HttpApiAdminStack extends cdk.Stack {
       this,
       "AuthorizerAdminVeifyFn",
       {
+        functionName: `${functionPrefix}-AuthorizerAdminVeify`,
+        description: `${functionPrefix}-AuthorizerAdminVeify`,
         entry: "src/handlers/authorizer/admin.veify.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,

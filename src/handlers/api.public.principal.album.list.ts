@@ -7,13 +7,13 @@ import {
 } from "../schemas/api.admin.facility";
 import {parseOrThrow} from "../libs/validate";
 
-import * as Facility from "../utils/Dynamo/Facility";
+import * as Album from "../utils/Dynamo/Alubum";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
   // データの取得
-  const data = await Facility.list();
+  const data = await Album.list(authContext.facilityCode);
   console.log("data", data);
 
   const result: FacilityListResponseT = [];

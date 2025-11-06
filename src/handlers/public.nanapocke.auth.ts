@@ -2,9 +2,13 @@ import {Setting} from "../config";
 import * as http from "../http";
 
 import {
-  FacilityListResponse,
-  FacilityListResponseT,
-} from "../schemas/api.admin.facility";
+  CodeQueryParams,
+  CodeQueryParamsT,
+  NanapockeAccessTokenResponse,
+  NanapockeAccessTokenResponseT,
+  IdTokenPayload,
+  IdTokenPayloadT,
+} from "../schemas/public.nanapocke.auth";
 import {parseOrThrow} from "../libs/validate";
 
 import {
@@ -25,146 +29,115 @@ import {
   ConvertRoleCdToName,
 } from "../utils/External/Nanapocke";
 
-const MAIN_REGION = process.env.MAIN_REGION || "";
-const NANAPOCKE_AUTHPOOL_ID = process.env.NANAPOCKE_AUTHPOOL_ID || "";
-const NANAPOCKE_AUTHPOOL_CLIENT_ID =
-  process.env.NANAPOCKE_AUTHPOOL_CLIENT_ID || "";
-const EXT_NANAPOCKE_API_URL_ACCESS_TOKEN =
-  process.env.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN || "";
-const EXT_NANAPOCKE_API_URL_USER_INFO =
-  process.env.EXT_NANAPOCKE_API_URL_USER_INFO || "";
-const EXT_NANAPOCKE_SETTING_CLIENTID =
-  process.env.EXT_NANAPOCKE_SETTING_CLIENTID || "";
-const EXT_NANAPOCKE_SETTING_CLIENTSECRET =
-  process.env.EXT_NANAPOCKE_SETTING_CLIENTSECRET || "";
-const EXT_NANAPOCKE_SETTING_GRANTTYPE =
-  process.env.EXT_NANAPOCKE_SETTING_GRANTTYPE || "";
-const EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT =
-  process.env.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT || "";
+import * as Facility from "../utils/Dynamo/Facility";
+import * as User from "../utils/Dynamo/User";
 
 // Cognito Identity Provider
 const idp = new CognitoIdentityProviderClient({
-  region: MAIN_REGION,
+  region: Setting.MAIN_REGION,
 });
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.1 クエリストリングチェック code を取得 =========== //
-  const code = event.queryStringParameters?.code || "";
-  console.log("code", code);
-  if (!code) {
-    return {
-      statusCode: 403,
-    };
-  }
+  const query = parseOrThrow(
+    CodeQueryParams,
+    event.queryStringParameters ?? {}
+  );
 
   // === Step.2 アクセストークン取得 =========== //
-  const externalAccessToken = await GetAccessToken(
-    EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
-    EXT_NANAPOCKE_SETTING_CLIENTID,
-    EXT_NANAPOCKE_SETTING_CLIENTSECRET,
-    EXT_NANAPOCKE_SETTING_GRANTTYPE,
-    EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT,
-    code
+  let tmpObj = await GetAccessToken(
+    Setting.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
+    Setting.EXT_NANAPOCKE_SETTING_CLIENTID,
+    Setting.EXT_NANAPOCKE_SETTING_CLIENTSECRET,
+    Setting.EXT_NANAPOCKE_SETTING_GRANTTYPE,
+    Setting.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT,
+    query.code
   );
-  console.log("externalAccessToken", externalAccessToken);
-  if (!externalAccessToken) {
-    return {
-      statusCode: 403,
-    };
-  }
+  console.log("externalAccessToken", tmpObj);
+  const nToken = parseOrThrow(NanapockeAccessTokenResponse, tmpObj ?? {});
 
   // === Step.3 ユーザー情報取得 =========== //
   const userInfo = await GetUserInfo(
-    EXT_NANAPOCKE_API_URL_USER_INFO,
-    externalAccessToken
+    Setting.EXT_NANAPOCKE_API_URL_USER_INFO,
+    nToken.access_token
   );
+  const roleName = ConvertRoleCdToName(userInfo.role_cd);
   console.log("userInfo", userInfo);
-  if (!userInfo) {
-    return {
-      statusCode: 403,
-    };
+
+  // === Step.4 利用可能な施設かチェック =========== //
+  if ((await Facility.isActive(userInfo.nursery_cd)) === false) {
+    console.log(
+      `施設利用不可 : ${userInfo.nursery_cd} / user : ${userInfo.user_cd}`
+    );
+    return http.notFound();
   }
 
-  // === Step.4 ユーザー確認（存在しなければ作成＆CONFIRMED） =========== //
-  await ensureUserConfirmed(
-    userInfo.user_cd,
-    userInfo.nursery_cd,
-    userInfo.role_cd
-  );
+  // === Step.5 ユーザー確認（存在しなければ作成＆CONFIRMED） =========== //
+  await ensureUserConfirmed(userInfo.user_cd, userInfo.nursery_cd, roleName);
 
-  // === Step.5 CUSTOM_AUTH 開始 =========== //
-  console.log("Step.5 CUSTOM_AUTH : Start");
+  // === Step.6 CUSTOM_AUTH 開始 =========== //
   const start = await idp.send(
     new AdminInitiateAuthCommand({
-      UserPoolId: NANAPOCKE_AUTHPOOL_ID,
-      ClientId: NANAPOCKE_AUTHPOOL_CLIENT_ID,
+      UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+      ClientId: Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
       AuthFlow: "CUSTOM_AUTH",
       AuthParameters: {USERNAME: userInfo.user_cd},
     })
   );
-  console.log("Step.5 CUSTOM_AUTH : End");
-  console.log("start", start);
 
-  // === Step.6 CUSTOM_AUTH チャレンジ応答 =========== //
-  console.log("Step.6 CUSTOM_AUTH : Start");
+  // === Step.7 CUSTOM_AUTH チャレンジ応答 =========== //
   const finish = await idp.send(
     new AdminRespondToAuthChallengeCommand({
-      UserPoolId: NANAPOCKE_AUTHPOOL_ID,
-      ClientId: NANAPOCKE_AUTHPOOL_CLIENT_ID,
+      UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+      ClientId: Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
       ChallengeName: start.ChallengeName!,
       Session: start.Session,
       ChallengeResponses: {
         USERNAME: userInfo.user_cd,
-        ANSWER: externalAccessToken, // Verifyトリガーで再検証
+        ANSWER: nToken.access_token, // Verifyトリガーで再検証
       },
     })
   );
-  console.log("Step.6 CUSTOM_AUTH : End");
   console.log("finish", finish);
-
   const auth = finish.AuthenticationResult!;
+  console.log("auth", auth);
+  const payload = parseOrThrow(
+    IdTokenPayload,
+    jwt.decode(auth.IdToken || "", {
+      complete: false,
+    }) ?? {}
+  );
+  console.log("payload", payload);
 
-  // === Step.7 cognito:groups の取得、ログイン者の振り分け =========== //
-  // const accessTokenDecoded = jwt.decode(auth.AccessToken!, {complete: false});
-  // if (!accessTokenDecoded) {
-  //   return {
-  //     statusCode: 403,
-  //   };
-  // }
+  // === Step.8 ログイン履歴を更新 =========== //
+  await User.signin(
+    payload.sub,
+    userInfo.user_cd,
+    userInfo.name,
+    roleName,
+    userInfo.nursery_cd
+  );
 
-  // const cookie = buildRefreshCookie(auth.RefreshToken!);
-  // const body = {
-  //   accessToken: auth.AccessToken!,
-  //   idToken: auth.IdToken!,
-  //   expiresIn: auth.ExpiresIn!,
-  // };
-  // return resp(200, body, origin, [cookie]);
-
+  // === Step.9 各権限別ページへとリダイレクト =========== //
   return {
     statusCode: 200,
-    headers: {"content-type": "application/json"},
-    cookies: ["cookie1=value1", "cookie2=value2"],
-    body: JSON.stringify({
-      path: event.rawPath,
-      message: "Hello from Lambda! : " + Date.now().toString(),
-      accessToken: auth.AccessToken!,
-      idToken: auth.IdToken!,
-      refreshToken: auth.RefreshToken!,
-      expiresIn: auth.ExpiresIn!,
-    }),
+    headers: {Location: "https://example.com"},
+    cookies: [
+      `refreshToken=${auth.RefreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+    ],
   };
 });
 
 async function ensureUserConfirmed(
   uid: string,
   facilityCd: string,
-  roleCd: number
+  roleName: string
 ) {
   try {
     // UserPool 内に対象ユーザーが存在するかチェック
     await idp.send(
       new AdminGetUserCommand({
-        UserPoolId: NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
       })
     );
@@ -172,10 +145,9 @@ async function ensureUserConfirmed(
     if (e.name !== "UserNotFoundException") throw e;
 
     // UserPool 内に対象ユーザーが存在しなければ作成
-    const roleName = ConvertRoleCdToName(roleCd);
     await idp.send(
       new AdminCreateUserCommand({
-        UserPoolId: NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
         MessageAction: "SUPPRESS",
         UserAttributes: [
@@ -190,10 +162,10 @@ async function ensureUserConfirmed(
         ],
       })
     );
-    // CONFIRMED化（カスタム認証でも安定運用）
+    // パスワードを登録して認証済みに設定（カスタム認証でも安定運用）
     await idp.send(
       new AdminSetUserPasswordCommand({
-        UserPoolId: NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
         Password: crypto.randomUUID() + crypto.randomUUID(),
         Permanent: true,
@@ -210,35 +182,3 @@ async function ensureUserConfirmed(
     // );
   }
 }
-
-// function buildRefreshCookie(token: string) {
-//   const maxAge = Number(process.env.COOKIE_MAX_AGE ?? 30 * 24 * 3600);
-//   return [
-//     `__Host-refresh=${encodeURIComponent(token)}`,
-//     "Path=/",
-//     "HttpOnly",
-//     "Secure",
-//     "SameSite=Strict",
-//     `Max-Age=${maxAge}`,
-//   ].join("; ");
-// }
-
-// function resp(
-//   code: number,
-//   body: any,
-//   origin: string,
-//   setCookies: string[] = []
-// ) {
-//   const headers: Record<string, string | string[]> = {
-//     "content-type": "application/json",
-//     "access-control-allow-origin": origin,
-//     "access-control-allow-credentials": "true",
-//     "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
-//     "x-frame-options": "DENY",
-//     "x-content-type-options": "nosniff",
-//     "referrer-policy": "no-referrer",
-//     "permissions-policy": "interest-cohort=()",
-//   };
-//   if (setCookies.length) headers["set-cookie"] = setCookies;
-//   return {statusCode: code, headers, body: JSON.stringify(body)};
-// }

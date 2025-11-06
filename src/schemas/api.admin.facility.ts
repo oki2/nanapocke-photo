@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-export const Code = v.pipe(v.string(), v.regex(/^[a-zA-Z0-9]{8}$/));
+export const Code = v.pipe(v.string(), v.regex(/^[a-zA-Z0-9]{5}$/));
 export const Name = v.pipe(v.string(), v.minLength(1));
 export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
 export const Status = v.picklist(["ACTIVE", "INACTIVE"]);
