@@ -69,6 +69,20 @@ export const badRequest = (issues: Record<string, string>) =>
     issues,
   });
 
+export const unauthorized = (message = "Unauthorized") =>
+  problem(401, {
+    title: "Unauthorized",
+    code: "UNAUTHORIZED",
+    detail: message,
+  });
+
+export const forbidden = (message = "Forbidden") =>
+  problem(403, {
+    title: "Forbidden",
+    code: "FORBIDDEN",
+    detail: message,
+  });
+
 export const notFound = (message = "Resource not found") =>
   problem(404, {
     title: "Resource not found",

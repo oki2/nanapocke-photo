@@ -85,7 +85,7 @@ export class Step15DynamodbStack extends cdk.Stack {
       billingMode: BillingMode.PAY_PER_REQUEST, // アクセス数の絶対数が少ないので PAY_PER_REQUEST
     });
 
-    // 認証フローテーブル
+    // Nanapockeユーザーテーブル
     this.NanapockeUserTable = new Table(this, params.NanapockeUserTable.Name, {
       tableName: params.NanapockeUserTable.Name,
       partitionKey: {
@@ -99,6 +99,14 @@ export class Step15DynamodbStack extends cdk.Stack {
       timeToLiveAttribute: "ttl",
       removalPolicy: cdk.RemovalPolicy.DESTROY, // NOT recommended for production code
       billingMode: BillingMode.PAY_PER_REQUEST, // アクセス数の絶対数が少ないので PAY_PER_REQUEST
+    });
+    // Nanapockeユーザーテーブル：ローカルセカンダリインデックス-1
+    this.NanapockeUserTable.addLocalSecondaryIndex({
+      indexName: "lsi1_index",
+      sortKey: {
+        name: "lsi1",
+        type: AttributeType.STRING,
+      },
     });
   }
 }

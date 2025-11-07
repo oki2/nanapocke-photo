@@ -110,7 +110,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("payload", payload);
 
   // === Step.8 ログイン履歴を更新 =========== //
-  await User.signin(
+  await User.signinNanapockeAuth(
     payload.sub,
     userInfo.user_cd,
     userInfo.name,
@@ -124,6 +124,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     headers: {Location: "https://example.com"},
     cookies: [
       `refreshToken=${auth.RefreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+      `userRole=${roleName}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
     ],
   };
 });

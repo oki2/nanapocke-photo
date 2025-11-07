@@ -104,6 +104,7 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   Config,
   NanapockeAuthPool: stackStep12.NanapockeAuthPool,
   NanapockeAuthPoolClient: stackStep12.NanapockeAuthPoolClient,
+  NanapockeAuthPhotographerClient: stackStep12.NanapockeAuthPhotographerClient,
   // ProviderAuthPool: stackStep11.ProviderAuthPool,
   // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
   // OrganizationAuthPool: stackStep11.OrganizationAuthPool,

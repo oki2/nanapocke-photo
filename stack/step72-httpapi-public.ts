@@ -139,13 +139,24 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // ==========================================================
     // HTTP API のルーティング設定
     // ==========================================================
-    // 認証不要ルート（テスト用）
+    // ナナポケ認証からの入り口
     this.httpApi.addRoutes({
       path: "/auth/nanapocke",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "nanapockeAuthFn",
         props.lambdaFnPublic.nanapockeAuthFn
+      ),
+      authorizer: AuthorizerPublicVerifyToken,
+    });
+
+    // フォトグラファー用ログイン
+    this.httpApi.addRoutes({
+      path: "/api/photographer/auth/signin",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "PhotographerAuthSigninIntegration",
+        props.lambdaFnPublic.photographerAuthSigninFn
       ),
       authorizer: AuthorizerPublicVerifyToken,
     });
@@ -161,13 +172,24 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPublicVerifyToken,
     });
 
-    // Photographer 登録
+    // フォトグラファー 登録
     this.httpApi.addRoutes({
       path: "/api/principal/photographer",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
-        "PrincipaPhotographerCreate",
+        "PrincipaPhotographerCreateIntegration",
         props.lambdaFnPublic.photographerCreateFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // フォトグラファー 一覧
+    this.httpApi.addRoutes({
+      path: "/api/principal/photographer/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PrincipaPhotographerListIntegration",
+        props.lambdaFnPublic.photographerListFn
       ),
       authorizer: AuthorizerPrincipalVeify,
     });

@@ -13,6 +13,7 @@ export interface Props extends cdk.StackProps {
 export class Step12CognitoNanapockeStack extends cdk.Stack {
   public NanapockeAuthPool: cognito.UserPool;
   public NanapockeAuthPoolClient: cognito.UserPoolClient;
+  public NanapockeAuthPhotographerClient: cognito.UserPoolClient;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id, props);
@@ -154,7 +155,7 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
     //   groupName: "Guardian",
     // });
 
-    // ユーザープールのクライアント作成
+    // ナナポケOAuth用クライアント作成
     this.NanapockeAuthPoolClient = new cognito.UserPoolClient(
       this,
       `${params.NanapockeAuthPool.Name}-Client`,
@@ -172,6 +173,22 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         accessTokenValidity: cdk.Duration.minutes(30),
         refreshTokenValidity: cdk.Duration.days(30),
         preventUserExistenceErrors: true,
+      }
+    );
+
+    // ユーザープールのクライアント作成
+    this.NanapockeAuthPhotographerClient = new cognito.UserPoolClient(
+      this,
+      `${params.NanapockeAuthPool.Name}-Client-Photographer`,
+      {
+        userPool: this.NanapockeAuthPool,
+        userPoolClientName: "NanapockeAuthPhotographerClient",
+        authFlows: {
+          adminUserPassword: true, // AdminInitiateAuth 用を有効化
+          userPassword: false, // USER_PASSWORD_AUTH フローを無効化
+          userSrp: false, // SRP 認証も無効化
+        },
+        generateSecret: false,
       }
     );
   }

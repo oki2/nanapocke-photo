@@ -9,6 +9,7 @@ export interface Props extends cdk.StackProps {
   readonly Config: any;
   readonly NanapockeAuthPool: UserPool;
   readonly NanapockeAuthPoolClient: UserPoolClient;
+  readonly NanapockeAuthPhotographerClient: UserPoolClient;
   readonly MainTable: Table;
   readonly NanapockeUserTable: Table;
 }
@@ -94,6 +95,53 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
+    // フォトグラファーログイン
+    this.lambdaFn.photographerAuthSigninFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotographerAuthSigninFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotographerAuthSignin`,
+        description: `${functionPrefix}-ApiPublicPhotographerAuthSignin`,
+        entry: "src/handlers/api.public.photographer.auth.signin.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_PHOTOGRAPHER_CLIENT_ID:
+            props.NanapockeAuthPhotographerClient.userPoolClientId,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["cognito-idp:AdminInitiateAuth"],
+            resources: [
+              props.NanapockeAuthPool.userPoolArn,
+              props.NanapockeAuthPool.userPoolArn,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:PutItem",
+            ],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      }
+    );
+
     // Refresh
     this.lambdaFn.authRefreshFn = new NodejsFunction(
       this,
@@ -111,6 +159,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
           NANAPOCKE_AUTHPOOL_CLIENT_ID:
             props.NanapockeAuthPoolClient.userPoolClientId,
+          NANAPOCKE_AUTHPOOL_PHOTOGRAPHER_CLIENT_ID:
+            props.NanapockeAuthPhotographerClient.userPoolClientId,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
         },
         initialPolicy: [
@@ -162,6 +212,35 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:PutItem"],
             resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      }
+    );
+
+    // フォトグラファー一覧取得
+    this.lambdaFn.photographerListFn = new NodejsFunction(
+      this,
+      "ApiPublicPrincipalPhotographerListFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPrincipalPhotographerList`,
+        description: `${functionPrefix}-ApiPublicPrincipalPhotographerList`,
+        entry: "src/handlers/api.public.principal.photographer.list.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [
+              props.NanapockeUserTable.tableArn,
+              `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
+            ],
           }),
         ],
       }

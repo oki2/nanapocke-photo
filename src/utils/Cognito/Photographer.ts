@@ -38,12 +38,12 @@ export async function create(
     })
   );
 
-  console.log("set password", userName, password);
   // パスワードを登録して認証済みに設定（カスタム認証でも安定運用）
   // まれに作成直後の取りこぼしに備え、軽いリトライを実装
   const maxRetries = 3;
   for (let i = 0; i < maxRetries; i++) {
     try {
+      console.log(`set password count : ${i} : ${facilityCode}@${userName}`);
       await idp.send(
         new AdminSetUserPasswordCommand({
           UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
@@ -52,6 +52,7 @@ export async function create(
           Permanent: true,
         })
       );
+      break;
     } catch (e) {
       // NotAuthorizedException / UserNotFoundException などは設定誤りの可能性
       console.log("error", e);
@@ -67,6 +68,7 @@ export async function create(
   // まれに作成直後の取りこぼしに備え、軽いリトライを実装
   let sub = "";
   for (let i = 0; i < maxRetries; i++) {
+    console.log(`get user count : ${i} : ${facilityCode}@${userName}`);
     try {
       const user = await idp.send(
         new AdminGetUserCommand({
@@ -77,6 +79,7 @@ export async function create(
       console.log("user", user);
       sub = user.UserAttributes?.find((a) => a.Name === "sub")?.Value || "";
       console.log("sub", sub);
+      break;
     } catch (e) {
       // NotAuthorizedException / UserNotFoundException などは設定誤りの可能性
       console.log("error", e);

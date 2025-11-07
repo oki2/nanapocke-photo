@@ -6,6 +6,16 @@
 ### Nanapocke 認証受け口
 GET https://{{customDomainName}}/auth/nanapocke?code=pUser01 HTTP/1.1
 
+### フォトグラファー Signin API
+# @name login
+POST https://{{customDomainName}}/api/photographer/auth/signin HTTP/1.1
+content-type: application/json
+
+{
+  "userName":"PHOTO004",
+  "password":"test1234",
+  "facilityCode":"T0001"
+}
 
 ### リフレッシュトークンでログイン
 # @name login
@@ -18,10 +28,15 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "PHOTO001",
+  "userCode": "PHOTO004",
   "password": "test1234",
-  "userName": "フォトグラファー1"
+  "userName": "フォトグラファー4"
 }
+
+### フォトグラファー一覧取得
+GET https://{{customDomainName}}/api/principal/photographer/list HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
 
 ### アルバム一覧取得

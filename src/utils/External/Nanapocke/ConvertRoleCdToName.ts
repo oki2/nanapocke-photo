@@ -1,16 +1,18 @@
+import {Setting} from "../../../config";
+
 export function ConvertRoleCdToName(roleCd: number): string {
   switch (roleCd) {
     case 2:
     case 3:
     case 8:
-      return "PRINCIPAL"; // 園長
+      return Setting.ROLE.PRINCIPAL; // 園長
     case 4:
     case 5:
     case 6:
     case 9:
-      return "TEACHER"; // 保育士
+      return Setting.ROLE.TEACHER; // 保育士
     case 0:
-      return "GUARDIAN"; // 保護者
+      return Setting.ROLE.GUARDIAN; // 保護者
     case 1:
     case 7:
     default:

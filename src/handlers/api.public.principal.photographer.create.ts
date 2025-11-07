@@ -27,13 +27,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   );
 
   // 2. DynamoDB に Photographer を作成
-  await User.createPhotographer(
+  await User.Photographer.create(
     newUserSub,
     data.userCode,
     data.userName,
     authContext.facilityCode,
     data.nbf ?? new Date().toISOString(),
-    data.exp ?? new Date().toISOString(),
+    data.exp ?? undefined,
     authContext.userSub
   );
 
