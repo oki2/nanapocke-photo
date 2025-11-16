@@ -155,8 +155,8 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       path: "/api/photographer/auth/signin",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
-        "PhotographerAuthSigninIntegration",
-        props.lambdaFnPublic.photographerAuthSigninFn
+        "AuthSigninIntegration",
+        props.lambdaFnPublic.authSigninFn
       ),
       authorizer: AuthorizerPublicVerifyToken,
     });
@@ -177,7 +177,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       path: "/api/principal/photographer",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
-        "PrincipaPhotographerCreateIntegration",
+        "PhotographerCreateIntegration",
         props.lambdaFnPublic.photographerCreateFn
       ),
       authorizer: AuthorizerPrincipalVeify,
@@ -188,7 +188,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       path: "/api/principal/photographer/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
-        "PrincipaPhotographerListIntegration",
+        "PhotographerListIntegration",
         props.lambdaFnPublic.photographerListFn
       ),
       authorizer: AuthorizerPrincipalVeify,
@@ -199,8 +199,8 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       path: "/api/principal/album/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
-        "PrincipaAlbumListIntegration",
-        props.lambdaFnPublic.principaAlbumListFn
+        "AlbumListIntegration",
+        props.lambdaFnPublic.albumListFn
       ),
       authorizer: AuthorizerPrincipalVeify,
     });

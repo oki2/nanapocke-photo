@@ -1,16 +1,17 @@
 import * as v from "valibot";
+import * as common from "./common";
+import * as nanapocke from "./common.nanapocke";
 
-export const Code = v.pipe(v.string(), v.regex(/^[a-zA-Z0-9]{5}$/));
+// export const Code = v.pipe(v.string(), v.regex(/^[a-zA-Z0-9]{5}$/));
 export const Name = v.pipe(v.string(), v.minLength(1));
-export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
 export const Status = v.picklist(["ACTIVE", "INACTIVE"]);
 
 export const FacilityCreateBody = v.pipe(
   v.object({
-    code: Code,
+    code: nanapocke.FacilityCode,
     name: Name,
-    nbf: ISODateTime,
-    exp: ISODateTime,
+    nbf: common.ISODateTime,
+    exp: common.ISODateTime,
   }),
   v.custom((input) => {
     const d = input as {nbf?: string; exp?: string};
@@ -20,14 +21,14 @@ export const FacilityCreateBody = v.pipe(
 );
 
 export const FacilityCodePathParams = v.object({
-  code: Code,
+  code: nanapocke.FacilityCode,
 });
 
 export const FacilityUpdateBody = v.pipe(
   v.object({
     name: v.optional(Name),
-    nbf: v.optional(ISODateTime),
-    exp: v.optional(ISODateTime),
+    nbf: v.optional(common.ISODateTime),
+    exp: v.optional(common.ISODateTime),
     status: v.optional(Status),
   }),
   v.custom((input) => {
@@ -47,24 +48,24 @@ export const FacilityUpdateBody = v.pipe(
 );
 
 export const FacilityResponse = v.object({
-  code: Code,
+  code: nanapocke.FacilityCode,
   name: Name,
-  nbf: ISODateTime,
-  exp: ISODateTime,
+  nbf: common.ISODateTime,
+  exp: common.ISODateTime,
   status: Status,
-  createdAt: ISODateTime,
-  updatedAt: ISODateTime,
+  createdAt: common.ISODateTime,
+  updatedAt: common.ISODateTime,
 });
 
 export const FacilityListResponse = v.array(
   v.object({
-    code: Code,
+    code: nanapocke.FacilityCode,
     name: Name,
-    nbf: ISODateTime,
-    exp: ISODateTime,
+    nbf: common.ISODateTime,
+    exp: common.ISODateTime,
     status: Status,
-    createdAt: ISODateTime,
-    updatedAt: ISODateTime,
+    createdAt: common.ISODateTime,
+    updatedAt: common.ISODateTime,
   })
 );
 

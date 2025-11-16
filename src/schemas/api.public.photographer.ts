@@ -1,11 +1,5 @@
 import * as v from "valibot";
-
-export const UserCode = v.pipe(v.string(), v.regex(/^[a-zA-Z0-9]{8}$/));
-
-// export const Id = v.pipe(v.string(), v.minLength(1), v.maxLength(64));
-// export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
-
-export const Role = v.picklist(["Admin"]);
+import * as common from "./common";
 
 // Signin Request body
 export const AuthSigninBody = v.pipe(
@@ -27,12 +21,12 @@ export type SigninSuccessT = v.InferOutput<typeof SigninSuccess>;
 
 export const PhotographerCreateBody = v.pipe(
   v.object({
-    userCode: UserCode,
-    password: v.pipe(v.string(), v.minLength(8), v.maxLength(64)),
+    userCode: common.AccountPhotographerId,
+    password: common.AccountPassword,
     userName: v.pipe(v.string(), v.minLength(1)),
     description: v.optional(v.pipe(v.string(), v.minLength(1))),
-    nbf: v.optional(v.pipe(v.string(), v.isoTimestamp())),
-    exp: v.optional(v.pipe(v.string(), v.isoTimestamp())),
+    nbf: v.optional(common.ISODateTime),
+    exp: v.optional(common.ISODateTime),
   })
 );
 
@@ -42,7 +36,7 @@ export type PhotographerCreateBodyT = v.InferOutput<
 
 export const PhotographerCreateResponse = v.pipe(
   v.object({
-    userCode: UserCode,
+    userCode: common.AccountPhotographerId,
     userName: v.pipe(v.string(), v.minLength(1)),
   })
 );

@@ -1,4 +1,6 @@
 import * as v from "valibot";
+import * as common from "./common";
+import * as nanapocke from "./common.nanapocke";
 
 // ナナポケ認証後のコード
 export const Code = v.pipe(v.string(), v.minLength(1));
@@ -20,19 +22,20 @@ export type NanapockeAccessTokenResponseT = v.InferOutput<
 >;
 
 // ナナポケ　ユーザー情報
-const Belong = v.object({
-  class_cd: v.pipe(v.string(), v.length(7)),
-  class_name: v.pipe(v.string(), v.minLength(1)),
-  grade_cd: v.number(),
-  grade_name: v.pipe(v.string(), v.minLength(1)),
-});
 export const NanapockeUserInfoResponse = v.object({
-  nursery_cd: v.pipe(v.string(), v.length(5)),
-  user_cd: v.pipe(v.string(), v.length(11)),
-  role_cd: v.number(),
+  nursery_cd: nanapocke.FacilityCode,
+  user_cd: nanapocke.UserCode,
+  role_cd: nanapocke.RoleCode,
   role: v.pipe(v.string(), v.minLength(1)),
   name: v.pipe(v.string(), v.minLength(1)),
-  belong: v.array(Belong),
+  belong: v.array(
+    v.object({
+      class_cd: nanapocke.ClassCode,
+      class_name: v.pipe(v.string(), v.minLength(1)),
+      grade_cd: nanapocke.GradeCode,
+      grade_name: v.pipe(v.string(), v.minLength(1)),
+    })
+  ),
 });
 export type NanapockeUserInfoResponseT = v.InferOutput<
   typeof NanapockeUserInfoResponse

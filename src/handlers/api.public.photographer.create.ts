@@ -4,7 +4,7 @@ import * as http from "../http";
 import {
   PhotographerCreateBody,
   PhotographerCreateResponse,
-} from "../schemas/api.public.principal.photographer";
+} from "../schemas/api.public.photographer";
 import {parseOrThrow} from "../libs/validate";
 
 import * as User from "../utils/Dynamo/User";

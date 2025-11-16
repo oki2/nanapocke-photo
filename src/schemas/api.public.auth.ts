@@ -1,16 +1,8 @@
 import * as v from "valibot";
-import {Setting} from "../config";
+import * as common from "./common";
 
 // export const Id = v.pipe(v.string(), v.minLength(1), v.maxLength(64));
 // export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
-
-export const Role = v.picklist([
-  // "Admin",
-  Setting.ROLE.PRINCIPAL,
-  Setting.ROLE.TEACHER,
-  Setting.ROLE.GUARDIAN,
-  Setting.ROLE.PHOTOGRAPHER,
-]);
 
 // Signin Request body
 export const AuthSigninBody = v.pipe(
@@ -59,7 +51,7 @@ export const ChallengeSuccess = v.object({
 
 export const RefreshTokenCookie = v.object({
   refreshToken: v.pipe(v.pipe(v.string(), v.minLength(1))),
-  userRole: Role,
+  userRole: common.PublicRole,
 });
 
 export type SigninSuccessT = v.InferOutput<typeof SigninSuccess>;

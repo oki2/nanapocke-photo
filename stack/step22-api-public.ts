@@ -96,13 +96,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     );
 
     // フォトグラファーログイン
-    this.lambdaFn.photographerAuthSigninFn = new NodejsFunction(
+    this.lambdaFn.authSigninFn = new NodejsFunction(
       this,
-      "ApiPublicPhotographerAuthSigninFn",
+      "ApiPublicAuthSigninFn",
       {
-        functionName: `${functionPrefix}-ApiPublicPhotographerAuthSignin`,
-        description: `${functionPrefix}-ApiPublicPhotographerAuthSignin`,
-        entry: "src/handlers/api.public.photographer.auth.signin.ts",
+        functionName: `${functionPrefix}-ApiPublicAuthSignin`,
+        description: `${functionPrefix}-ApiPublicAuthSignin`,
+        entry: "src/handlers/api.public.auth.signin.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
@@ -180,11 +180,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     // Photographer の作成
     this.lambdaFn.photographerCreateFn = new NodejsFunction(
       this,
-      "ApiPublicPrincipalPhotographerCreateFn",
+      "ApiPublicPhotographerCreateFn",
       {
-        functionName: `${functionPrefix}-ApiPublicPrincipalPhotographerCreate`,
-        description: `${functionPrefix}-ApiPublicPrincipalPhotographerCreate`,
-        entry: "src/handlers/api.public.principal.photographer.create.ts",
+        functionName: `${functionPrefix}-ApiPublicPhotographerCreate`,
+        description: `${functionPrefix}-ApiPublicPhotographerCreate`,
+        entry: "src/handlers/api.public.photographer.create.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
@@ -220,11 +220,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     // フォトグラファー一覧取得
     this.lambdaFn.photographerListFn = new NodejsFunction(
       this,
-      "ApiPublicPrincipalPhotographerListFn",
+      "ApiPublicPhotographerListFn",
       {
-        functionName: `${functionPrefix}-ApiPublicPrincipalPhotographerList`,
-        description: `${functionPrefix}-ApiPublicPrincipalPhotographerList`,
-        entry: "src/handlers/api.public.principal.photographer.list.ts",
+        functionName: `${functionPrefix}-ApiPublicPhotographerList`,
+        description: `${functionPrefix}-ApiPublicPhotographerList`,
+        entry: "src/handlers/api.public.photographer.list.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
@@ -247,13 +247,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     );
 
     // アルバム一覧の取得
-    this.lambdaFn.principaAlbumListFn = new NodejsFunction(
+    this.lambdaFn.albumListFn = new NodejsFunction(
       this,
-      "ApiPublicPrincipalAlbumListFn",
+      "ApiPublicAlbumListFn",
       {
-        functionName: `${functionPrefix}-ApiPublicPrincipalAlbumList`,
-        description: `${functionPrefix}-ApiPublicPrincipalAlbumList`,
-        entry: "src/handlers/api.public.principal.album.list.ts",
+        functionName: `${functionPrefix}-ApiPublicAlbumList`,
+        description: `${functionPrefix}-ApiPublicAlbumList`,
+        entry: "src/handlers/api.public.album.list.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,

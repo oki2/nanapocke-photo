@@ -1,8 +1,5 @@
 import * as v from "valibot";
 
-// export const Id = v.pipe(v.string(), v.minLength(1), v.maxLength(64));
-// export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
-
 export const Role = v.picklist(["Admin"]);
 
 // Signin Request body
