@@ -10,13 +10,14 @@ import {Setting} from "./Setting";
 export async function create(
   facilityCode: string,
   userId: string,
-  name: string,
+  title: string,
   description: string,
-  nbf: string,
-  exp: string
+  priceTable: string,
+  nbf: string | undefined,
+  exp: string | undefined
 ): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
-  const id = crypto.randomUUID();
+  const albumId = crypto.randomUUID();
 
   // コマンド実行
   const result = await docClient().send(
@@ -24,11 +25,12 @@ export async function create(
       TableName: Setting.TABLE_NAME_MAIN,
       Item: {
         pk: `ALBUM#${facilityCode}`,
-        sk: id,
+        sk: `META#${albumId}`,
         facilityCode: facilityCode,
-        albumId: id,
-        name: name,
+        albumId: albumId,
+        title: title,
         description: description,
+        priceTable: priceTable,
         nbf: nbf,
         exp: exp,
         status: Setting.STATUS.INACTIVE,
@@ -42,8 +44,8 @@ export async function create(
   );
 
   return {
-    albumId: id,
-    name: name,
+    albumId: albumId,
+    title: title,
   };
 }
 
@@ -52,13 +54,14 @@ export async function list(facilityCode: string): Promise<any> {
     TableName: Setting.TABLE_NAME_MAIN,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #name, #nbf, #exp, #status, #createdAt, #updatedAt",
+      "#sk, #albumId, #title, #description, #priceTable, #nbf, #exp, #status, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
       "#albumId": "albumId",
-      "#name": "name",
+      "#title": "title",
       "#description": "description",
+      "#priceTable": "priceTable",
       "#nbf": "nbf",
       "#exp": "exp",
       "#status": "status",

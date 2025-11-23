@@ -194,6 +194,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // === アルバム関連 === //
+    // アルバム作成
+    this.httpApi.addRoutes({
+      path: "/api/principal/album",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "AlbumCreateIntegration",
+        props.lambdaFnPublic.albumCreateFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // アルバム一覧
     this.httpApi.addRoutes({
       path: "/api/principal/album/list",
@@ -201,6 +213,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       integration: new HttpLambdaIntegration(
         "AlbumListIntegration",
         props.lambdaFnPublic.albumListFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // === 写真関連 === //
+    // 写真の作成・Upload用署名付きURL発行
+    this.httpApi.addRoutes({
+      path: "/api/photo",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "PhotoUploadIntegration",
+        props.lambdaFnPublic.photoUploadFn
       ),
       authorizer: AuthorizerPrincipalVeify,
     });

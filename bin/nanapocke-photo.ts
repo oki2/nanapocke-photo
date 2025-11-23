@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
 
+import {Step10ResourceStack} from "../stack/step10-resource";
+
 import {Step11CognitoProviderStack} from "../stack/step11-resource-cognito-provider";
 import {Step12CognitoNanapockeStack} from "../stack/step12-resource-cognito-nanapocke";
 
@@ -9,20 +11,27 @@ import {Step15DynamodbStack} from "../stack/step15-resource-dynamodb";
 import {Step21ApiAdminStack} from "../stack/step21-api-admin";
 import {Step22ApiPublicleStack} from "../stack/step22-api-public";
 
+import {Step31EventTriggerStack} from "../stack/step31-event-trigger";
+
 import {Step71HttpApiAdminStack} from "../stack/step71-httpapi-admin";
 import {Step72HttpApiPublicStack} from "../stack/step72-httpapi-public";
 
 import {Step81CertificateStack} from "../stack/step81-certificate";
 
 import {Step82CloudfrontStack} from "../stack/step82-cloudfront";
+import {Setting} from "../src/config";
 
 const app = new cdk.App();
 
 const stage = app.node.tryGetContext("environment") ?? "sandbox"; // default -> sandbox
 const context = app.node.tryGetContext(stage);
 const account = process.env.CDK_DEFAULT_ACCOUNT;
-
 const PROJECT_NAME = context.projectName ?? "NanaPhoto";
+
+const S3AutoDeleteObjects = context.s3.setting.autoDeleteObjects;
+const S3RemovalPolicy = S3AutoDeleteObjects
+  ? cdk.RemovalPolicy.DESTROY
+  : cdk.RemovalPolicy.RETAIN;
 
 // regionの定義　基本は、東京、一部AWS制約のあるものはバージニア
 export const REGION = {
@@ -45,10 +54,20 @@ const Config = {
     },
   },
   S3: {
+    Setting: {
+      AutoDeleteObjects: S3AutoDeleteObjects,
+      RemovalPolicy: S3RemovalPolicy,
+    },
     Bucket: {
       PublicCfd: {
         BucketName:
           `${PROJECT_NAME}-${stage}-PublicCfd-${account}`.toLowerCase(),
+      },
+      Upload: {
+        BucketName: `${PROJECT_NAME}-${stage}-Upload-${account}`.toLowerCase(),
+      },
+      Photo: {
+        BucketName: `${PROJECT_NAME}-${stage}-Photo-${account}`.toLowerCase(),
       },
     },
   },
@@ -66,6 +85,11 @@ const Config = {
     },
   },
 };
+
+const stackStep10 = new Step10ResourceStack(app, "Step10ResourceStack", {
+  env: {account: account, region: REGION.TOKYO},
+  Config,
+});
 
 const stackStep11 = new Step11CognitoProviderStack(
   app,
@@ -111,7 +135,25 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
   MainTable: stackStep15.MainTable,
   NanapockeUserTable: stackStep15.NanapockeUserTable,
+  bucketUpload: stackStep10.bucketUpload,
 });
+
+const stackStep31 = new Step31EventTriggerStack(
+  app,
+  "Step31EventTriggerStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    Config,
+    // ProviderAuthPool: stackStep11.ProviderAuthPool,
+    // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
+    // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
+    // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
+    MainTable: stackStep15.MainTable,
+    // NanapockeUserTable: stackStep15.NanapockeUserTable,
+    bucketUpload: stackStep10.bucketUpload,
+    bucketPhoto: stackStep10.bucketPhoto,
+  }
+);
 
 const stackStep71 = new Step71HttpApiAdminStack(
   app,
@@ -160,11 +202,15 @@ const stackStep82 = new Step82CloudfrontStack(app, "Step82CloudfrontStack", {
 // =======================
 // 実行の主従関係設定
 // =======================
+stackStep21.addDependency(stackStep10);
 stackStep21.addDependency(stackStep11);
 stackStep21.addDependency(stackStep15);
 
+stackStep22.addDependency(stackStep10);
 stackStep22.addDependency(stackStep12);
 stackStep22.addDependency(stackStep15);
+
+stackStep31.addDependency(stackStep10);
 
 stackStep71.addDependency(stackStep21);
 

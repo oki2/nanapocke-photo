@@ -1,14 +1,22 @@
-# Welcome to your CDK TypeScript project
+# NANAPOCKE-PHOTO
 
-This is a blank project for CDK development with TypeScript.
+LIKE の運営する「ナナポケ」向け写真販売サービス用プロジェクト
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+# SecretKey ParameterStore SecretsManager の設定
 
-## Useful commands
+## キーペアの作成
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+以下を VSCode のターミナル等で実行
+
+1. キーペアを生成 `openssl genrsa -out private_key.pem 2048`
+
+2. 生成したキーペアからパブリックキーを抽出 `openssl rsa -pubout -in private_key.pem -out public_key.pem`
+
+## キーペアの登録
+
+1. SSM パラメータストアに登録 `bin/shopreel.ts` の `config.CloudFront` 配下の情報を参考にパラメータストアへ登録
+
+| 名前 | Type | 説明 |
+| :-- | :-: | :-- |
+| /nanapocke-photo/cfd/public-photo-upload-pem/private | Secure | CloudFront 写真アップロード用署名付き URL の秘密鍵 |
+| /nanapocke-photo/cfd/public-photo-upload-pem/public |  | CloudFront 写真アップロード用署名付き URL の公開鍵 |

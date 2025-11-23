@@ -38,9 +38,37 @@ GET https://{{customDomainName}}/api/principal/photographer/list HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
+### アルバム追加
+POST https://{{customDomainName}}/api/principal/album HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "テストアルバム",
+  "description": "アルバムの説明",
+  "priceTable": "BASIC"
+}
 
 ### アルバム一覧取得
 GET https://{{customDomainName}}/api/principal/album/list HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
+### 写真追加（画像）
+# @name photoUploadUrl
+POST https://{{customDomainName}}/api/photo HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "fileType": "IMAGE",
+  "fileName": "test.jpg",
+  "valueType": "BASIC",
+  "shootingAt": "2025-11-16T08:30:58Z",
+  "tags": ["TAG-A", "TAG-あいうえお"]
+}
+
+### 画像ファイルを実際に送信
+PUT {{photoUploadUrl.response.body.$.url}} HTTP/1.1
+
+< /home/tomo/work/00_sampledata/test101.jpg

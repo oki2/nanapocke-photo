@@ -23,6 +23,11 @@
         "rootDomain": "sandbox.uxbrew.jp",
         "publicDomain": "nanaphoto.sandbox.uxbrew.jp"
       },
+      "s3": {
+        "setting": {
+          "autoDeleteObjects": true
+        }
+      },
       "external": {
         "nanapocke": {
           "setting": {

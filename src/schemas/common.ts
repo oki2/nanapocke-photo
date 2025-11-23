@@ -25,3 +25,14 @@ export const AccountPassword = v.pipe(
   v.minLength(8),
   v.maxLength(64)
 );
+
+// アルバム販売テーブル
+export const PriceTable = v.picklist(["BASIC", "PREMIUM", "SALE"]);
+
+// 写真タイプ
+export const PhotoValueType = v.picklist(["BASIC", "PREMIUM"]);
+
+// 写真アップロード形式。画像 or zip
+export const PhotoUploadFileType = v.picklist(
+  Object.values(Setting.UPLOAD_FILE_TYPE)
+);

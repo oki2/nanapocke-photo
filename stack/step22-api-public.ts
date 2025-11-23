@@ -3,7 +3,9 @@ import {Construct} from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 import {UserPool, UserPoolClient} from "aws-cdk-lib/aws-cognito";
+import {Bucket} from "aws-cdk-lib/aws-s3";
 import {Table} from "aws-cdk-lib/aws-dynamodb";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 
 export interface Props extends cdk.StackProps {
   readonly Config: any;
@@ -12,6 +14,8 @@ export interface Props extends cdk.StackProps {
   readonly NanapockeAuthPhotographerClient: UserPoolClient;
   readonly MainTable: Table;
   readonly NanapockeUserTable: Table;
+  readonly bucketUpload: Bucket;
+  // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
 }
 
 interface LambdaFunctions {
@@ -246,6 +250,33 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
+    // === アルバム関連 === //
+    // アルバム一の作成
+    this.lambdaFn.albumCreateFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumCreateFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumCreate`,
+        description: `${functionPrefix}-ApiPublicAlbumCreate`,
+        entry: "src/handlers/api.public.album.create.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:PutItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
     // アルバム一覧の取得
     this.lambdaFn.albumListFn = new NodejsFunction(
       this,
@@ -267,6 +298,43 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query"],
             resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
+    // === 写真関連 === //
+    // 写真の作成・Upload用署名付きURL発行
+    this.lambdaFn.photoUploadFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoUploadFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoUpload`,
+        description: `${functionPrefix}-ApiPublicPhotoUpload`,
+        entry: "src/handlers/api.public.photo.upload.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:PutItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [
+              // props.bucketUpload.bucketArn,
+              `${props.bucketUpload.bucketArn}/photo-upload/*`,
+              `${props.bucketUpload.bucketArn}/photo-zip-upload/*`,
+            ],
           }),
         ],
       }
