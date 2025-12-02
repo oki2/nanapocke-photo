@@ -35,7 +35,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const auth = await Auth.Signin(
     Setting.MAIN_REGION,
     Setting.NANAPOCKE_AUTHPOOL_ID,
-    Setting.NANAPOCKE_AUTHPOOL_PHOTOGRAPHER_CLIENT_ID,
+    Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
     `${data.facilityCode}@${data.userName}`,
     data.password
   );

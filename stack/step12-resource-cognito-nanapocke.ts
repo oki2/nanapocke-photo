@@ -100,7 +100,7 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
       params.NanapockeAuthPool.Name,
       {
         userPoolName: params.NanapockeAuthPool.Name,
-        signInCaseSensitive: false, // case insensitive is preferred in most situations
+        signInCaseSensitive: true, // case insensitive is preferred in most situations
         deletionProtection: true,
         selfSignUpEnabled: false, // ユーザー自身でサインアップ不可
         removalPolicy: cdk.RemovalPolicy.DESTROY, // ※あとで調整する
@@ -165,7 +165,7 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         generateSecret: false,
         authFlows: {
           custom: true, // カスタム認証を有効化
-          adminUserPassword: false, // AdminInitiateAuth 用を無効化
+          adminUserPassword: true, // AdminInitiateAuth 用を無効化
           userPassword: false, // USER_PASSWORD_AUTH フローを無効化
           userSrp: false, // SRP 認証も無効化
         },
@@ -173,22 +173,6 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         accessTokenValidity: cdk.Duration.minutes(30),
         refreshTokenValidity: cdk.Duration.days(30),
         preventUserExistenceErrors: true,
-      }
-    );
-
-    // ユーザープールのクライアント作成
-    this.NanapockeAuthPhotographerClient = new cognito.UserPoolClient(
-      this,
-      `${params.NanapockeAuthPool.Name}-Client-Photographer`,
-      {
-        userPool: this.NanapockeAuthPool,
-        userPoolClientName: "NanapockeAuthPhotographerClient",
-        authFlows: {
-          adminUserPassword: true, // AdminInitiateAuth 用を有効化
-          userPassword: false, // USER_PASSWORD_AUTH フローを無効化
-          userSrp: false, // SRP 認証も無効化
-        },
-        generateSecret: false,
       }
     );
   }

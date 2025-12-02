@@ -16,7 +16,7 @@ export const PublicRole = v.picklist([
 // フォトグラファーのアカウントNameの長さを固定で（小文字 + 数字の8文字固定長）
 export const AccountPhotographerId = v.pipe(
   v.string(),
-  v.regex(/^[a-z0-9]{8}$/)
+  v.regex(/^[a-zA-Z0-9]{8}$/)
 );
 
 // パスワードの長さ指定

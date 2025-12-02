@@ -12,9 +12,9 @@ POST https://{{customDomainName}}/api/auth/signin HTTP/1.1
 content-type: application/json
 
 {
-  "userName":"PHOTO004",
+  "userName":"Photo001",
   "password":"test1234",
-  "facilityCode":"T0001"
+  "facilityCode":"00001"
 }
 
 ### リフレッシュトークンでログイン
@@ -28,9 +28,9 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "PHOTO004",
+  "userCode": "Photo001",
   "password": "test1234",
-  "userName": "フォトグラファー4"
+  "userName": "フォトグラファー5"
 }
 
 ### フォトグラファー一覧取得

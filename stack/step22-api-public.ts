@@ -11,7 +11,6 @@ export interface Props extends cdk.StackProps {
   readonly Config: any;
   readonly NanapockeAuthPool: UserPool;
   readonly NanapockeAuthPoolClient: UserPoolClient;
-  readonly NanapockeAuthPhotographerClient: UserPoolClient;
   readonly MainTable: Table;
   readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
@@ -114,8 +113,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
-          NANAPOCKE_AUTHPOOL_PHOTOGRAPHER_CLIENT_ID:
-            props.NanapockeAuthPhotographerClient.userPoolClientId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
           TABLE_NAME_MAIN: props.MainTable.tableName,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
         },
@@ -163,8 +162,6 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
           NANAPOCKE_AUTHPOOL_CLIENT_ID:
             props.NanapockeAuthPoolClient.userPoolClientId,
-          NANAPOCKE_AUTHPOOL_PHOTOGRAPHER_CLIENT_ID:
-            props.NanapockeAuthPhotographerClient.userPoolClientId,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
         },
         initialPolicy: [
