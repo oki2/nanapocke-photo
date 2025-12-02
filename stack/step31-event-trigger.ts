@@ -42,8 +42,26 @@ export class Step31EventTriggerStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.X86_64,
         memorySize: 2048,
+        timeout: cdk.Duration.seconds(60),
         bundling: {
           nodeModules: ["sharp"], // sharp を nodeModules に明示的に指定
+          commandHooks: {
+            beforeBundling() {
+              return [];
+            },
+            beforeInstall() {
+              return [];
+            },
+            afterBundling(inputDir: string, outputDir: string): string[] {
+              // inputDir … package.json / lockfile があるディレクトリ（= project-root）
+              // outputDir … ビルド後の JS が入るディレクトリ
+
+              // project-root/lambda/watermark.png → outputDir/watermark.png にコピー
+              return [
+                `cp ${inputDir}/src/resource/watermark.png ${outputDir}/watermark.png`,
+              ];
+            },
+          },
         },
         environment: {
           ...defaultEnvironment,

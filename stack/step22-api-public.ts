@@ -251,7 +251,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     );
 
     // === アルバム関連 === //
-    // アルバム一の作成
+    // アルバムの作成
     this.lambdaFn.albumCreateFn = new NodejsFunction(
       this,
       "ApiPublicAlbumCreateFn",
@@ -270,7 +270,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:PutItem"],
+            actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
             resources: [props.MainTable.tableArn],
           }),
         ],
@@ -303,6 +303,32 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
+    // アルバムへ写真登録
+    this.lambdaFn.albumSetPhotoFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumSetPhotoFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumSetPhoto`,
+        description: `${functionPrefix}-ApiPublicAlbumSetPhoto`,
+        entry: "src/handlers/api.public.album.setPhoto.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:PutItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
     // === 写真関連 === //
     // 写真の作成・Upload用署名付きURL発行
     this.lambdaFn.photoUploadFn = new NodejsFunction(
@@ -324,7 +350,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:PutItem"],
+            actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
             resources: [props.MainTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -335,6 +361,32 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               `${props.bucketUpload.bucketArn}/photo-upload/*`,
               `${props.bucketUpload.bucketArn}/photo-zip-upload/*`,
             ],
+          }),
+        ],
+      }
+    );
+
+    // 写真一覧の取得
+    this.lambdaFn.photoListFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoListFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoList`,
+        description: `${functionPrefix}-ApiPublicPhotoList`,
+        entry: "src/handlers/api.public.photo.list.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.MainTable.tableArn],
           }),
         ],
       }

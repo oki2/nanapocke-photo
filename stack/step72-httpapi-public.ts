@@ -152,7 +152,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // フォトグラファー用ログイン
     this.httpApi.addRoutes({
-      path: "/api/photographer/auth/signin",
+      path: "/api/auth/signin",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AuthSigninIntegration",
@@ -174,7 +174,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // フォトグラファー 登録
     this.httpApi.addRoutes({
-      path: "/api/principal/photographer",
+      path: "/api/photographer",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "PhotographerCreateIntegration",
@@ -185,7 +185,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // フォトグラファー 一覧
     this.httpApi.addRoutes({
-      path: "/api/principal/photographer/list",
+      path: "/api/photographer/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PhotographerListIntegration",
@@ -197,7 +197,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // === アルバム関連 === //
     // アルバム作成
     this.httpApi.addRoutes({
-      path: "/api/principal/album",
+      path: "/api/album",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AlbumCreateIntegration",
@@ -208,11 +208,22 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // アルバム一覧
     this.httpApi.addRoutes({
-      path: "/api/principal/album/list",
+      path: "/api/album/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "AlbumListIntegration",
         props.lambdaFnPublic.albumListFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // アルバムへ写真登録
+    this.httpApi.addRoutes({
+      path: "/api/album/{albumId}/photo",
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: new HttpLambdaIntegration(
+        "AlbumSetPhotoIntegration",
+        props.lambdaFnPublic.albumSetPhotoFn
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -225,6 +236,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       integration: new HttpLambdaIntegration(
         "PhotoUploadIntegration",
         props.lambdaFnPublic.photoUploadFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // 写真一覧
+    this.httpApi.addRoutes({
+      path: "/api/photo/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PhotoListIntegration",
+        props.lambdaFnPublic.photoListFn
       ),
       authorizer: AuthorizerPrincipalVeify,
     });

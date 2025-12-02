@@ -6,6 +6,7 @@ import {
   CodeQueryParamsT,
   NanapockeAccessTokenResponse,
   NanapockeAccessTokenResponseT,
+  NanapockeUserInfoResponse,
   IdTokenPayload,
   IdTokenPayloadT,
 } from "../schemas/public.nanapocke.auth";
@@ -57,10 +58,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const nToken = parseOrThrow(NanapockeAccessTokenResponse, tmpObj ?? {});
 
   // === Step.3 ユーザー情報取得 =========== //
-  const userInfo = await GetUserInfo(
+  const userRes = await GetUserInfo(
     Setting.EXT_NANAPOCKE_API_URL_USER_INFO,
     nToken.access_token
   );
+  const userInfo = parseOrThrow(NanapockeUserInfoResponse, userRes ?? {});
   const roleName = ConvertRoleCdToName(userInfo.role_cd);
   console.log("userInfo", userInfo);
 

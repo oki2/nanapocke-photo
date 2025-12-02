@@ -37,8 +37,8 @@ Authorization: Bearer {{accessToken}}
 content-type: application/json
 
 {
-  "code": "T0001",
-  "name": "テスト保育園0001",
+  "code": "00001",
+  "name": "テスト保育園00001",
   "nbf": "2025-10-25T07:49:01Z",
   "exp": "2026-10-25T07:49:02Z"
 }

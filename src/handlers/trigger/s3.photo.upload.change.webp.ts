@@ -41,9 +41,10 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       .resize({
         width: 600,
         height: 600,
-        fit: "outside",
+        fit: "inside",
         withoutEnlargement: true,
       })
+      .composite([{input: "watermark.png", tile: true}])
       .toFormat("webp", {quality: 80})
       .toBuffer();
 

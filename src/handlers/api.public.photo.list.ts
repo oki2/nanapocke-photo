@@ -1,36 +1,34 @@
 import {Setting} from "../config";
 import * as http from "../http";
 
-import {AlbumListResponse, AlbumListResponseT} from "../schemas/album";
+import {PhotoListResponse, PhotoListResponseT} from "../schemas/photo";
 import {parseOrThrow} from "../libs/validate";
 
-import * as Album from "../utils/Dynamo/Album";
+import * as Photo from "../utils/Dynamo/Photo";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
   // データの取得
-  const data = await Album.list(authContext.facilityCode);
+  const data = await Photo.list(authContext.facilityCode);
   console.log("data", data);
 
-  const result: AlbumListResponseT = [];
+  const result: PhotoListResponseT = [];
 
   for (const item of data) {
     result.push({
-      albumId: item.albumId,
+      facilityCode: item.facilityCode,
+      photoId: item.photoId,
       seq: item.seq,
-      title: item.title,
-      description: item.description,
-      salesStatus: item.salesStatus,
-      priceTable: item.priceTable,
-      nbf: item.nbf,
-      exp: item.exp,
+      status: item.status,
+      tags: item.tags,
+      valueType: item.valueType,
+      shootingAt: item.shootingAt,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
     });
   }
 
-  const tmp = parseOrThrow(AlbumListResponse, result);
+  const tmp = parseOrThrow(PhotoListResponse, result);
   console.log("tmp", tmp);
   return http.ok(tmp);
 });

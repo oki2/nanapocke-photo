@@ -17,17 +17,22 @@ export async function create(
   const nowISO = new Date().toISOString();
   const photoId = crypto.randomUUID();
 
+  const seq = await nextSequence(facilityCode);
+  console.log("next seq", seq);
+
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
       TableName: Setting.TABLE_NAME_MAIN,
       Item: {
-        pk: `PHOTO#${facilityCode}`,
-        sk: `META#${photoId}`,
+        pk: `FAC#${facilityCode}#PHOTO#META`,
+        sk: photoId,
         facilityCode: facilityCode,
+        photoId: photoId,
         shootingAt: shootingAt,
         valueType: valueType,
         tags: tags,
+        seq: seq,
         status: Setting.PHOTO_STATUS.INACTIVE,
         createdAt: nowISO,
         createdBy: userId,
@@ -86,8 +91,8 @@ export async function setPhotoMeta(
   const command = new UpdateCommand({
     TableName: Setting.TABLE_NAME_MAIN,
     Key: {
-      pk: `PHOTO#${facilityCode}`,
-      sk: `META#${photoId}`,
+      pk: `FAC#${facilityCode}#PHOTO#META`,
+      sk: photoId,
     },
     UpdateExpression: `SET #status = :status, #width = :width, #height = :height, #updatedAt = :updatedAt`,
     ExpressionAttributeNames: {
@@ -115,24 +120,26 @@ export async function list(facilityCode: string): Promise<any> {
     TableName: Setting.TABLE_NAME_MAIN,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #title, #description, #priceTable, #nbf, #exp, #status, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #photoId, #seq, #facilityCode, #status, #tags, #valueType, #shootingAt, #width, #height, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
-      "#albumId": "albumId",
-      "#title": "title",
-      "#description": "description",
-      "#priceTable": "priceTable",
-      "#nbf": "nbf",
-      "#exp": "exp",
+      "#photoId": "photoId",
+      "#seq": "seq",
+      "#facilityCode": "facilityCode",
       "#status": "status",
+      "#tags": "tags",
+      "#valueType": "valueType",
+      "#shootingAt": "shootingAt",
+      "#width": "width",
+      "#height": "height",
       "#createdAt": "createdAt",
       "#createdBy": "createdBy",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `ALBUM#${facilityCode}`,
+      ":pk": `FAC#${facilityCode}#PHOTO#META`,
     },
   });
 
@@ -141,48 +148,33 @@ export async function list(facilityCode: string): Promise<any> {
   return result.Items;
 }
 
-export async function update(
-  facilityCode: string,
-  albumId: string,
-  userId: string,
-  name: string,
-  description: string,
-  nbf: string,
-  exp: string,
-  status: string
-): Promise<Record<string, any> | undefined> {
-  const nowISO = new Date().toISOString();
-
-  // コマンド生成
+/**
+ * Increment the sequence number for the given facility code.
+ * If the sequence number does not exist, it will be created with value 1.
+ * @param facilityCode The facility code to increment the sequence number for.
+ * @returns The updated sequence number.
+ */
+async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
     TableName: Setting.TABLE_NAME_MAIN,
     Key: {
-      pk: `ALBUM#${facilityCode}`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}#SEQ`,
+      sk: `PHOTO#COUNTER`,
     },
-    UpdateExpression: `SET #name = :name, #description = :description, #nbf = :nbf, #exp = :exp, #status = :status, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    // seq を 1 加算（存在しなければ 1 で作られる）
+    UpdateExpression: "ADD #seq :inc",
     ExpressionAttributeNames: {
-      "#name": "name",
-      "#description": "description",
-      "#nbf": "nbf",
-      "#exp": "exp",
-      "#status": "status",
-      "#updatedAt": "updatedAt",
-      "#updatedBy": "updatedBy",
+      "#seq": "seq",
     },
     ExpressionAttributeValues: {
-      ":name": name,
-      ":description": description,
-      ":nbf": nbf,
-      ":exp": exp,
-      ":status": status,
-      ":updatedAt": nowISO,
-      ":updatedBy": userId,
+      ":inc": 1,
     },
-    ReturnValues: "ALL_NEW",
+    ReturnValues: "UPDATED_NEW",
   });
 
   // コマンド実行
   const result = await docClient().send(command);
-  return result.Attributes;
+  const value = result.Attributes?.seq;
+  if (!value) throw new Error("seq not returned");
+  return value;
 }

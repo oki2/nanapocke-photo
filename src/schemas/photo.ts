@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import * as common from "./common";
+import * as nanapocke from "./common.nanapocke";
 import {created} from "../http";
 
 // アルバム新規作成時のリクエストボディ
@@ -21,3 +22,19 @@ export const PhotoUploadResponse = v.pipe(
   })
 );
 export type PhotoUploadResponseT = v.InferOutput<typeof PhotoUploadResponse>;
+
+export const PhotoListResponse = v.array(
+  v.pipe(
+    v.object({
+      facilityCode: nanapocke.FacilityCode,
+      photoId: common.AlbumId,
+      seq: v.number(),
+      status: v.pipe(v.string(), v.minLength(1)),
+      tags: v.optional(v.array(v.string())),
+      valueType: common.PhotoValueType,
+      shootingAt: common.ISODateTime,
+      createdAt: common.ISODateTime,
+    })
+  )
+);
+export type PhotoListResponseT = v.InferOutput<typeof PhotoListResponse>;

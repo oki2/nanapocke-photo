@@ -18,22 +18,24 @@ export async function create(
 ): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
   const albumId = crypto.randomUUID();
+  const seq = await nextSequence(facilityCode);
 
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
       TableName: Setting.TABLE_NAME_MAIN,
       Item: {
-        pk: `ALBUM#${facilityCode}`,
-        sk: `META#${albumId}`,
+        pk: `FAC#${facilityCode}#ALBUM#META`,
+        sk: albumId,
         facilityCode: facilityCode,
         albumId: albumId,
+        seq: seq,
         title: title,
         description: description,
         priceTable: priceTable,
         nbf: nbf,
         exp: exp,
-        status: Setting.STATUS.INACTIVE,
+        salesStatus: Setting.SALES_STATUS.STOPPED,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -54,24 +56,25 @@ export async function list(facilityCode: string): Promise<any> {
     TableName: Setting.TABLE_NAME_MAIN,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #title, #description, #priceTable, #nbf, #exp, #status, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #seq, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
       "#albumId": "albumId",
+      "#seq": "seq",
       "#title": "title",
       "#description": "description",
       "#priceTable": "priceTable",
       "#nbf": "nbf",
       "#exp": "exp",
-      "#status": "status",
+      "#salesStatus": "salesStatus",
       "#createdAt": "createdAt",
       "#createdBy": "createdBy",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `ALBUM#${facilityCode}`,
+      ":pk": `FAC#${facilityCode}#ALBUM#META`,
     },
   });
 
@@ -87,8 +90,7 @@ export async function update(
   name: string,
   description: string,
   nbf: string,
-  exp: string,
-  status: string
+  exp: string
 ): Promise<Record<string, any> | undefined> {
   const nowISO = new Date().toISOString();
 
@@ -96,16 +98,17 @@ export async function update(
   const command = new UpdateCommand({
     TableName: Setting.TABLE_NAME_MAIN,
     Key: {
-      pk: `ALBUM#${facilityCode}`,
+      pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
     },
-    UpdateExpression: `SET #name = :name, #description = :description, #nbf = :nbf, #exp = :exp, #status = :status, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #name = :name, #description = :description, #nbf = :nbf, #exp = :exp, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
       "#name": "name",
       "#description": "description",
       "#nbf": "nbf",
       "#exp": "exp",
-      "#status": "status",
+      "#salesStatus": "salesStatus",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
@@ -114,7 +117,7 @@ export async function update(
       ":description": description,
       ":nbf": nbf,
       ":exp": exp,
-      ":status": status,
+      ":salesStatus": Setting.SALES_STATUS.STOPPED,
       ":updatedAt": nowISO,
       ":updatedBy": userId,
     },
@@ -124,4 +127,58 @@ export async function update(
   // コマンド実行
   const result = await docClient().send(command);
   return result.Attributes;
+}
+
+export async function setPhoto(
+  facilityCode: string,
+  userId: string,
+  albumId: string,
+  photoId: string
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+
+  // コマンド実行
+  const result = await docClient().send(
+    new PutCommand({
+      TableName: Setting.TABLE_NAME_MAIN,
+      Item: {
+        pk: `FAC#${facilityCode}#ALBUM#PHOTO`,
+        sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
+        lsi1: photoId,
+        facilityCode: facilityCode,
+        albumId: albumId,
+        photoId: photoId,
+        createdAt: nowISO,
+        createdBy: userId,
+      },
+      // ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
+    })
+  );
+
+  return;
+}
+
+async function nextSequence(facilityCode: string): Promise<number> {
+  const command = new UpdateCommand({
+    TableName: Setting.TABLE_NAME_MAIN,
+    Key: {
+      pk: `FAC#${facilityCode}#SEQ`,
+      sk: `ALBUM#COUNTER`,
+    },
+    // seq を 1 加算（存在しなければ 1 で作られる）
+    UpdateExpression: "ADD #seq :inc",
+    ExpressionAttributeNames: {
+      "#seq": "seq",
+    },
+    ExpressionAttributeValues: {
+      ":inc": 1,
+    },
+    ReturnValues: "UPDATED_NEW",
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  const value = result.Attributes?.seq;
+  if (!value) throw new Error("seq not returned");
+  return value;
 }

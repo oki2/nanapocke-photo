@@ -36,3 +36,6 @@ export const PhotoValueType = v.picklist(["BASIC", "PREMIUM"]);
 export const PhotoUploadFileType = v.picklist(
   Object.values(Setting.UPLOAD_FILE_TYPE)
 );
+
+export const AlbumId = v.pipe(v.string(), v.minLength(1));
+export const PhotoId = v.pipe(v.string(), v.minLength(1));
