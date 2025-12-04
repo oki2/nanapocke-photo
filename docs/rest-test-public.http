@@ -3,8 +3,11 @@
 @accessToken = {{login.response.body.$.accessToken}}
 # @accessToken = eyJraWQiOiI5RHpLaWV1NEhuY0JqS0pxU25NRnIycmZcL0h0SURPQWU5ckF3Z0hTMmh0ST0iLCJhbGciOiJSUzI1NiJ9.eyJvcmlnaW5fanRpIjoiN2Y2OGYyOGYtNjJhZS00NDAwLWJhOGQtZGZkNDUyNzliNWMwIiwic3ViIjoiMDdmNDNhNTgtMzAxMS03MDY0LWNiNTQtYWY4NzQ1OGVhZmUzIiwiYXVkIjoiMzVpZWQ4NG9na2FoNm9sZzM3Z3IzYnMzdmwiLCJldmVudF9pZCI6ImY0MGU4ZTU4LTY2NWEtNGQ2Mi1iODQ3LTcwOTFlZjc1ZDYyZCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU1NjkyODQ3LCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuYXAtbm9ydGhlYXN0LTEuYW1hem9uYXdzLmNvbVwvYXAtbm9ydGhlYXN0LTFfUkx0WnBKMDZoIiwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTc1NTY5NjQ0NywiaWF0IjoxNzU1NjkyODQ3LCJqdGkiOiJkOTRlMWY3Yi0yZGQ2LTQ0YzAtYWY0Zi1iMTMzOWYwMjEyY2MifQ.Sna24kZWNNRKLLRWJACjWX3nHJDkqckXy1rOUy08TF6-xPM5P58sl9odTP1zLZJypz6zN6djT2N2jkQ1iJssHDN0qWvASPnflnlh5wj2ZxgYgqUHP5Xg7DwCzLPha54oFX2eU7jChdb1cf3eFf-RdTp8yapg1Xm8bBqjI1dhpUAo_WQV4U3OAPGSMDTLIlCjZBZnAP31hwRufuD0NEaSpj3W-KVVCqo6idPNnYhRhhtBOMWIIO9wBL1nDitRuX-joUoMfuGMty5z1t0eOQC0fICoT5eSuqk52d_3rXtpqmOYQbxKt1YBLTGFM7rnD_sW766kKWMXMomMwO6Y8VTx2g
 
-### Nanapocke 認証受け口
+### Nanapocke 認証受け口 : 園長
 GET https://{{customDomainName}}/auth/nanapocke?code=Ptest01 HTTP/1.1
+
+### Nanapocke 認証受け口 : 保護者
+GET https://{{customDomainName}}/auth/nanapocke?code=Gtest01 HTTP/1.1
 
 ### フォトグラファー Signin API
 # @name login
@@ -44,7 +47,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバム",
+  "title": "テストアルバム2",
   "description": "アルバムの説明",
   "priceTable": "BASIC"
 }

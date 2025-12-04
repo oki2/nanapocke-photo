@@ -294,7 +294,10 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query"],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
         ],
       }

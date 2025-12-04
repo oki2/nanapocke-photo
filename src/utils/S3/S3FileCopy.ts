@@ -1,4 +1,4 @@
-import { S3Client, CopyObjectCommand } from '@aws-sdk/client-s3';
+import {S3Client, CopyObjectCommand, StorageClass} from "@aws-sdk/client-s3";
 const s3Client = new S3Client({});
 
 /**
@@ -10,15 +10,24 @@ const s3Client = new S3Client({});
  * @param {string} toKey - The destination file key
  * @return {Promise<void>} Promise that resolves when the file is successfully copied
  */
-export async function S3FileCopy(fromBucket: string, fromKey: string, toBucket: string, toKey: string): Promise<void> {
+export async function S3FileCopy(
+  fromBucket: string,
+  fromKey: string,
+  toBucket: string,
+  toKey: string,
+  storageClass: StorageClass = StorageClass.STANDARD
+): Promise<void> {
   const response = await s3Client.send(
     new CopyObjectCommand({
       CopySource: `${fromBucket}/${fromKey}`,
       Bucket: toBucket,
       Key: toKey,
+      StorageClass: storageClass,
     })
   );
   if (response.$metadata.httpStatusCode != 200) {
-    throw new Error(`Copy Error s3://${fromBucket}/${fromKey} to s3://${toBucket}/${toKey}`);
+    throw new Error(
+      `Copy Error s3://${fromBucket}/${fromKey} to s3://${toBucket}/${toKey}`
+    );
   }
 }

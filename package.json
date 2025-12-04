@@ -36,6 +36,8 @@
     "aws-cdk-lib": "^2.220.0",
     "aws-jwt-verify": "^5.1.1",
     "constructs": "^10.0.0",
+    "date-fns": "^4.1.0",
+    "exifreader": "^4.32.0",
     "jsonwebtoken": "^9.0.2",
     "sharp": "^0.34.5",
     "valibot": "^1.1.0"

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {S3Client, PutObjectCommand, StorageClass} from "@aws-sdk/client-s3";
 const s3Client = new S3Client({});
 
 /**
@@ -9,13 +9,20 @@ const s3Client = new S3Client({});
  * @param {string | Buffer} body - The content of the file to upload.
  * @return {Promise<void>} A promise that resolves when the file is successfully uploaded.
  */
-export async function S3FilePut(bucket: string, key: string, body: string | Buffer, contentType: string | undefined = undefined): Promise<void> {
+export async function S3FilePut(
+  bucket: string,
+  key: string,
+  body: string | Buffer,
+  contentType: string | undefined = undefined,
+  storageClass: StorageClass = StorageClass.STANDARD
+): Promise<void> {
   const response = await s3Client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: body,
       ContentType: contentType,
+      StorageClass: storageClass,
     })
   );
 }

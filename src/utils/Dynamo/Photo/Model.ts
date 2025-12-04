@@ -7,6 +7,23 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import {Setting} from "./Setting";
 
+export async function get(
+  facilityCode: string,
+  photoId: string
+): Promise<Record<string, any> | undefined> {
+  const command = new GetCommand({
+    TableName: Setting.TABLE_NAME_MAIN,
+    Key: {
+      pk: `FAC#${facilityCode}#PHOTO#META`,
+      sk: photoId,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
+}
+
 export async function create(
   facilityCode: string,
   userId: string,

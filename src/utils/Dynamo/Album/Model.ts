@@ -27,6 +27,7 @@ export async function create(
       Item: {
         pk: `FAC#${facilityCode}#ALBUM#META`,
         sk: albumId,
+        lsi1: nowISO,
         facilityCode: facilityCode,
         albumId: albumId,
         seq: seq,
@@ -35,7 +36,7 @@ export async function create(
         priceTable: priceTable,
         nbf: nbf,
         exp: exp,
-        salesStatus: Setting.SALES_STATUS.STOPPED,
+        salesStatus: Setting.SALES_STATUS.COMING_SOON,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -54,6 +55,8 @@ export async function create(
 export async function list(facilityCode: string): Promise<any> {
   const command = new QueryCommand({
     TableName: Setting.TABLE_NAME_MAIN,
+    IndexName: "lsi1_index",
+    ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
       "#sk, #albumId, #seq, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",

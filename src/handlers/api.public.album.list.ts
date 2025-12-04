@@ -16,6 +16,12 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const result: AlbumListResponseT = [];
 
   for (const item of data) {
+    if (
+      item.salesStatus !== Album.Setting.SALES_STATUS.AVAILABLE &&
+      authContext.role === Setting.ROLE.GUARDIAN
+    ) {
+      continue;
+    }
     result.push({
       albumId: item.albumId,
       seq: item.seq,

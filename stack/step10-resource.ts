@@ -49,7 +49,7 @@ export class Step10ResourceStack extends cdk.Stack {
       }
     );
 
-    // ファイルアップロード用Bucket
+    // 写真用Bucket
     this.bucketPhoto = new Bucket(
       this,
       props.Config.S3.Bucket.Photo.BucketName,

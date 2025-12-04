@@ -1,12 +1,13 @@
-import {Setting} from "../../config";
-
+import {StorageClass} from "@aws-sdk/client-s3";
 import {EventBridgeHandler} from "aws-lambda";
-import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 
+import {Setting} from "../../config";
+import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 import * as Photo from "../../utils/Dynamo/Photo";
 
 import sharp from "sharp";
-import {ConfigurationSetTlsPolicy} from "aws-cdk-lib/aws-ses";
+import ExifReader from "exifreader";
+import {lightFormat} from "date-fns";
 
 interface Detail {
   bucketName: string;
@@ -30,11 +31,23 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     // 対象の画像をS3から取得
     const byteAry = await S3FileReadToByteArray(bucketName, keyPath);
 
-    // データを準備
-    const webpImg = sharp(byteAry);
-    const meta = await webpImg.metadata();
+    // 写真の情報を取得
+    const photo = await Photo.get(facilityCode, photoId);
+    const shootingAt: string = lightFormat(
+      new Date(photo?.shootingAt) ?? Date.now(),
+      "yyyy:MM:dd HH:mm:ss"
+    );
 
-    // webp へ変換 100px x 100px に縮小
+    // データを準備
+    const orgImg = sharp(byteAry);
+    const meta = await orgImg.metadata();
+    console.log("meta", meta.exif);
+    const DateTime = (await getDateTimeExif(byteAry)) ?? shootingAt;
+    console.log("DateTime", DateTime);
+
+    // ============================================================
+    // 1. webp へ変換 100px x 100px に縮小 =====
+    const webpImg = orgImg.clone();
     let webpBf: Buffer;
     webpBf = await webpImg
       .rotate()
@@ -48,7 +61,6 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       .toFormat("webp", {quality: 80})
       .toBuffer();
 
-    // 生成した画像を保存
     const webpKeyPath = `thumbnail/${facilityCode}/${userId}/${photoId}.webp`;
     await S3FilePut(
       Setting.BUCKET_PHOTO_NAME,
@@ -57,12 +69,115 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       "image/webp"
     );
 
-    // 画像をコピー
+    // ============================================================
+    // 2. DL用画像 =====
+    const Copyright = `nanapocke photo ${facilityCode}`;
+    const dlBf = await orgImg
+      .clone()
+      .rotate()
+      .jpeg({quality: 100, chromaSubsampling: "4:4:4"})
+      .toBuffer();
+
+    // Exifデータ埋め込み ===================
+    const allDate = {
+      DateCreated: DateTime,
+      DateTimeCreated: DateTime,
+      DateTimeOriginal: DateTime,
+      DateTimeDigitized: DateTime,
+      CreateDate: DateTime,
+    };
+    const ExifData = {
+      exif: {
+        IFD0: {Copyright, DateTime, ...allDate},
+        IFD1: {Copyright, DateTime, ...allDate},
+        IFD2: {Copyright, DateTime, ...allDate},
+        IFD3: {Copyright, DateTime, ...allDate},
+        IFD4: {Copyright, DateTime, ...allDate},
+      },
+    };
+    const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
+    await S3FilePut(
+      Setting.BUCKET_PHOTO_NAME,
+      `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-dl.jpg`,
+      finalBuffer,
+      "image/jpeg",
+      StorageClass.STANDARD_IA
+    );
+
+    // ============================================================
+    // 3. 印刷L画像 1051 x 1500 以上
+    if (
+      (meta.width >= 1051 && meta.height >= 1500) ||
+      (meta.width >= 1500 && meta.height >= 1051)
+    ) {
+      let width = 1051;
+      let height = 1500;
+      if (meta.width > meta.height) {
+        width = 1500;
+        height = 1051;
+      }
+      const plBf = await orgImg
+        .clone()
+        .rotate()
+        .resize({
+          width: width,
+          height: height,
+          fit: "outside",
+          withoutEnlargement: true,
+        })
+        .jpeg()
+        .toBuffer();
+
+      await S3FilePut(
+        Setting.BUCKET_PHOTO_NAME,
+        `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-printl.jpg`,
+        plBf,
+        "image/jpeg",
+        StorageClass.STANDARD_IA
+      );
+    }
+
+    // ============================================================
+    // 4. 印刷2L画像 1500 x 2102 以上
+    if (
+      (meta.width >= 2102 && meta.height >= 1500) ||
+      (meta.width >= 1500 && meta.height >= 2102)
+    ) {
+      let width = 1500;
+      let height = 2102;
+      if (meta.width > meta.height) {
+        width = 2102;
+        height = 1500;
+      }
+      const p2lBf = await orgImg
+        .clone()
+        .rotate()
+        .resize({
+          width: width,
+          height: height,
+          fit: "outside",
+          withoutEnlargement: true,
+        })
+        .jpeg()
+        .toBuffer();
+
+      await S3FilePut(
+        Setting.BUCKET_PHOTO_NAME,
+        `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-print2l.jpg`,
+        p2lBf,
+        "image/jpeg",
+        StorageClass.STANDARD_IA
+      );
+    }
+
+    // ============================================================
+    // 5. オリジナル画像をコピー
     await S3FileCopy(
       bucketName,
       keyPath,
       Setting.BUCKET_PHOTO_NAME,
-      `original/${facilityCode}/${userId}/${photoId}`
+      `original/${facilityCode}/${userId}/${photoId}`,
+      StorageClass.GLACIER_IR
     );
 
     // 画像変換完了したら、DynamoDBにデータ保存
@@ -71,3 +186,24 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     console.error(err);
   }
 };
+
+async function getDateTimeExif(
+  byteAry: Uint8Array<ArrayBufferLike>
+): Promise<string | undefined> {
+  try {
+    const buffer = byteAry.buffer.slice(
+      byteAry.byteOffset,
+      byteAry.byteOffset + byteAry.byteLength
+    );
+
+    const tags = ExifReader.load(buffer, {expanded: true});
+
+    return (
+      tags.exif?.DateTimeOriginal?.description ||
+      tags.exif?.DateTimeDigitized?.description ||
+      undefined
+    );
+  } catch (error) {
+    return undefined;
+  }
+}

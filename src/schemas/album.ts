@@ -1,6 +1,7 @@
 import * as v from "valibot";
 import * as common from "./common";
 import {created} from "../http";
+import {Setting} from "../utils/Dynamo/Album";
 
 // アルバム新規作成時のリクエストボディ
 export const AlbumCreateBody = v.pipe(
@@ -29,7 +30,7 @@ export const AlbumListResponse = v.array(
       seq: v.number(),
       title: v.pipe(v.string(), v.minLength(1)),
       description: v.pipe(v.string(), v.minLength(1)),
-      salesStatus: v.picklist(["AVAILABLE", "STOPPED"]),
+      salesStatus: v.picklist(Object.values(Setting.SALES_STATUS)),
       priceTable: common.PriceTable,
       nbf: v.optional(common.ISODateTime),
       exp: v.optional(common.ISODateTime),

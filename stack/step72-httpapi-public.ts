@@ -124,6 +124,49 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       }
     );
 
+    // Access Token : 認証済みユーザーを判定するオーソライザー
+    const AuthorizerUserVeifyFn = new NodejsFunction(
+      this,
+      "AuthorizerUserVeifyFn",
+      {
+        functionName: `${functionPrefix}-AuthorizerUserVeify`,
+        description: `${functionPrefix}-AuthorizerUserVeify`,
+        entry: "src/handlers/authorizer/user.veify.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      }
+    );
+    const AuthorizerUserVeify = new HttpLambdaAuthorizer(
+      "AuthorizerUserVeify",
+      AuthorizerUserVeifyFn,
+      {
+        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        identitySource: [
+          "$request.header.Authorization",
+          "$request.header.x-origin-verify-token",
+        ],
+        // 必要に応じてキャッシュを有効化
+        resultsCacheTtl: cdk.Duration.seconds(60),
+      }
+    );
+
     // ==========================================================
     // HTTP API の設定
     // ==========================================================
@@ -214,7 +257,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "AlbumListIntegration",
         props.lambdaFnPublic.albumListFn
       ),
-      authorizer: AuthorizerPrincipalVeify,
+      authorizer: AuthorizerUserVeify,
     });
 
     // アルバムへ写真登録
@@ -250,28 +293,6 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
-
-    // // ログイン
-    // this.httpApi.addRoutes({
-    //   path: "/api/console/auth/signin",
-    //   methods: [apigwv2.HttpMethod.POST],
-    //   integration: new HttpLambdaIntegration(
-    //     "SigninIntegration",
-    //     props.lambdaFnConsole.signinFn
-    //   ),
-    //   authorizer: AuthorizerVerifyTokenCheckOnly,
-    // });
-
-    // // チャレンジ（初回ログイン時等）
-    // this.httpApi.addRoutes({
-    //   path: "/api/console/auth/challenge",
-    //   methods: [apigwv2.HttpMethod.POST],
-    //   integration: new HttpLambdaIntegration(
-    //     "ChallengeIntegration",
-    //     props.lambdaFnConsole.challengeFn
-    //   ),
-    //   authorizer: AuthorizerVerifyTokenCheckOnly,
-    // });
 
     // ==========================================================
     // 後処理

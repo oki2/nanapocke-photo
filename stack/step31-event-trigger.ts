@@ -72,7 +72,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:UpdateItem"],
+            actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
             resources: [props.MainTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -86,6 +86,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
             resources: [
               `${props.bucketPhoto.bucketArn}/thumbnail/*`,
               `${props.bucketPhoto.bucketArn}/original/*`,
+              `${props.bucketPhoto.bucketArn}/storage/*`,
             ],
           }),
         ],
