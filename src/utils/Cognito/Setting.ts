@@ -1,7 +1,7 @@
-import {Setting as CommonSetting} from "../../config";
+import {AppConfig} from "../../config";
 
 export const Setting = {
-  ...CommonSetting,
+  ...AppConfig,
   SigninResults: {
     Success: "SUCCESS",
     Failure: "FAILURE",

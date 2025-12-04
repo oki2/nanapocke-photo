@@ -1,4 +1,3 @@
-import {Setting} from "../config";
 import * as http from "../http";
 
 import {PhotoListResponse, PhotoListResponseT} from "../schemas/photo";

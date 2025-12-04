@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 
 import {
@@ -23,9 +23,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("session", session);
 
   const auth = await Auth.Challenge(
-    Setting.MAIN_REGION,
-    Setting.PROVIDER_AUTHPOOL_ID,
-    Setting.PROVIDER_AUTHPOOL_CLIENT_ID,
+    AppConfig.MAIN_REGION,
+    AppConfig.PROVIDER_AUTHPOOL_ID,
+    AppConfig.PROVIDER_AUTHPOOL_CLIENT_ID,
     data.userName,
     data.password,
     session || ""

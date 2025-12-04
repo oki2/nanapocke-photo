@@ -1,7 +1,7 @@
 import {StorageClass} from "@aws-sdk/client-s3";
 import {EventBridgeHandler} from "aws-lambda";
 
-import {Setting} from "../../config";
+import {AppConfig} from "../../config";
 import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 import * as Photo from "../../utils/Dynamo/Photo";
 
@@ -63,7 +63,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     const webpKeyPath = `thumbnail/${facilityCode}/${userId}/${photoId}.webp`;
     await S3FilePut(
-      Setting.BUCKET_PHOTO_NAME,
+      AppConfig.BUCKET_PHOTO_NAME,
       webpKeyPath,
       webpBf,
       "image/webp"
@@ -97,7 +97,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     };
     const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
     await S3FilePut(
-      Setting.BUCKET_PHOTO_NAME,
+      AppConfig.BUCKET_PHOTO_NAME,
       `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-dl.jpg`,
       finalBuffer,
       "image/jpeg",
@@ -129,7 +129,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         .toBuffer();
 
       await S3FilePut(
-        Setting.BUCKET_PHOTO_NAME,
+        AppConfig.BUCKET_PHOTO_NAME,
         `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-printl.jpg`,
         plBf,
         "image/jpeg",
@@ -162,7 +162,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         .toBuffer();
 
       await S3FilePut(
-        Setting.BUCKET_PHOTO_NAME,
+        AppConfig.BUCKET_PHOTO_NAME,
         `storage/${facilityCode}/${userId}/${photoId}/${photo?.seq}-print2l.jpg`,
         p2lBf,
         "image/jpeg",
@@ -175,7 +175,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     await S3FileCopy(
       bucketName,
       keyPath,
-      Setting.BUCKET_PHOTO_NAME,
+      AppConfig.BUCKET_PHOTO_NAME,
       `original/${facilityCode}/${userId}/${photoId}`,
       StorageClass.GLACIER_IR
     );

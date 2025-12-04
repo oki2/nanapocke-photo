@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 import {
   AuthSigninBody,
@@ -18,9 +18,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(AuthSigninBody, raw);
 
   const auth = await Auth.Signin(
-    Setting.MAIN_REGION,
-    Setting.PROVIDER_AUTHPOOL_ID,
-    Setting.PROVIDER_AUTHPOOL_CLIENT_ID,
+    AppConfig.MAIN_REGION,
+    AppConfig.PROVIDER_AUTHPOOL_ID,
+    AppConfig.PROVIDER_AUTHPOOL_CLIENT_ID,
     data.userName,
     data.password
   );

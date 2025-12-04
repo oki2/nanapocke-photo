@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 
 import {
@@ -35,7 +35,7 @@ import * as User from "../utils/Dynamo/User";
 
 // Cognito Identity Provider
 const idp = new CognitoIdentityProviderClient({
-  region: Setting.MAIN_REGION,
+  region: AppConfig.MAIN_REGION,
 });
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
@@ -47,11 +47,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // === Step.2 アクセストークン取得 =========== //
   let tmpObj = await GetAccessToken(
-    Setting.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
-    Setting.EXT_NANAPOCKE_SETTING_CLIENTID,
-    Setting.EXT_NANAPOCKE_SETTING_CLIENTSECRET,
-    Setting.EXT_NANAPOCKE_SETTING_GRANTTYPE,
-    Setting.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT,
+    AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
+    AppConfig.EXT_NANAPOCKE_SETTING_CLIENTID,
+    AppConfig.EXT_NANAPOCKE_SETTING_CLIENTSECRET,
+    AppConfig.EXT_NANAPOCKE_SETTING_GRANTTYPE,
+    AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT,
     query.code
   );
   console.log("externalAccessToken", tmpObj);
@@ -59,7 +59,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // === Step.3 ユーザー情報取得 =========== //
   const userRes = await GetUserInfo(
-    Setting.EXT_NANAPOCKE_API_URL_USER_INFO,
+    AppConfig.EXT_NANAPOCKE_API_URL_USER_INFO,
     nToken.access_token
   );
   const userInfo = parseOrThrow(NanapockeUserInfoResponse, userRes ?? {});
@@ -80,8 +80,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.6 CUSTOM_AUTH 開始 =========== //
   const start = await idp.send(
     new AdminInitiateAuthCommand({
-      UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
-      ClientId: Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
+      UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
+      ClientId: AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
       AuthFlow: "CUSTOM_AUTH",
       AuthParameters: {USERNAME: userInfo.user_cd},
     })
@@ -90,8 +90,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.7 CUSTOM_AUTH チャレンジ応答 =========== //
   const finish = await idp.send(
     new AdminRespondToAuthChallengeCommand({
-      UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
-      ClientId: Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
+      UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
+      ClientId: AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
       ChallengeName: start.ChallengeName!,
       Session: start.Session,
       ChallengeResponses: {
@@ -140,7 +140,7 @@ async function ensureUserConfirmed(
     // UserPool 内に対象ユーザーが存在するかチェック
     await idp.send(
       new AdminGetUserCommand({
-        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
       })
     );
@@ -150,7 +150,7 @@ async function ensureUserConfirmed(
     // UserPool 内に対象ユーザーが存在しなければ作成
     await idp.send(
       new AdminCreateUserCommand({
-        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
         MessageAction: "SUPPRESS",
         UserAttributes: [
@@ -168,7 +168,7 @@ async function ensureUserConfirmed(
     // パスワードを登録して認証済みに設定（カスタム認証でも安定運用）
     await idp.send(
       new AdminSetUserPasswordCommand({
-        UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+        UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
         Password: crypto.randomUUID() + crypto.randomUUID(),
         Permanent: true,

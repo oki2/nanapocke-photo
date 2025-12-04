@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 
 // 日付型の指定 ISO世界標準時刻
 export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
@@ -7,10 +7,10 @@ export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
 // Admin 以外のロール
 export const PublicRole = v.picklist([
   // "Admin",
-  Setting.ROLE.PRINCIPAL,
-  Setting.ROLE.TEACHER,
-  Setting.ROLE.GUARDIAN,
-  Setting.ROLE.PHOTOGRAPHER,
+  AppConfig.ROLE.PRINCIPAL,
+  AppConfig.ROLE.TEACHER,
+  AppConfig.ROLE.GUARDIAN,
+  AppConfig.ROLE.PHOTOGRAPHER,
 ]);
 
 // フォトグラファーのアカウントNameの長さを固定で（小文字 + 数字の8文字固定長）
@@ -34,7 +34,7 @@ export const PhotoValueType = v.picklist(["BASIC", "PREMIUM"]);
 
 // 写真アップロード形式。画像 or zip
 export const PhotoUploadFileType = v.picklist(
-  Object.values(Setting.UPLOAD_FILE_TYPE)
+  Object.values(AppConfig.UPLOAD_FILE_TYPE)
 );
 
 export const AlbumId = v.pipe(v.string(), v.minLength(1));

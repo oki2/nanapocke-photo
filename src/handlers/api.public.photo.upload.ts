@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 import {
   PhotoUploadBody,
@@ -25,7 +25,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 1. DynamoDB にレコードを作成
   let uploadId = "";
   let prefix = "";
-  if (data.fileType === Setting.UPLOAD_FILE_TYPE.ZIP) {
+  if (data.fileType === AppConfig.UPLOAD_FILE_TYPE.ZIP) {
     uploadId = await Photo.createZip(
       authContext.facilityCode,
       authContext.userId,
@@ -33,7 +33,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       data.valueType,
       data.tags
     );
-    prefix = Setting.S3.PREFIX.PHOTO_ZIP_UPLOAD;
+    prefix = AppConfig.S3.PREFIX.PHOTO_ZIP_UPLOAD;
   } else {
     uploadId = await Photo.create(
       authContext.facilityCode,
@@ -42,14 +42,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       data.valueType,
       data.tags
     );
-    prefix = Setting.S3.PREFIX.PHOTO_UPLOAD;
+    prefix = AppConfig.S3.PREFIX.PHOTO_UPLOAD;
   }
 
   // 2. 署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
   const key = `${prefix}/${authContext.facilityCode}/${authContext.userId}/${uploadId}/${data.fileName}`;
-  const s3Client = new S3Client({region: Setting.MAIN_REGION});
+  const s3Client = new S3Client({region: AppConfig.MAIN_REGION});
   const s3Command = new PutObjectCommand({
-    Bucket: Setting.BUCKET_UPLOAD_NAME,
+    Bucket: AppConfig.BUCKET_UPLOAD_NAME,
     Key: key,
   });
   const preSignedUrl = await getSignedUrl(s3Client, s3Command, {

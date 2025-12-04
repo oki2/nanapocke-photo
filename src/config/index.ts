@@ -1,7 +1,7 @@
 import {defaults} from "./defaults";
 import {env} from "./env";
 
-export const Setting = {
+export const AppConfig = {
   ...defaults,
   ...env,
 };

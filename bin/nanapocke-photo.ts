@@ -19,7 +19,6 @@ import {Step72HttpApiPublicStack} from "../stack/step72-httpapi-public";
 import {Step81CertificateStack} from "../stack/step81-certificate";
 
 import {Step82CloudfrontStack} from "../stack/step82-cloudfront";
-import {Setting} from "../src/config";
 
 const app = new cdk.App();
 

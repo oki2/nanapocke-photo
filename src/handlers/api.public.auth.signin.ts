@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 import {
   AuthSigninBody,
@@ -33,9 +33,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // === Step.2 ログイン処理 =========== //
   const auth = await Auth.Signin(
-    Setting.MAIN_REGION,
-    Setting.NANAPOCKE_AUTHPOOL_ID,
-    Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
+    AppConfig.MAIN_REGION,
+    AppConfig.NANAPOCKE_AUTHPOOL_ID,
+    AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
     `${data.facilityCode}@${data.userName}`,
     data.password
   );
@@ -69,6 +69,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("result", result);
   return http.ok(parseOrThrow(SigninSuccess, result), {}, [
     `refreshToken=${auth.refreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
-    `userRole=${Setting.ROLE.PHOTOGRAPHER}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+    `userRole=${AppConfig.ROLE.PHOTOGRAPHER}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
   ]);
 });

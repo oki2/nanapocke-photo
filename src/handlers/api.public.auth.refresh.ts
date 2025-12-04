@@ -1,4 +1,4 @@
-import {Setting} from "../config";
+import {AppConfig} from "../config";
 import * as http from "../http";
 
 import {
@@ -26,9 +26,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // リフレッシュ
   const res = await Auth.Refresh(
-    Setting.MAIN_REGION,
-    Setting.NANAPOCKE_AUTHPOOL_ID,
-    Setting.NANAPOCKE_AUTHPOOL_CLIENT_ID,
+    AppConfig.MAIN_REGION,
+    AppConfig.NANAPOCKE_AUTHPOOL_ID,
+    AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
     cookie.refreshToken
   );
 
