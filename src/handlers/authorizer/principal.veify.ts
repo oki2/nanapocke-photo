@@ -1,5 +1,6 @@
 import {CognitoJwtVerifier} from "aws-jwt-verify";
 import {CloudFrontVerifyTokenCheck} from "../../utils/Authorizer";
+import {UserConfig} from "../../config";
 import * as User from "../../utils/Dynamo/User";
 
 const NANAPOCKE_AUTHPOOL_ID = process.env.NANAPOCKE_AUTHPOOL_ID || "";
@@ -40,7 +41,7 @@ export const handler = async (event: any = {}): Promise<any> => {
     console.log("userInfo", userInfo);
 
     // User の Role を確認、PRINCIPAL なら認可
-    if (userInfo.userRole === User.Setting.ROLE.PRINCIPAL) {
+    if (userInfo.userRole === UserConfig.ROLE.PRINCIPAL) {
       return {
         isAuthorized: true,
         context: {

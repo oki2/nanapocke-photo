@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, UserConfig} from "../config";
 import * as http from "../http";
 import {
   AuthSigninBody,
@@ -69,6 +69,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("result", result);
   return http.ok(parseOrThrow(SigninSuccess, result), {}, [
     `refreshToken=${auth.refreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
-    `userRole=${AppConfig.ROLE.PHOTOGRAPHER}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+    `userRole=${UserConfig.ROLE.PHOTOGRAPHER}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
   ]);
 });

@@ -5,7 +5,7 @@ import {
   GetCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {Setting} from "./Setting";
+import {FacilityConfig} from "../../../config";
 
 export async function create(
   code: string,
@@ -17,7 +17,7 @@ export async function create(
 
   // コマンド生成
   const command = new PutCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: FacilityConfig.TABLE_NAME,
     Item: {
       pk: "FACILITY",
       sk: code,
@@ -25,7 +25,7 @@ export async function create(
       name: name,
       nbf: nbf,
       exp: exp,
-      status: Setting.STATUS.ACTIVE,
+      status: FacilityConfig.STATUS.ACTIVE,
       createdAt: nowISO,
       updatedAt: nowISO,
     },
@@ -40,7 +40,7 @@ export async function create(
         name: name,
         nbf: nbf,
         exp: exp,
-        status: Setting.STATUS.ACTIVE,
+        status: FacilityConfig.STATUS.ACTIVE,
         createdAt: nowISO,
         updatedAt: nowISO,
       }
@@ -49,7 +49,7 @@ export async function create(
 
 export async function list(): Promise<any> {
   const command = new QueryCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: FacilityConfig.TABLE_NAME,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
       "#sk, #code, #name, #nbf, #exp, #status, #createdAt, #updatedAt",
@@ -116,7 +116,7 @@ export async function update(
 
   // コマンド生成
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: FacilityConfig.TABLE_NAME,
     Key: {
       pk: "FACILITY",
       sk: code,
@@ -136,7 +136,7 @@ export async function get(
   code: string
 ): Promise<Record<string, any> | undefined> {
   const command = new GetCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: FacilityConfig.TABLE_NAME,
     Key: {
       pk: "FACILITY",
       sk: code,

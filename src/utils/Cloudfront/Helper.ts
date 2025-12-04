@@ -1,6 +1,3 @@
-import {Setting} from "./Setting";
-// import * as AlbumModel from "./Model";
-
 import {
   getSignedCookies,
   getSignedUrl,
@@ -67,7 +64,7 @@ export function PutSignedUrl(
   });
 
   const keys = Object.keys(cookies) as cfSignedCookieKeys[];
-  const cookieAry = keys.map((key) => {
+  const cookieAry = keys.map((key: any) => {
     return `${key}=${cookies[key]}; Path=${targetPath}; Max-Age=${maxAge}; SameSite=strict; Secure; HttpOnly;`;
   });
 

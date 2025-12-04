@@ -7,12 +7,12 @@ import {
   UpdateCommand,
   TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {Setting} from "./Setting";
+import {UserConfig} from "../../../config";
 
 // ユーザー情報を取得する
 export async function get(userSub: string): Promise<any> {
   const command = new GetCommand({
-    TableName: Setting.TABLE_NAME_NANAPOCKE_USER,
+    TableName: UserConfig.TABLE_NAME,
     Key: {
       pk: "USER",
       sk: userSub,
@@ -37,7 +37,7 @@ export async function create(
   const nowISO = now ?? new Date().toISOString();
   await docClient().send(
     new PutCommand({
-      TableName: Setting.TABLE_NAME_NANAPOCKE_USER,
+      TableName: UserConfig.TABLE_NAME,
       Item: {
         pk: "USER",
         sk: userSub,
@@ -46,7 +46,7 @@ export async function create(
         userName: userName,
         userRole: userRole,
         facilityCode: facilityCode,
-        status: Setting.STATUS.ACTIVE,
+        status: UserConfig.STATUS.ACTIVE,
         createdAt: nowISO,
         updatedAt: nowISO,
         ...options,
@@ -65,7 +65,7 @@ export async function updateLastLoginAt(
   const nowISO = now ?? new Date().toISOString();
   return await docClient().send(
     new UpdateCommand({
-      TableName: Setting.TABLE_NAME_NANAPOCKE_USER,
+      TableName: UserConfig.TABLE_NAME,
       Key: {
         pk: "USER",
         sk: userSub,
@@ -94,7 +94,7 @@ export async function updateUserName(
   const nowISO = now ?? new Date().toISOString();
   await docClient().send(
     new UpdateCommand({
-      TableName: Setting.TABLE_NAME_NANAPOCKE_USER,
+      TableName: UserConfig.TABLE_NAME,
       Key: {
         pk: "USER",
         sk: userSub,
@@ -114,7 +114,7 @@ export async function updateUserName(
 
 export async function photographerList(facilityCode: string): Promise<any> {
   const command = new QueryCommand({
-    TableName: Setting.TABLE_NAME_NANAPOCKE_USER,
+    TableName: UserConfig.TABLE_NAME,
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk AND #lsi1 = :lsi1",
     ProjectionExpression:
@@ -133,7 +133,7 @@ export async function photographerList(facilityCode: string): Promise<any> {
     },
     ExpressionAttributeValues: {
       ":pk": "USER",
-      ":lsi1": `${facilityCode}#${Setting.ROLE.PHOTOGRAPHER}`,
+      ":lsi1": `${facilityCode}#${UserConfig.ROLE.PHOTOGRAPHER}`,
     },
   });
 

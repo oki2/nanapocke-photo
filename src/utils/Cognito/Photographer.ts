@@ -2,7 +2,7 @@
  * ユーザー登録
  */
 import {NotFoundError} from "../../errors/NotFoundError";
-import {Setting} from "./Setting";
+import {AppConfig, UserConfig, CognitoConfig} from "../../config";
 import {
   CognitoIdentityProviderClient,
   AdminCreateUserCommand,
@@ -16,13 +16,13 @@ export async function create(
   facilityCode: string
 ): Promise<string> {
   const idp = new CognitoIdentityProviderClient({
-    region: Setting.MAIN_REGION,
+    region: AppConfig.MAIN_REGION,
   });
 
   console.log("create user", userName, password, facilityCode);
   await idp.send(
     new AdminCreateUserCommand({
-      UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+      UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
       Username: `${facilityCode}@${userName}`,
       MessageAction: "SUPPRESS",
       UserAttributes: [
@@ -32,7 +32,7 @@ export async function create(
         },
         {
           Name: "custom:role",
-          Value: Setting.ROLE.PHOTOGRAPHER,
+          Value: UserConfig.ROLE.PHOTOGRAPHER,
         },
       ],
     })
@@ -46,7 +46,7 @@ export async function create(
       console.log(`set password count : ${i} : ${facilityCode}@${userName}`);
       await idp.send(
         new AdminSetUserPasswordCommand({
-          UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+          UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
           Username: `${facilityCode}@${userName}`,
           Password: password,
           Permanent: true,
@@ -72,7 +72,7 @@ export async function create(
     try {
       const user = await idp.send(
         new AdminGetUserCommand({
-          UserPoolId: Setting.NANAPOCKE_AUTHPOOL_ID,
+          UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
           Username: `${facilityCode}@${userName}`,
         })
       );

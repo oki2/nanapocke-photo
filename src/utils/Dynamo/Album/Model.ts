@@ -5,7 +5,7 @@ import {
   GetCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {Setting} from "./Setting";
+import {AlbumConfig} from "../../../config";
 
 export async function create(
   facilityCode: string,
@@ -23,7 +23,7 @@ export async function create(
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
-      TableName: Setting.TABLE_NAME_MAIN,
+      TableName: AlbumConfig.TABLE_NAME,
       Item: {
         pk: `FAC#${facilityCode}#ALBUM#META`,
         sk: albumId,
@@ -36,7 +36,7 @@ export async function create(
         priceTable: priceTable,
         nbf: nbf,
         exp: exp,
-        salesStatus: Setting.SALES_STATUS.COMING_SOON,
+        salesStatus: AlbumConfig.SALES_STATUS.COMING_SOON,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -54,7 +54,7 @@ export async function create(
 
 export async function list(facilityCode: string): Promise<any> {
   const command = new QueryCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: AlbumConfig.TABLE_NAME,
     IndexName: "lsi1_index",
     ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
@@ -99,7 +99,7 @@ export async function update(
 
   // コマンド生成
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: AlbumConfig.TABLE_NAME,
     Key: {
       pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
@@ -120,7 +120,7 @@ export async function update(
       ":description": description,
       ":nbf": nbf,
       ":exp": exp,
-      ":salesStatus": Setting.SALES_STATUS.STOPPED,
+      ":salesStatus": AlbumConfig.SALES_STATUS.STOPPED,
       ":updatedAt": nowISO,
       ":updatedBy": userId,
     },
@@ -143,7 +143,7 @@ export async function setPhoto(
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
-      TableName: Setting.TABLE_NAME_MAIN,
+      TableName: AlbumConfig.TABLE_NAME,
       Item: {
         pk: `FAC#${facilityCode}#ALBUM#PHOTO`,
         sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
@@ -163,7 +163,7 @@ export async function setPhoto(
 
 async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: AlbumConfig.TABLE_NAME,
     Key: {
       pk: `FAC#${facilityCode}#SEQ`,
       sk: `ALBUM#COUNTER`,

@@ -1,10 +1,4 @@
 export const defaults = {
-  ROLE: {
-    PRINCIPAL: "PRINCIPAL",
-    TEACHER: "TEACHER",
-    GUARDIAN: "GUARDIAN",
-    PHOTOGRAPHER: "PHOTOGRAPHER",
-  },
   S3: {
     PREFIX: {
       PHOTO_UPLOAD: "photo-upload",

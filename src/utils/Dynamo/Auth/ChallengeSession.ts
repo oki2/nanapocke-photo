@@ -5,21 +5,21 @@ import {
   // GetCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {Setting} from "./Setting";
+import {AuthConfig} from "../../../config";
 import * as crypto from "crypto";
 
 export async function put(session: string): Promise<string | undefined> {
   const flowId = crypto
-    .randomBytes(Setting.FLOW_ID_LENGTH)
+    .randomBytes(AuthConfig.FLOW_ID_LENGTH)
     .toString("base64url");
   const now = new Date();
   const createdAt = now.toISOString();
   const ttl =
-    Math.floor(now.getTime() / 1000) + Setting.CHALLENGE_SESSION_EXPIRATION; // ミリ秒から秒に変換し、10分後まで有効とする
+    Math.floor(now.getTime() / 1000) + AuthConfig.CHALLENGE_SESSION_EXPIRATION; // ミリ秒から秒に変換し、10分後まで有効とする
 
   // コマンド生成
   const command = new PutCommand({
-    TableName: Setting.TABLE_NAME_AUTHFLOW,
+    TableName: AuthConfig.TABLE_NAME,
     Item: {
       pk: "CHALLENGE#SESSION",
       sk: flowId,
@@ -39,7 +39,7 @@ export async function get(flowId: string): Promise<string | undefined> {
   const now = new Date();
 
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_AUTHFLOW,
+    TableName: AuthConfig.TABLE_NAME,
     Key: {
       pk: "CHALLENGE#SESSION",
       sk: flowId,

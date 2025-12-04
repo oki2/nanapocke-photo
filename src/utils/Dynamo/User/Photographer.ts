@@ -1,4 +1,4 @@
-import {Setting} from "./Setting";
+import {UserConfig} from "../../../config";
 import * as UserModel from "./Model";
 
 export async function create(
@@ -14,7 +14,7 @@ export async function create(
     userSub,
     userCode,
     userName,
-    Setting.ROLE.PHOTOGRAPHER,
+    UserConfig.ROLE.PHOTOGRAPHER,
     facilityCode,
     {nbf: nbf, exp: exp, createdBy: createdBy}
   );
@@ -39,5 +39,5 @@ export const isActive = async (userSub: string): Promise<boolean> => {
   }
 
   // 状態がINACTIVEの場合はfalse
-  return user.status === Setting.STATUS.ACTIVE;
+  return user.status === UserConfig.STATUS.ACTIVE;
 };

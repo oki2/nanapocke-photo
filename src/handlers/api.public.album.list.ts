@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AlbumConfig, UserConfig} from "../config";
 import * as http from "../http";
 
 import {AlbumListResponse, AlbumListResponseT} from "../schemas/album";
@@ -17,8 +17,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   for (const item of data) {
     if (
-      item.salesStatus !== Album.Setting.SALES_STATUS.AVAILABLE &&
-      authContext.role === AppConfig.ROLE.GUARDIAN
+      item.salesStatus !== AlbumConfig.SALES_STATUS.AVAILABLE &&
+      authContext.role === UserConfig.ROLE.GUARDIAN
     ) {
       continue;
     }

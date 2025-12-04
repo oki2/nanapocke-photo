@@ -1,0 +1,11 @@
+export const TABLE_NAME = process.env.TABLE_NAME_NANAPOCKE_USER || "";
+export const ROLE = {
+  PRINCIPAL: "PRINCIPAL",
+  TEACHER: "TEACHER",
+  GUARDIAN: "GUARDIAN",
+  PHOTOGRAPHER: "PHOTOGRAPHER",
+};
+export const STATUS = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+};

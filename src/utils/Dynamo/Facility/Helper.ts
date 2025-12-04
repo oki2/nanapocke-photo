@@ -1,4 +1,4 @@
-import {Setting} from "./Setting";
+import {FacilityConfig} from "../../../config";
 import * as FacilityModel from "./Model";
 
 export const isActive = async (code: string): Promise<boolean> => {
@@ -11,5 +11,5 @@ export const isActive = async (code: string): Promise<boolean> => {
     return false;
   }
 
-  return facility?.status === Setting.STATUS.ACTIVE;
+  return facility?.status === FacilityConfig.STATUS.ACTIVE;
 };

@@ -1,2 +1,2 @@
+// export {AuthConfig} from "../../../config";
 export * from "./ChallengeSession";
-export * from "./Setting";

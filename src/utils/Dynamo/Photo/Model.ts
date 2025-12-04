@@ -5,14 +5,14 @@ import {
   GetCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {Setting} from "./Setting";
+import {PhotoConfig} from "../../../config";
 
 export async function get(
   facilityCode: string,
   photoId: string
 ): Promise<Record<string, any> | undefined> {
   const command = new GetCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: PhotoConfig.TABLE_NAME,
     Key: {
       pk: `FAC#${facilityCode}#PHOTO#META`,
       sk: photoId,
@@ -40,7 +40,7 @@ export async function create(
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
-      TableName: Setting.TABLE_NAME_MAIN,
+      TableName: PhotoConfig.TABLE_NAME,
       Item: {
         pk: `FAC#${facilityCode}#PHOTO#META`,
         sk: photoId,
@@ -50,7 +50,7 @@ export async function create(
         valueType: valueType,
         tags: tags,
         seq: seq,
-        status: Setting.PHOTO_STATUS.INACTIVE,
+        status: PhotoConfig.PHOTO_STATUS.INACTIVE,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -76,7 +76,7 @@ export async function createZip(
   // コマンド実行
   const result = await docClient().send(
     new PutCommand({
-      TableName: Setting.TABLE_NAME_MAIN,
+      TableName: PhotoConfig.TABLE_NAME,
       Item: {
         pk: `PHOTOZIP#${facilityCode}`,
         sk: `META#${photoId}`,
@@ -84,7 +84,7 @@ export async function createZip(
         shootingAt: shootingAt,
         valueType: valueType,
         tags: tags,
-        status: Setting.PHOTO_STATUS.INACTIVE,
+        status: PhotoConfig.PHOTO_STATUS.INACTIVE,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -106,7 +106,7 @@ export async function setPhotoMeta(
   // コマンド生成
   const nowISO = new Date().toISOString();
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: PhotoConfig.TABLE_NAME,
     Key: {
       pk: `FAC#${facilityCode}#PHOTO#META`,
       sk: photoId,
@@ -119,7 +119,7 @@ export async function setPhotoMeta(
       "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
-      ":status": Setting.PHOTO_STATUS.INACTIVE,
+      ":status": PhotoConfig.PHOTO_STATUS.INACTIVE,
       ":width": width,
       ":height": height,
       ":updatedAt": nowISO,
@@ -134,7 +134,7 @@ export async function setPhotoMeta(
 
 export async function list(facilityCode: string): Promise<any> {
   const command = new QueryCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: PhotoConfig.TABLE_NAME,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
       "#sk, #photoId, #seq, #facilityCode, #status, #tags, #valueType, #shootingAt, #width, #height, #createdAt, #createdBy, #updatedAt, #updatedBy",
@@ -173,7 +173,7 @@ export async function list(facilityCode: string): Promise<any> {
  */
 async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
-    TableName: Setting.TABLE_NAME_MAIN,
+    TableName: PhotoConfig.TABLE_NAME,
     Key: {
       pk: `FAC#${facilityCode}#SEQ`,
       sk: `PHOTO#COUNTER`,

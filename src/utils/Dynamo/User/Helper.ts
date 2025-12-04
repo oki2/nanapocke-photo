@@ -1,4 +1,3 @@
-import {Setting} from "./Setting";
 import * as UserModel from "./Model";
 
 export async function signinNanapockeAuth(

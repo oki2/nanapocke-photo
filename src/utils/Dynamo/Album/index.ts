@@ -1,3 +1,3 @@
-export * from "./Setting";
+// export * from "../../../config/Album";
 export * from "./Model";
 export * from "./Helper";

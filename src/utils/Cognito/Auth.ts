@@ -2,7 +2,7 @@
  * 認証系モジュール
  */
 import {NotFoundError} from "../../errors/NotFoundError";
-import {Setting} from "./Setting";
+import {CognitoConfig} from "../../config";
 import {
   CognitoIdentityProviderClient,
   AuthFlowType,
@@ -53,9 +53,9 @@ export async function Signin(
     result.AuthenticationResult.RefreshToken == undefined
   ) {
     // 仮登録の場合はパスワード強制変更へ遷移させる為の情報を返却する
-    if (result.ChallengeName == Setting.SigninResults.Challenge) {
+    if (result.ChallengeName == CognitoConfig.SigninResults.Challenge) {
       return {
-        result: Setting.SigninResults.Challenge,
+        result: CognitoConfig.SigninResults.Challenge,
         challenge: result.ChallengeName,
         session: result.Session,
       };
@@ -65,7 +65,7 @@ export async function Signin(
   }
 
   return {
-    result: Setting.SigninResults.Success,
+    result: CognitoConfig.SigninResults.Success,
     idToken: result.AuthenticationResult.IdToken,
     refreshToken: result.AuthenticationResult.RefreshToken,
     accessToken: result.AuthenticationResult.AccessToken,
@@ -141,7 +141,7 @@ export async function Refresh(
   }
 
   return {
-    result: Setting.SigninResults.Success,
+    result: CognitoConfig.SigninResults.Success,
     idToken: result.AuthenticationResult.IdToken,
     accessToken: result.AuthenticationResult.AccessToken,
   };

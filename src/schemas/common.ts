@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import {AppConfig} from "../config";
+import {AppConfig, UserConfig} from "../config";
 
 // 日付型の指定 ISO世界標準時刻
 export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
@@ -7,10 +7,10 @@ export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
 // Admin 以外のロール
 export const PublicRole = v.picklist([
   // "Admin",
-  AppConfig.ROLE.PRINCIPAL,
-  AppConfig.ROLE.TEACHER,
-  AppConfig.ROLE.GUARDIAN,
-  AppConfig.ROLE.PHOTOGRAPHER,
+  UserConfig.ROLE.PRINCIPAL,
+  UserConfig.ROLE.TEACHER,
+  UserConfig.ROLE.GUARDIAN,
+  UserConfig.ROLE.PHOTOGRAPHER,
 ]);
 
 // フォトグラファーのアカウントNameの長さを固定で（小文字 + 数字の8文字固定長）
