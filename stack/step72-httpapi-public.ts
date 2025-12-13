@@ -215,9 +215,12 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPublicVerifyToken,
     });
 
+    // ==========================================================
+    // フォトグラファー管理関連
+    // ==========================================================
     // フォトグラファー 登録
     this.httpApi.addRoutes({
-      path: "/api/photographer",
+      path: "/api/facility/{facilityCode}/photographer",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "PhotographerCreateIntegration",
@@ -228,7 +231,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // フォトグラファー 一覧
     this.httpApi.addRoutes({
-      path: "/api/photographer/list",
+      path: "/api/facility/{facilityCode}/photographer/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PhotographerListIntegration",
@@ -240,7 +243,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // === アルバム関連 === //
     // アルバム作成
     this.httpApi.addRoutes({
-      path: "/api/album",
+      path: "/api/facility/{facilityCode}/album",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AlbumCreateIntegration",
@@ -251,7 +254,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // アルバム一覧
     this.httpApi.addRoutes({
-      path: "/api/album/list",
+      path: "/api/facility/{facilityCode}/album/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "AlbumListIntegration",
@@ -262,7 +265,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // アルバムへ写真登録
     this.httpApi.addRoutes({
-      path: "/api/album/{albumId}/photo",
+      path: "/api/facility/{facilityCode}/album/{albumId}/photo",
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "AlbumSetPhotoIntegration",
@@ -274,7 +277,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // === 写真関連 === //
     // 写真の作成・Upload用署名付きURL発行
     this.httpApi.addRoutes({
-      path: "/api/photo",
+      path: "/api/facility/{facilityCode}/photo",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "PhotoUploadIntegration",
@@ -285,7 +288,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // 写真一覧
     this.httpApi.addRoutes({
-      path: "/api/photo/list",
+      path: "/api/facility/{facilityCode}/photo/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PhotoListIntegration",

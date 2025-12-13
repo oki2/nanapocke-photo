@@ -1,4 +1,4 @@
-import {AppConfig, UserConfig} from "../config";
+import {AppConfig, UserConfig, CognitoConfig} from "../config";
 import * as http from "../http";
 import {
   AuthSigninBody,
@@ -40,7 +40,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.password
   );
   // ログイン成功以外は全てエラーとする
-  if (auth.result !== Auth.Setting.SigninResults.Success) {
+  if (auth.result !== CognitoConfig.SigninResults.Success) {
     console.log("signin error", auth);
     return http.unauthorized();
   }

@@ -101,7 +101,8 @@ export async function setPhotoMeta(
   facilityCode: string,
   photoId: string,
   width: number,
-  height: number
+  height: number,
+  shootingAt: string
 ): Promise<Record<string, any> | undefined> {
   // コマンド生成
   const nowISO = new Date().toISOString();
@@ -111,17 +112,19 @@ export async function setPhotoMeta(
       pk: `FAC#${facilityCode}#PHOTO#META`,
       sk: photoId,
     },
-    UpdateExpression: `SET #status = :status, #width = :width, #height = :height, #updatedAt = :updatedAt`,
+    UpdateExpression: `SET #status = :status, #width = :width, #height = :height, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
     ExpressionAttributeNames: {
       "#status": "status",
       "#width": "width",
       "#height": "height",
+      "#shootingAt": "shootingAt",
       "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
       ":status": PhotoConfig.PHOTO_STATUS.INACTIVE,
       ":width": width,
       ":height": height,
+      ":shootingAt": shootingAt,
       ":updatedAt": nowISO,
     },
     ReturnValues: "ALL_NEW",

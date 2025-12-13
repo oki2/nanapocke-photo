@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, CognitoConfig} from "../config";
 import * as http from "../http";
 import {
   AuthSigninBody,
@@ -27,7 +27,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   switch (auth.result) {
     // Success
-    case Auth.Setting.SigninResults.Success: {
+    case CognitoConfig.SigninResults.Success: {
       console.log("SUCCESS");
       const result: SigninResponseT = {
         state: "success",
@@ -40,7 +40,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     }
 
     // Challenge
-    case Auth.Setting.SigninResults.Challenge: {
+    case CognitoConfig.SigninResults.Challenge: {
       console.log("NEW_PASSWORD_REQUIRED");
       const flowId = await ChallengeSession.put(auth.session || "");
       const result: SigninResponseT = {
@@ -52,7 +52,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     }
 
     // Failure
-    case Auth.Setting.SigninResults.Failure:
+    case CognitoConfig.SigninResults.Failure:
     default:
       console.log("FAILURE");
       return http.badRequest({message: auth.message ?? "Error"});

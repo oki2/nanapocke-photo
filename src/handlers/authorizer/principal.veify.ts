@@ -8,13 +8,19 @@ const NANAPOCKE_AUTHPOOL_CLIENT_ID =
   process.env.NANAPOCKE_AUTHPOOL_CLIENT_ID || "";
 
 export const handler = async (event: any = {}): Promise<any> => {
+  console.log("event : ", event);
   // CloudFrontのVerify Token チェック
   if (CloudFrontVerifyTokenCheck(event) === false) {
     console.log("Unauthorized : x-origin-verify-token");
     return {isAuthorized: false};
   }
 
-  console.log("event.headers : ", event.headers);
+  // パスパラメータの施設コード
+  const facilityCode = event.pathParameters.facilityCode;
+  if (facilityCode == undefined) {
+    console.log("Unauthorized : facilityCode");
+    return {isAuthorized: false};
+  }
 
   const [bearer, token] = event.headers.authorization.split(" ");
   if (bearer !== "Bearer") {
@@ -37,8 +43,14 @@ export const handler = async (event: any = {}): Promise<any> => {
     const payload = await verifier.verify(token);
     console.log("Token is valid. Payload:", payload);
 
+    // ユーザー情報を取得
     const userInfo = await User.get(payload.sub);
     console.log("userInfo", userInfo);
+
+    // Facility Code を確認
+    if (userInfo.facilityCode != facilityCode) {
+      return {isAuthorized: false};
+    }
 
     // User の Role を確認、PRINCIPAL なら認可
     if (userInfo.userRole === UserConfig.ROLE.PRINCIPAL) {

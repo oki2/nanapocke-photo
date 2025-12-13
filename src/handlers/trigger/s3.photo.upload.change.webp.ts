@@ -33,17 +33,33 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     // 写真の情報を取得
     const photo = await Photo.get(facilityCode, photoId);
-    const shootingAt: string = lightFormat(
-      new Date(photo?.shootingAt) ?? Date.now(),
-      "yyyy:MM:dd HH:mm:ss"
-    );
+
+    // 撮影日時をDBから取得（タイムゾーンはUTC）
+    const tmpShootingDate = new Date(photo?.shootingAt ?? Date.now());
+    // Exif に書き込む日時を計算（タイムゾーンはJST）
+    tmpShootingDate.setHours(tmpShootingDate.getHours() + 9);
 
     // データを準備
     const orgImg = sharp(byteAry);
     const meta = await orgImg.metadata();
     console.log("meta", meta.exif);
-    const DateTime = (await getDateTimeExif(byteAry)) ?? shootingAt;
+
+    // 写真の撮影日時を取得、無い場合は指定した撮影日時を使用
+    const DateTime =
+      (await getDateTimeExif(byteAry)) ??
+      lightFormat(tmpShootingDate, "yyyy:MM:dd HH:mm:ss");
     console.log("DateTime", DateTime);
+
+    // 撮影日時をDate型に変換
+    const shootingAt = new Date(
+      DateTime.replace(
+        /^(\d{4}):(\d{2}):(\d{2}) (\d{2}:\d{2}:\d{2})$/,
+        "$1-$2-$3T$4"
+      )
+    );
+    // UTCに変換
+    shootingAt.setHours(shootingAt.getHours() - 9);
+    console.log("shootingAt", shootingAt);
 
     // ============================================================
     // 1. webp へ変換 100px x 100px に縮小 =====
@@ -181,7 +197,13 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     );
 
     // 画像変換完了したら、DynamoDBにデータ保存
-    await Photo.setPhotoMeta(facilityCode, photoId, meta.width, meta.height);
+    await Photo.setPhotoMeta(
+      facilityCode,
+      photoId,
+      meta.width,
+      meta.height,
+      shootingAt.toISOString()
+    );
   } catch (err) {
     console.error(err);
   }
