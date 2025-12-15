@@ -10,12 +10,12 @@ import {
 import {UserConfig} from "../../../config";
 
 // ユーザー情報を取得する
-export async function get(userSub: string): Promise<any> {
+export async function get(userId: string): Promise<any> {
   const command = new GetCommand({
     TableName: UserConfig.TABLE_NAME,
     Key: {
       pk: "USER",
-      sk: userSub,
+      sk: userId,
     },
   });
 
@@ -26,7 +26,7 @@ export async function get(userSub: string): Promise<any> {
 
 // ユーザー情報を登録する
 export async function create(
-  userSub: string,
+  userId: string,
   userCode: string,
   userName: string,
   userRole: string,
@@ -40,7 +40,7 @@ export async function create(
       TableName: UserConfig.TABLE_NAME,
       Item: {
         pk: "USER",
-        sk: userSub,
+        sk: userId,
         lsi1: `${facilityCode}#${userRole}`,
         userCode: userCode,
         userName: userName,
@@ -58,7 +58,7 @@ export async function create(
 
 // 最終ログイン日時の更新
 export async function updateLastLoginAt(
-  userSub: string,
+  userId: string,
   userCode: string,
   now?: string
 ): Promise<Record<string, any>> {
@@ -68,7 +68,7 @@ export async function updateLastLoginAt(
       TableName: UserConfig.TABLE_NAME,
       Key: {
         pk: "USER",
-        sk: userSub,
+        sk: userId,
       },
       UpdateExpression: "set #lastLoginAt = :lastLoginAt",
       ConditionExpression: "#userCode = :userCode", // レコードが存在しない場合は登録しないように、必要な項目を指定する
@@ -87,7 +87,7 @@ export async function updateLastLoginAt(
 
 // ユーザー名の更新
 export async function updateUserName(
-  userSub: string,
+  userId: string,
   userName: string,
   now?: string
 ): Promise<void> {
@@ -97,7 +97,7 @@ export async function updateUserName(
       TableName: UserConfig.TABLE_NAME,
       Key: {
         pk: "USER",
-        sk: userSub,
+        sk: userId,
       },
       UpdateExpression: "set #userName = :userName, #updatedAt = :updatedAt",
       ExpressionAttributeNames: {

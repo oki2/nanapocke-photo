@@ -33,7 +33,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     authContext.facilityCode,
     data.nbf ?? new Date().toISOString(),
     data.exp ?? undefined,
-    authContext.userSub
+    authContext.userId
   );
 
   return http.ok(

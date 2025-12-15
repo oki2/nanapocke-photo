@@ -59,14 +59,13 @@ const Config = {
     },
     Bucket: {
       PublicCfd: {
-        BucketName:
-          `${PROJECT_NAME}-${stage}-PublicCfd-${account}`.toLowerCase(),
+        BucketName: `${PROJECT_NAME}-${stage}-PublicCfd`.toLowerCase(),
       },
       Upload: {
-        BucketName: `${PROJECT_NAME}-${stage}-Upload-${account}`.toLowerCase(),
+        BucketName: `${PROJECT_NAME}-${stage}-Upload`.toLowerCase(),
       },
       Photo: {
-        BucketName: `${PROJECT_NAME}-${stage}-Photo-${account}`.toLowerCase(),
+        BucketName: `${PROJECT_NAME}-${stage}-Photo`.toLowerCase(),
       },
     },
   },

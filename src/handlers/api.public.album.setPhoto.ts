@@ -27,7 +27,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 1. アルバムに写真を登録
   await Album.setPhoto(
     authContext.facilityCode,
-    authContext.userSub,
+    authContext.userId,
     path.albumId,
     data.photoId
   );

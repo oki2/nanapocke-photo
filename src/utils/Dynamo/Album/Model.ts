@@ -36,7 +36,7 @@ export async function create(
         priceTable: priceTable,
         nbf: nbf,
         exp: exp,
-        salesStatus: AlbumConfig.SALES_STATUS.COMING_SOON,
+        salesStatus: AlbumConfig.SALES_STATUS.DRAFT,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -90,11 +90,12 @@ export async function update(
   facilityCode: string,
   albumId: string,
   userId: string,
-  name: string,
+  title: string,
   description: string,
+  priceTable: string,
   nbf: string,
   exp: string
-): Promise<Record<string, any> | undefined> {
+): Promise<boolean> {
   const nowISO = new Date().toISOString();
 
   // コマンド生成
@@ -104,11 +105,12 @@ export async function update(
       pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
     },
-    UpdateExpression: `SET #name = :name, #description = :description, #nbf = :nbf, #exp = :exp, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #nbf = :nbf, #exp = :exp, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
-      "#name": "name",
+      "#title": "title",
       "#description": "description",
+      "#priceTable": "priceTable",
       "#nbf": "nbf",
       "#exp": "exp",
       "#salesStatus": "salesStatus",
@@ -116,20 +118,20 @@ export async function update(
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":name": name,
+      ":title": title,
       ":description": description,
+      ":priceTable": priceTable,
       ":nbf": nbf,
       ":exp": exp,
-      ":salesStatus": AlbumConfig.SALES_STATUS.STOPPED,
+      ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
       ":updatedAt": nowISO,
       ":updatedBy": userId,
     },
-    ReturnValues: "ALL_NEW",
   });
 
   // コマンド実行
-  const result = await docClient().send(command);
-  return result.Attributes;
+  await docClient().send(command);
+  return true;
 }
 
 export async function setPhoto(

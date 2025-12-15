@@ -15,6 +15,23 @@ export const AlbumCreateBody = v.pipe(
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
 
+export const AlbumPathParameters = v.pipe(
+  v.object({
+    albumId: v.pipe(v.string(), v.minLength(1)),
+  })
+);
+
+export const AlbumUpdateBody = v.pipe(
+  v.object({
+    title: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    priceTable: common.PriceTable,
+    nbf: common.ISODateTime,
+    exp: common.ISODateTime,
+  })
+);
+export type AlbumUpdateBodyT = v.InferOutput<typeof AlbumUpdateBody>;
+
 export const AlbumCreateResponse = v.pipe(
   v.object({
     albumId: common.AlbumId,
@@ -32,8 +49,8 @@ export const AlbumListResponse = v.array(
       description: v.pipe(v.string(), v.minLength(1)),
       salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
       priceTable: common.PriceTable,
-      nbf: v.optional(common.ISODateTime),
-      exp: v.optional(common.ISODateTime),
+      nbf: v.union([common.ISODateTime, v.literal("")]),
+      exp: v.union([common.ISODateTime, v.literal("")]),
       createdAt: common.ISODateTime,
       updatedAt: common.ISODateTime,
     })

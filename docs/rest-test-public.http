@@ -48,7 +48,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバム2",
+  "title": "テストアルバム",
   "description": "アルバムの説明",
   "priceTable": "BASIC"
 }
@@ -57,6 +57,19 @@ Authorization: Bearer {{accessToken}}
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/list HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
+
+### アルバム更新
+PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "テストアルバムa",
+  "description": "アルバムaの説明",
+  "priceTable": "BASIC",
+  "nbf": "2025-12-16T00:00:00Z",
+  "exp": "2025-12-19T00:00:00Z"
+}
 
 ### 写真追加（画像）
 # @name photoUploadUrl
@@ -85,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 7dd8c161-9a38-4916-94c4-fb59a5814f76
+@albumId = b80dd918-218c-420b-b11e-795b76d787fd
 @photoId = 1a722260-b28b-41c8-91ac-1834f4a99cd1
 
 ### アルバムへ写真設定する

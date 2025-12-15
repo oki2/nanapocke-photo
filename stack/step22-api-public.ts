@@ -303,6 +303,32 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
+    // アルバム情報の更新
+    this.lambdaFn.albumUpdateFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumUpdateFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumUpdate`,
+        description: `${functionPrefix}-ApiPublicAlbumUpdate`,
+        entry: "src/handlers/api.public.album.update.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:UpdateItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
     // アルバムへ写真登録
     this.lambdaFn.albumSetPhotoFn = new NodejsFunction(
       this,

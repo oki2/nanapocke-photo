@@ -1,6 +1,10 @@
 import * as http from "../http";
 
-import {AlbumCreateBody, AlbumCreateResponse} from "../schemas/album";
+import {
+  AlbumUpdateBody,
+  AlbumPathParameters,
+  AlbumCreateResponse,
+} from "../schemas/album";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
@@ -9,13 +13,21 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
 
+  // パスパラメータのアルバムID
+  const path = parseOrThrow(AlbumPathParameters, event.pathParameters ?? {});
+
   const raw = event.body ? JSON.parse(event.body) : {};
-  const data = parseOrThrow(AlbumCreateBody, raw);
+  const data = parseOrThrow(AlbumUpdateBody, raw);
   console.log("data", data);
 
-  // 2. DynamoDB に Album を作成
-  const album = await Album.create(
+  // 販売開始日・終了日の計算
+  console.log("nbf", data.nbf);
+  console.log("exp", data.exp);
+
+  // 2. DynamoDB に Albumデータを更新
+  await Album.update(
     authContext.facilityCode,
+    path.albumId,
     authContext.userId,
     data.title,
     data.description ?? "",
@@ -26,8 +38,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   return http.ok(
     parseOrThrow(AlbumCreateResponse, {
-      albumId: album.albumId,
-      title: album.title,
+      albumId: path.albumId,
+      title: data.title,
     })
   );
 });

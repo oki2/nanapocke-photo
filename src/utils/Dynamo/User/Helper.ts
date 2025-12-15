@@ -1,7 +1,7 @@
 import * as UserModel from "./Model";
 
 export async function signinNanapockeAuth(
-  userSub: string,
+  userId: string,
   userCode: string,
   userName: string,
   userRole: string,
@@ -11,22 +11,22 @@ export async function signinNanapockeAuth(
 
   try {
     // 先ずは最終ログイン日時を更新する
-    const result = await UserModel.updateLastLoginAt(userSub, userCode, nowISO);
+    const result = await UserModel.updateLastLoginAt(userId, userCode, nowISO);
     console.log(result);
 
     // もし userName が変わっていたら、更新する
     if (result.Attributes?.userName !== userName) {
       console.log(`update userName : ${userName}`);
-      await UserModel.updateUserName(userSub, userName, nowISO);
+      await UserModel.updateUserName(userId, userName, nowISO);
     }
   } catch (e: any) {
     console.log(e);
     if (e.name !== "ConditionalCheckFailedException") throw e;
 
     // アカウント情報が存在しない場合は登録する
-    console.log(`account not found : create new account : ${userSub}`);
+    console.log(`account not found : create new account : ${userId}`);
     await UserModel.create(
-      userSub,
+      userId,
       userCode,
       userName,
       userRole,

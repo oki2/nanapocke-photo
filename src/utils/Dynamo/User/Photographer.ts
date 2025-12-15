@@ -2,7 +2,7 @@ import {UserConfig} from "../../../config";
 import * as UserModel from "./Model";
 
 export async function create(
-  userSub: string,
+  userId: string,
   userCode: string,
   userName: string,
   facilityCode: string,
@@ -11,7 +11,7 @@ export async function create(
   createdBy: string
 ): Promise<void> {
   await UserModel.create(
-    userSub,
+    userId,
     userCode,
     userName,
     UserConfig.ROLE.PHOTOGRAPHER,
@@ -20,8 +20,8 @@ export async function create(
   );
 }
 
-export const isActive = async (userSub: string): Promise<boolean> => {
-  const user = await UserModel.get(userSub);
+export const isActive = async (userId: string): Promise<boolean> => {
+  const user = await UserModel.get(userId);
 
   const nowDate = new Date(); // 現在日時
   const nbfDate = new Date(user?.nbf);
