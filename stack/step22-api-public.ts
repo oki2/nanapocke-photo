@@ -411,8 +411,43 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:Query"],
+            actions: ["dynamodb:Query", "dynamodb:BatchGetItem"],
             resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
+    // 写真の情報を編集（アルバムIDの紐付けに利用）
+    this.lambdaFn.photoEditFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoEditFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoEditFn`,
+        description: `${functionPrefix}-ApiPublicPhotoEditFn`,
+        entry: "src/handlers/api.public.photo.edit.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 512,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:Query",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
         ],
       }

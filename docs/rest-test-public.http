@@ -58,7 +58,10 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/list HTTP/1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
-### アルバム更新
+### 設定値
+@albumId = 1bd4d5ba-db85-440e-8ced-96023f88535e
+
+### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
@@ -66,7 +69,7 @@ Authorization: Bearer {{accessToken}}
 {
   "title": "テストアルバムa",
   "description": "アルバムaの説明",
-  "priceTable": "BASIC",
+  "priceTable": "STANDARD",
   "nbf": "2025-12-16T00:00:00Z",
   "exp": "2025-12-19T00:00:00Z"
 }
@@ -80,7 +83,7 @@ Authorization: Bearer {{accessToken}}
 {
   "fileType": "IMAGE",
   "fileName": "test.jpg",
-  "valueType": "BASIC",
+  "priceTier": "STANDARD",
   "shootingAt": "2025-11-16T08:30:58Z",
   "tags": ["TAG-A", "TAG-あいうえお"]
 }
@@ -92,22 +95,37 @@ PUT {{photoUploadUrl.response.body.$.url}} HTTP/1.1
 
 < /home/tomo/work/00_sampledata/test101.jpg
 
-### 写真一覧取得
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list HTTP/1.1
-content-type: application/json
+### 写真一覧：全件取得
+#GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+### 写真一覧：アルバム指定
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=ASC&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1&tagQuery=TAG-A　TAG-あいうえお HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = b80dd918-218c-420b-b11e-795b76d787fd
-@photoId = 1a722260-b28b-41c8-91ac-1834f4a99cd1
+@photoId = d12de6fd-f569-4e87-8fa8-ee47c8173d76
 
-### アルバムへ写真設定する
-# @name photoUploadUrl
-PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo HTTP/1.1
+# ### アルバムへ写真設定する
+# # @name photoUploadUrl
+# PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo HTTP/1.1
+# content-type: application/json
+# Authorization: Bearer {{accessToken}}
+
+# {
+#   "photoId": "{{photoId}}"
+# }
+
+### 写真編集（アルバムの設定設定）
+## @name photoUploadUrl
+PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/{{photoId}} HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "photoId": "{{photoId}}"
+  "album": {
+    "mode": "CHANGE",
+    "albums": ["{{albumId}}"]
+  }
 }
-

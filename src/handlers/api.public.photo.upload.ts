@@ -30,7 +30,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       authContext.facilityCode,
       authContext.userId,
       data.shootingAt,
-      data.valueType,
+      data.priceTier,
       data.tags
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_ZIP_UPLOAD;
@@ -39,7 +39,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       authContext.facilityCode,
       authContext.userId,
       data.shootingAt,
-      data.valueType,
+      data.priceTier,
       data.tags
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_UPLOAD;

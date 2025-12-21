@@ -1,10 +1,34 @@
 export const TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
 export const STATUS = {
+  CREATE: "CREATE",
   ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
+  DELETED_LOGICAL: "DELETED_LOGICAL",
+  DELETED_PENDING_PURGE: "DELETED_PENDING_PURGE",
+  BULK_DELETED: "BULK_DELETED",
+  PURGED: "PURGED",
 };
-export const PHOTO_STATUS = {
-  ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
-  DELETE: "DELETE",
+
+export const PRICE_TIER = {
+  STANDARD: "STANDARD",
+  PREMIUM: "PREMIUM",
+};
+
+export const EDITABILITY = {
+  EDITABLE: "EDITABLE",
+  LOCKED: "LOCKED",
+};
+
+export const DATE_TYPE = {
+  SHOOTING: "SHOOTING",
+  UPLOAD: "UPLOAD",
+};
+
+export const SORT_KEY = {
+  SHOOTING: "SHOOTING",
+  UPLOAD: "UPLOAD",
+};
+
+export const SORT_ORDER = {
+  ASC: "ASC",
+  DESC: "DESC",
 };

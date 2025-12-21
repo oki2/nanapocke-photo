@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import {AppConfig, UserConfig} from "../config";
+import {AppConfig, UserConfig, PhotoConfig} from "../config";
 
 // 日付型の指定 ISO世界標準時刻
 export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
@@ -26,16 +26,18 @@ export const AccountPassword = v.pipe(
   v.maxLength(64)
 );
 
-// アルバム販売テーブル
-export const PriceTable = v.picklist(["BASIC", "PREMIUM", "SALE"]);
-
-// 写真タイプ
-export const PhotoValueType = v.picklist(["BASIC", "PREMIUM"]);
-
 // 写真アップロード形式。画像 or zip
 export const PhotoUploadFileType = v.picklist(
   Object.values(AppConfig.UPLOAD_FILE_TYPE)
 );
 
-export const AlbumId = v.pipe(v.string(), v.minLength(1));
-export const PhotoId = v.pipe(v.string(), v.minLength(1));
+const uuidV4 = v.pipe(v.string(), v.uuid());
+const uuidV7 = v.pipe(
+  v.string(),
+  v.regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  )
+);
+
+export const AlbumId = uuidV4;
+export const PhotoId = uuidV4;
