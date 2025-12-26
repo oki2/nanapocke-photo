@@ -30,7 +30,7 @@ export async function create(
         lsi1: nowISO,
         facilityCode: facilityCode,
         albumId: albumId,
-        seq: seq,
+        sequenceId: seq,
         title: title,
         description: description,
         priceTable: priceTable,
@@ -59,12 +59,12 @@ export async function list(facilityCode: string): Promise<any> {
     ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #seq, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
       "#albumId": "albumId",
-      "#seq": "seq",
+      "#sequenceId": "sequenceId",
       "#title": "title",
       "#description": "description",
       "#priceTable": "priceTable",
@@ -171,9 +171,9 @@ async function nextSequence(facilityCode: string): Promise<number> {
       sk: `ALBUM#COUNTER`,
     },
     // seq を 1 加算（存在しなければ 1 で作られる）
-    UpdateExpression: "ADD #seq :inc",
+    UpdateExpression: "ADD #sequenceId :inc",
     ExpressionAttributeNames: {
-      "#seq": "seq",
+      "#sequenceId": "sequenceId",
     },
     ExpressionAttributeValues: {
       ":inc": 1,
@@ -183,7 +183,7 @@ async function nextSequence(facilityCode: string): Promise<number> {
 
   // コマンド実行
   const result = await docClient().send(command);
-  const value = result.Attributes?.seq;
-  if (!value) throw new Error("seq not returned");
+  const value = result.Attributes?.sequenceId;
+  if (!value) throw new Error("sequenceId not returned");
   return value;
 }

@@ -92,7 +92,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     result.photos.push({
       facilityCode: item.facilityCode,
       photoId: item.photoId,
-      seq: item.seq,
+      sequenceId: item.sequenceId,
       status: item.status,
       tags: item.tags,
       albums: item.albums,

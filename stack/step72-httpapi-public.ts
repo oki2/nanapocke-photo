@@ -319,6 +319,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // === メタ情報関連 === //
+    // 写真一覧
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/meta/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "MetaListIntegration",
+        props.lambdaFnPublic.metaListFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // ==========================================================
     // 後処理
     // ==========================================================

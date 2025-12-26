@@ -466,5 +466,35 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         ],
       }
     );
+
+    // === メタ情報関連 === //
+    // メタ情報一覧取得
+    this.lambdaFn.metaListFn = new NodejsFunction(this, "ApiPublicMetaListFn", {
+      functionName: `${functionPrefix}-ApiPublicMetaList`,
+      description: `${functionPrefix}-ApiPublicMetaList`,
+      entry: "src/handlers/api.public.meta.list.ts",
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 256,
+      environment: {
+        ...defaultEnvironment,
+        TABLE_NAME_MAIN: props.MainTable.tableName,
+        TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+      },
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ["dynamodb:Query"],
+          resources: [
+            props.MainTable.tableArn,
+            `${props.MainTable.tableArn}/index/lsi1_index`,
+            props.NanapockeUserTable.tableArn,
+            `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
+          ],
+        }),
+      ],
+    });
   }
 }

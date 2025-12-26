@@ -35,13 +35,15 @@ export async function create(
   now?: string
 ) {
   const nowISO = now ?? new Date().toISOString();
+  const group = userRole === UserConfig.ROLE.GUARDIAN ? "" : "#STAFF";
   await docClient().send(
     new PutCommand({
       TableName: UserConfig.TABLE_NAME,
       Item: {
         pk: "USER",
         sk: userId,
-        lsi1: `${facilityCode}#${userRole}`,
+        lsi1: `${facilityCode}${group}#${userRole}`,
+        userId: userId,
         userCode: userCode,
         userName: userName,
         userRole: userRole,
@@ -133,7 +135,39 @@ export async function photographerList(facilityCode: string): Promise<any> {
     },
     ExpressionAttributeValues: {
       ":pk": "USER",
-      ":lsi1": `${facilityCode}#${UserConfig.ROLE.PHOTOGRAPHER}`,
+      ":lsi1": `${facilityCode}#STAFF#${UserConfig.ROLE.PHOTOGRAPHER}`,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Items;
+}
+
+export async function staffList(facilityCode: string): Promise<any> {
+  const command = new QueryCommand({
+    TableName: UserConfig.TABLE_NAME,
+    IndexName: "lsi1_index",
+    KeyConditionExpression: "#pk = :pk AND begins_with(#lsi1, :lsi1)",
+    ProjectionExpression:
+      "#sk, #userCode, #userId, #userRole, #userName, #nbf, #exp, #status, #createdAt, #updatedAt",
+    ExpressionAttributeNames: {
+      "#pk": "pk",
+      "#lsi1": "lsi1",
+      "#sk": "sk",
+      "#userCode": "userCode",
+      "#userId": "userId",
+      "#userRole": "userRole",
+      "#userName": "userName",
+      "#nbf": "nbf",
+      "#exp": "exp",
+      "#status": "status",
+      "#createdAt": "createdAt",
+      "#updatedAt": "updatedAt",
+    },
+    ExpressionAttributeValues: {
+      ":pk": "USER",
+      ":lsi1": `${facilityCode}#STAFF#`,
     },
   });
 

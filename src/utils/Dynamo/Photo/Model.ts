@@ -15,7 +15,7 @@ import {PhotoConfig} from "../../../config";
 export type Photo = {
   facilityCode: string;
   photoId: string;
-  seq: number;
+  sequenceId: number;
   status: string;
   tags: string[];
   albums: string[];
@@ -95,7 +95,7 @@ export async function create(
   const photoId = crypto.randomUUID();
 
   const seq = await nextSequence(facilityCode);
-  console.log("next seq", seq);
+  console.log("next sequenceId", seq);
 
   const item = {
     pk: `FAC#${facilityCode}#PHOTO#META`,
@@ -104,7 +104,7 @@ export async function create(
     photoId: photoId,
     shootingAt: shootingAt,
     priceTier: priceTier,
-    seq: seq,
+    sequenceId: seq,
     status: PhotoConfig.STATUS.CREATE,
     createdAt: nowISO,
     createdBy: userId,
@@ -213,12 +213,12 @@ export async function list(facilityCode: string): Promise<any> {
     TableName: PhotoConfig.TABLE_NAME,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #photoId, #seq, #facilityCode, #status, #tags, #priceTier, #shootingAt, #width, #height, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #photoId, #sequenceId, #facilityCode, #status, #tags, #priceTier, #shootingAt, #width, #height, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
       "#photoId": "photoId",
-      "#seq": "seq",
+      "#sequenceId": "sequenceId",
       "#facilityCode": "facilityCode",
       "#status": "status",
       "#tags": "tags",
@@ -255,9 +255,9 @@ async function nextSequence(facilityCode: string): Promise<number> {
       sk: `PHOTO#COUNTER`,
     },
     // seq を 1 加算（存在しなければ 1 で作られる）
-    UpdateExpression: "ADD #seq :inc",
+    UpdateExpression: "ADD #sequenceId :inc",
     ExpressionAttributeNames: {
-      "#seq": "seq",
+      "#sequenceId": "sequenceId",
     },
     ExpressionAttributeValues: {
       ":inc": 1,
@@ -267,8 +267,8 @@ async function nextSequence(facilityCode: string): Promise<number> {
 
   // コマンド実行
   const result = await docClient().send(command);
-  const value = result.Attributes?.seq;
-  if (!value) throw new Error("seq not returned");
+  const value = result.Attributes?.sequenceId;
+  if (!value) throw new Error("sequenceId not returned");
   return value;
 }
 

@@ -75,7 +75,7 @@ export const PhotoListResponse = v.object({
       v.object({
         facilityCode: nanapocke.FacilityCode,
         photoId: common.AlbumId,
-        seq: v.number(),
+        sequenceId: v.number(),
         status: v.pipe(v.string(), v.minLength(1)),
         tags: v.optional(v.array(v.string())),
         albums: v.optional(v.array(common.AlbumId)),

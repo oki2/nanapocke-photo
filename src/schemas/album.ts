@@ -49,7 +49,7 @@ export const AlbumListResponse = v.array(
   v.pipe(
     v.object({
       albumId: common.AlbumId,
-      seq: v.number(),
+      sequenceId: v.number(),
       title: v.pipe(v.string(), v.minLength(1)),
       description: v.pipe(v.string(), v.minLength(1)),
       salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),

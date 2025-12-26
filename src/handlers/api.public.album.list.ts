@@ -27,7 +27,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
     result.push({
       albumId: item.albumId,
-      seq: item.seq,
+      sequenceId: item.sequenceId,
       title: item.title,
       description: item.description,
       salesStatus: item.salesStatus,

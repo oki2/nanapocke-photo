@@ -34,7 +34,7 @@ Authorization: Bearer {{accessToken}}
 {
   "userCode": "Photo001",
   "password": "test1234",
-  "userName": "フォトグラファー5"
+  "userName": "フォトグラファー1"
 }
 
 ### フォトグラファー一覧取得
@@ -59,7 +59,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = cab6be26-fd54-47cd-8186-920012d49985
+@albumId = de20be73-4b0c-49c8-b0ac-7ac29c565c1f
 
 ### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
@@ -134,3 +134,7 @@ Authorization: Bearer {{accessToken}}
     "albums": ["{{albumId}}"]
   }
 }
+
+### メタ情報一覧取得
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/meta/list HTTP/1.1
+Authorization: Bearer {{accessToken}}
