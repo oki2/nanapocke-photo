@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, TagConfig} from "../config";
 import * as http from "../http";
 import {
   PhotoUploadBody,
@@ -12,7 +12,9 @@ import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import {GetParameter} from "../utils/ParameterStore";
 import * as Photo from "../utils/Dynamo/Photo";
-import {config} from "process";
+import * as Album from "../utils/Dynamo/Album";
+import * as Tag from "../utils/Dynamo/Tag";
+import {tagSplitter} from "../libs/tool";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -22,7 +24,41 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(PhotoUploadBody, raw);
   console.log("data", data);
 
-  // 1. DynamoDB にレコードを作成
+  // 1. アルバム指定がある場合はチェック
+  const albums: string[] = [];
+  if (data.albums.length > 0) {
+    const albumList = await Album.list(authContext.facilityCode);
+    // アルバムのステータスをチェックし、DRAFT以外の場合はエラー
+    for (const album of data.albums) {
+      const tmp = albumList.filter((a: any) => a.albumId === album);
+      if (tmp.length === 0) {
+        return http.badRequest({detail: "アルバムが存在しません"});
+      }
+      if (tmp[0].salesStatus !== "DRAFT") {
+        return http.badRequest({detail: "対象のアルバムは選択できません"});
+      }
+      albums.push(album);
+    }
+  }
+  console.log("albums", albums);
+
+  // 2. タグ指定がある場合の処理
+  const tags = tagSplitter(data.tags);
+  console.log("tags", tags);
+
+  // 登録可能タグ数の上限以上の場合はエラーを返す
+  if (tags.length > TagConfig.TAG_LIMIT_PER_PHOTO) {
+    return http.badRequest({
+      detail: `タグは${TagConfig.TAG_LIMIT_PER_PHOTO}個までしか登録できません`,
+    });
+  }
+
+  // タグが存在する場合はタグ履歴に登録
+  if (tags.length > 0) {
+    await Tag.historyAdd(authContext.facilityCode, authContext.userId, tags);
+  }
+
+  // 3. DynamoDB にレコードを作成
   let uploadId = "";
   let prefix = "";
   if (data.fileType === AppConfig.UPLOAD_FILE_TYPE.ZIP) {
@@ -31,7 +67,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       authContext.userId,
       data.shootingAt,
       data.priceTier,
-      data.tags
+      tags
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_ZIP_UPLOAD;
   } else {
@@ -40,12 +76,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       authContext.userId,
       data.shootingAt,
       data.priceTier,
-      data.tags
+      tags,
+      albums
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_UPLOAD;
   }
 
-  // 2. 署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
+  // 4. 署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
   const key = `${prefix}/${authContext.facilityCode}/${authContext.userId}/${uploadId}/${data.fileName}`;
   const s3Client = new S3Client({region: AppConfig.MAIN_REGION});
   const s3Command = new PutObjectCommand({
@@ -56,7 +93,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     expiresIn: 60, // 即時アップされる想定なので、有効期限を短く1分とする
   });
 
-  // 3. レスポンス作成
+  // 5. レスポンス作成
   const result: PhotoUploadResponseT = {
     url: preSignedUrl,
   };

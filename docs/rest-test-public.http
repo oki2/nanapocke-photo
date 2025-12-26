@@ -59,7 +59,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 1bd4d5ba-db85-440e-8ced-96023f88535e
+@albumId = cab6be26-fd54-47cd-8186-920012d49985
 
 ### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
@@ -84,8 +84,9 @@ Authorization: Bearer {{accessToken}}
   "fileType": "IMAGE",
   "fileName": "test.jpg",
   "priceTier": "STANDARD",
-  "shootingAt": "2025-11-16T08:30:58Z",
-  "tags": ["TAG-A", "TAG-あいうえお"]
+  "shootingAt": "2025-11-16T00:00:00+09:00",
+  "albums": ["{{albumId}}"],
+  "tags": "TAG-A,TAG-あいうえお#イベント"
 }
 
 ### 画像ファイルを実際に送信
@@ -97,15 +98,19 @@ PUT {{photoUploadUrl.response.body.$.url}} HTTP/1.1
 
 ### 写真一覧：全件取得
 #GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+### 写真一覧：アルバム未設定
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=2&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=ASC&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1&tagQuery=TAG-A　TAG-あいうえお HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1&tagQuery=TAG-A　TAG-あいうえお HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = d12de6fd-f569-4e87-8fa8-ee47c8173d76
+@photoId = acf1433c-6761-46c8-b4d4-ab0cbcd4bf7b
 
 # ### アルバムへ写真設定する
 # # @name photoUploadUrl

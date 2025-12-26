@@ -1,5 +1,7 @@
 import * as http from "../http";
 
+import {tagSplitter, photoIdSplitter} from "../libs/tool";
+
 import {PhotoConfig} from "../config";
 
 import {
@@ -19,18 +21,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const query = parseOrThrow(PhotoFilters, event.queryStringParameters ?? {});
   console.log("query", query);
 
-  // タグの分解・スペース、又はハッシュで分割
-  const tags =
-    query.tagQuery
-      .trim()
-      .split(/[ #　]+/)
-      .filter(Boolean) ?? [];
+  // タグの分解
+  const tags = tagSplitter(query.tagQuery);
 
-  const photoIds =
-    query.photoIdQuery
-      .trim()
-      .split(/[ ,#　]+/)
-      .filter(Boolean) ?? [];
+  // 写真IDの分解
+  const photoIds = photoIdSplitter(query.photoIdQuery);
 
   // === Step.2 絞込み情報作成 =========== //
   const filter: Photo.FilterOptions = {
@@ -57,14 +52,26 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     order: query.sortOrder == PhotoConfig.SORT_ORDER.ASC ? "asc" : "desc",
   };
 
-  // === Step.2 データの取得 =========== //
+  // === Step.4 データの取得 =========== //
   let data: any;
   switch (query.albumId) {
     case "ALL":
-      data = await getAllPhoto(authContext.facilityCode);
+      data = await getAllPhoto(
+        authContext.facilityCode,
+        filter,
+        sort,
+        query.limit,
+        query.cursor ?? ""
+      );
       break;
     case "UNSET":
-      data = await getUnsetPhoto();
+      data = await getUnsetPhoto(
+        authContext.facilityCode,
+        filter,
+        sort,
+        query.limit,
+        query.cursor ?? ""
+      );
       break;
     default:
       data = await getAlbumPhoto(
@@ -101,11 +108,97 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   return http.ok(tmp);
 });
 
-async function getAllPhoto(facilityCode: string) {
-  return await Photo.list(facilityCode);
+/**
+ * Get all photos in DynamoDB.
+ * @param {string} facilityCode - facility code
+ * @param {Photo.FilterOptions} filter - filter options
+ * @param {Photo.SortOptions} sort - sort options
+ * @param {number} limit - limit of photos
+ * @param {string} cursor - cursor of photos
+ * @return {Promise<Photo.ListResponseT[]>} promise of array of photos
+ */
+async function getAllPhoto(
+  facilityCode: string,
+  filter: Photo.FilterOptions,
+  sort: Photo.SortOptions,
+  limit: number,
+  cursor: string
+) {
+  // 1. Index の判定
+  const indexFielsd = sort.field === "shootingAt" ? "lsi2" : "lsi1"; //
+  const indexName = `${indexFielsd}_index`; //
+  const indexPrefix =
+    filter.editability === PhotoConfig.EDITABILITY.EDITABLE
+      ? "EDITABLE#"
+      : "LOCKED#";
+  const scanIndexForward = sort.order === "asc";
+
+  // 2. 写真一覧を取得
+  const res = await Photo.queryPhotos(
+    {
+      pk: {
+        name: "pk",
+        value: `FAC#${facilityCode}#PHOTO#META`,
+      },
+      sk: {
+        name: indexFielsd,
+        value: indexPrefix,
+      },
+    },
+    indexName,
+    scanIndexForward,
+    filter,
+    {
+      limit: limit,
+      cursor: cursor,
+    }
+  );
+  console.log("res", res);
+
+  return res.Items;
 }
 
-function getUnsetPhoto() {}
+async function getUnsetPhoto(
+  facilityCode: string,
+  filter: Photo.FilterOptions,
+  sort: Photo.SortOptions,
+  limit: number,
+  cursor: string
+) {
+  console.log("getUnsetPhoto");
+  // 1. Index の判定
+  const indexFielsd = sort.field === "shootingAt" ? "lsi4" : "lsi3"; //
+  const indexName = `${indexFielsd}_index`; //
+  const indexPrefix =
+    filter.editability === PhotoConfig.EDITABILITY.EDITABLE
+      ? "EDITABLE#"
+      : "LOCKED#";
+  const scanIndexForward = sort.order === "asc";
+
+  // 2. 写真一覧を取得
+  const res = await Photo.queryPhotos(
+    {
+      pk: {
+        name: "pk",
+        value: `FAC#${facilityCode}#PHOTO#META`,
+      },
+      sk: {
+        name: indexFielsd,
+        value: indexPrefix,
+      },
+    },
+    indexName,
+    scanIndexForward,
+    filter,
+    {
+      limit: limit,
+      cursor: cursor,
+    }
+  );
+  console.log("res", res);
+
+  return res.Items;
+}
 
 /**
  * Get album photos.

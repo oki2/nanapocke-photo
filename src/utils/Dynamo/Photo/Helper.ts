@@ -1,68 +1,13 @@
 import {PhotoConfig} from "../../../config";
 import * as PhotoModel from "./Model";
-
-type Photo = {
-  facilityCode: string;
-  photoId: string;
-  seq: number;
-  status: string;
-  tags: string[];
-  albums: string[];
-  priceTier: string;
-  shootingAt: string; // ISO8601
-  createdAt: string; // ISO8601
-  createdBy: string;
-};
-
-type DateRange = {
-  from?: string; // ISO8601
-  to?: string; // ISO8601
-};
-
-export type FilterOptions = {
-  photographer?: string;
-  editability?: string;
-  tags?: string[]; // AND 条件（すべて含む）
-  photoIds?: string[]; // OR 条件（すべて含む）
-  priceTier?: string;
-  shootingAt?: DateRange;
-  createdAt?: DateRange;
-};
-
-type SortField = "shootingAt" | "createdAt";
-type SortOrder = "asc" | "desc";
-
-export type SortOptions = {
-  field: SortField; // 未指定時 createdAt
-  order: SortOrder; // 未指定時 desc
-};
-
-type PageOptions = {
-  limit?: number; // 未指定時 50
-  cursor?: string; // 前回レスポンスの nextCursor を渡す
-};
-
-type PageResult<T> = {
-  items: T[];
-  nextCursor?: string; // 次ページがあれば返す
-};
-
-type CursorPayload = {
-  v: 1;
-  field: SortField;
-  order: SortOrder;
-  t: number; // sortField の epoch ms
-  id: string; // tie-breaker (photoId)
-};
-
-function encodeCursor(payload: CursorPayload): string {
+function encodeCursor(payload: PhotoModel.CursorPayload): string {
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
 
-function decodeCursor(cursor: string): CursorPayload {
+function decodeCursor(cursor: string): PhotoModel.CursorPayload {
   try {
     const json = Buffer.from(cursor, "base64url").toString("utf8");
-    const payload = JSON.parse(json) as CursorPayload;
+    const payload = JSON.parse(json) as PhotoModel.CursorPayload;
     if (
       payload?.v !== 1 ||
       (payload.field !== "shootingAt" && payload.field !== "createdAt") ||
@@ -78,8 +23,8 @@ function decodeCursor(cursor: string): CursorPayload {
   }
 }
 
-function compareBy(field: SortField, order: SortOrder) {
-  return (a: Photo, b: Photo) => {
+function compareBy(field: PhotoModel.SortField, order: PhotoModel.SortOrder) {
+  return (a: PhotoModel.Photo, b: PhotoModel.Photo) => {
     const aT = new Date(a[field]).getTime();
     const bT = new Date(b[field]).getTime();
 
@@ -94,7 +39,10 @@ function compareBy(field: SortField, order: SortOrder) {
   };
 }
 
-function isAfterCursor(photo: Photo, cursor: CursorPayload): boolean {
+function isAfterCursor(
+  photo: PhotoModel.Photo,
+  cursor: PhotoModel.CursorPayload
+): boolean {
   const t = new Date(photo[cursor.field]).getTime();
 
   if (cursor.order === "asc") {
@@ -122,11 +70,11 @@ export async function getPhotosByAlbumId(
 }
 
 export function filterSortPagePhotos(
-  photos: Photo[],
-  filter: FilterOptions,
-  sort: SortOptions,
-  page: PageOptions = {}
-): PageResult<Photo> {
+  photos: PhotoModel.Photo[],
+  filter: PhotoModel.FilterOptions,
+  sort: PhotoModel.SortOptions,
+  page: PhotoModel.PageOptions = {}
+): PhotoModel.PageResult<PhotoModel.Photo> {
   const sortField = sort.field;
   const sortOrder = sort.order;
   const limit = page.limit ?? 50;
@@ -169,6 +117,7 @@ export function filterSortPagePhotos(
 
     // タグチェック
     if (filter.tags && filter.tags.length > 0) {
+      if (!photo.tags || photo.tags.length === 0) return false;
       const hasAll = filter.tags.every((tag) => photo.tags.includes(tag));
       if (!hasAll) return false;
     }
@@ -223,7 +172,7 @@ export function filterSortPagePhotos(
   let nextCursor: string | undefined = undefined;
   if (items.length === limit && startList.length > limit) {
     const last = items[items.length - 1];
-    const payload: CursorPayload = {
+    const payload: PhotoModel.CursorPayload = {
       v: 1,
       field: sortField,
       order: sortOrder,

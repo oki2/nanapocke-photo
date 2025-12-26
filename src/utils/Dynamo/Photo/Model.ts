@@ -7,8 +7,64 @@ import {
   BatchGetCommand,
   BatchWriteCommand,
   TransactWriteCommand,
+  QueryCommandInput,
+  QueryCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 import {PhotoConfig} from "../../../config";
+
+export type Photo = {
+  facilityCode: string;
+  photoId: string;
+  seq: number;
+  status: string;
+  tags: string[];
+  albums: string[];
+  priceTier: string;
+  shootingAt: string; // ISO8601
+  createdAt: string; // ISO8601
+  createdBy: string;
+};
+
+export type DateRange = {
+  from?: string; // ISO8601
+  to?: string; // ISO8601
+};
+
+export type FilterOptions = {
+  photographer?: string;
+  editability?: string;
+  tags?: string[]; // AND 条件（すべて含む）
+  photoIds?: string[]; // OR 条件（すべて含む）
+  priceTier?: string;
+  shootingAt?: DateRange;
+  createdAt?: DateRange;
+};
+
+export type SortField = "shootingAt" | "createdAt";
+export type SortOrder = "asc" | "desc";
+
+export type SortOptions = {
+  field: SortField; // 未指定時 createdAt
+  order: SortOrder; // 未指定時 desc
+};
+
+export type PageOptions = {
+  limit?: number; // 未指定時 50
+  cursor?: string; // 前回レスポンスの nextCursor を渡す
+};
+
+export type PageResult<T> = {
+  items: T[];
+  nextCursor?: string; // 次ページがあれば返す
+};
+
+export type CursorPayload = {
+  v: 1;
+  field: SortField;
+  order: SortOrder;
+  t: number; // sortField の epoch ms
+  id: string; // tie-breaker (photoId)
+};
 
 export async function get(
   facilityCode: string,
@@ -32,7 +88,8 @@ export async function create(
   userId: string,
   shootingAt: string,
   priceTier: string,
-  tags: string[]
+  tags: string[],
+  albums: string[]
 ): Promise<string> {
   const nowISO = new Date().toISOString();
   const photoId = crypto.randomUUID();
@@ -40,25 +97,28 @@ export async function create(
   const seq = await nextSequence(facilityCode);
   console.log("next seq", seq);
 
+  const item = {
+    pk: `FAC#${facilityCode}#PHOTO#META`,
+    sk: photoId,
+    facilityCode: facilityCode,
+    photoId: photoId,
+    shootingAt: shootingAt,
+    priceTier: priceTier,
+    seq: seq,
+    status: PhotoConfig.STATUS.CREATE,
+    createdAt: nowISO,
+    createdBy: userId,
+    updatedAt: nowISO,
+    updatedBy: userId,
+    ...(tags && tags.length > 0 ? {tags} : {}),
+    ...(albums && albums.length > 0 ? {albums} : {}),
+  };
+
   // コマンド実行
-  const result = await docClient().send(
+  await docClient().send(
     new PutCommand({
       TableName: PhotoConfig.TABLE_NAME,
-      Item: {
-        pk: `FAC#${facilityCode}#PHOTO#META`,
-        sk: photoId,
-        facilityCode: facilityCode,
-        photoId: photoId,
-        shootingAt: shootingAt,
-        priceTier: priceTier,
-        tags: tags,
-        seq: seq,
-        status: PhotoConfig.STATUS.CREATE,
-        createdAt: nowISO,
-        createdBy: userId,
-        updatedAt: nowISO,
-        updatedBy: userId,
-      },
+      Item: item,
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
     })
   );
@@ -103,6 +163,8 @@ export async function createZip(
 export async function setPhotoMeta(
   facilityCode: string,
   photoId: string,
+  lsi1: string,
+  lsi2: string,
   width: number,
   height: number,
   shootingAt: string
@@ -115,8 +177,12 @@ export async function setPhotoMeta(
       pk: `FAC#${facilityCode}#PHOTO#META`,
       sk: photoId,
     },
-    UpdateExpression: `SET #status = :status, #width = :width, #height = :height, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
+    UpdateExpression: `SET #lsi1 = :lsi1, #lsi2 = :lsi2, #lsi3 = :lsi3, #lsi4 = :lsi4, #status = :status, #width = :width, #height = :height, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
     ExpressionAttributeNames: {
+      "#lsi1": "lsi1",
+      "#lsi2": "lsi2",
+      "#lsi3": "lsi3",
+      "#lsi4": "lsi4",
       "#status": "status",
       "#width": "width",
       "#height": "height",
@@ -124,6 +190,10 @@ export async function setPhotoMeta(
       "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
+      ":lsi1": lsi1,
+      ":lsi2": lsi2,
+      ":lsi3": lsi1,
+      ":lsi4": lsi2,
       ":status": PhotoConfig.STATUS.ACTIVE,
       ":width": width,
       ":height": height,
@@ -271,31 +341,27 @@ export async function setAlbums(
   };
   // 削除有、かつアルバム設定無しの場合は、未割当状態(GSIに設定)にする
   if (delAlbums.length > 0 && albumList.length === 0) {
-    UpdateExpression =
-      "SET #gsi1pk = :gsi1pk, #gsi1sk = :gsi1sk, #gsi2pk = :gsi2pk, #gsi2sk = :gsi2sk REMOVE #albums";
+    // 現在の写真情報を取得
+    const tmpPhoto = await get(facilityCode, photoId);
+    if (!tmpPhoto) throw new Error("photo not found");
+
+    UpdateExpression = "SET #lsi3 = :lsi3, #lsi4 = :lsi4 REMOVE #albums";
     ExpressionAttributeNames = {
       "#albums": "albums",
-      "#gsi1pk": "gsi1pk",
-      "#gsi1sk": "gsi1si",
-      "#gsi2pk": "gsi2pk",
-      "#gsi2sk": "gsi2sk",
+      "#lsi3": "lsi3",
+      "#lsi4": "lsi4",
     };
     ExpressionAttributeValues = {
-      ":gsi1pk": "UPpk",
-      ":gsi1sk": "UPsk",
-      ":gsi2pk": "SHOTpk",
-      ":gsi2sk": "SHOTsk",
+      ":lsi3": tmpPhoto.lsi1,
+      ":lsi4": tmpPhoto.lsi2,
     };
     // 追加有の場合は、割当状態(GSIの削除)にする
   } else if (addAlbums.length > 0) {
-    UpdateExpression =
-      "SET #albums = :albums REMOVE #gsi1pk, #gsi1sk, #gsi2pk, #gsi2sk";
+    UpdateExpression = "SET #albums = :albums REMOVE #lsi3, #lsi4";
     ExpressionAttributeNames = {
       "#albums": "albums",
-      "#gsi1pk": "gsi1pk",
-      "#gsi1sk": "gsi1si",
-      "#gsi2pk": "gsi2pk",
-      "#gsi2sk": "gsi2sk",
+      "#lsi3": "lsi3",
+      "#lsi4": "lsi4",
     };
     ExpressionAttributeValues = {
       ":albums": albumList,
@@ -406,3 +472,93 @@ const chunk = <T>(arr: T[], size: number): T[][] => {
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
 };
+
+export async function queryPhotos(
+  keys: any,
+  indexName: string,
+  scanIndexForward: boolean,
+  filter: FilterOptions,
+  page: PageOptions = {}
+): Promise<QueryCommandOutput> {
+  // // 排他チェック（仕様通り）
+  // if (shootingAt && createdAt) {
+  //   throw new Error("shootingAt と createdAt は同時指定できません。");
+  // }
+
+  const ExpressionAttributeNames: Record<string, string> = {};
+  const ExpressionAttributeValues: Record<string, any> = {};
+
+  // ---- KeyConditionExpression ----
+  const KeyConditionExpression = "#pk = :pk AND begins_with(#sk, :sk)";
+  ExpressionAttributeNames["#pk"] = keys.pk.name;
+  ExpressionAttributeValues[":pk"] = keys.pk.value;
+  ExpressionAttributeNames["#sk"] = keys.sk.name;
+  ExpressionAttributeValues[":sk"] = keys.sk.value;
+
+  // ---- FilterExpression ----
+  const filters: string[] = [];
+
+  // tags: AND（tags属性は String Set もしくは String List を想定）
+  if (filter.tags && filter.tags.length > 0) {
+    ExpressionAttributeNames["#tags"] = "tags";
+    filter.tags.forEach((t, i) => {
+      const v = `:tag${i}`;
+      ExpressionAttributeValues[v] = t;
+      filters.push(`contains(#tags, ${v})`);
+    });
+  }
+
+  // photographer
+  if (filter.photographer) {
+    filters.push(`#createdBy = :createdBy`);
+    ExpressionAttributeNames["#createdBy"] = "createdBy";
+    ExpressionAttributeValues[":createdBy"] = filter.photographer;
+  }
+
+  // status
+  // lsi1、lsi2 で、ソートと一緒に判定する
+
+  // shootingAt / createdAt: Range（attribute は文字列ソート可能な形式を想定）
+  let rangeAttr = "";
+  let from = "";
+  let to = "";
+
+  if (filter.createdAt) {
+    rangeAttr = "createdAt";
+    from = filter.createdAt.from ?? "";
+    to = filter.createdAt.to ?? "";
+  } else if (filter.shootingAt) {
+    rangeAttr = "shootingAt";
+    from = filter.shootingAt.from ?? "";
+    to = filter.shootingAt.to ?? "";
+  }
+  if (rangeAttr && from && to) {
+    filters.push("#term BETWEEN :from AND :to");
+    ExpressionAttributeNames["#term"] = rangeAttr;
+    ExpressionAttributeValues[":from"] = from;
+    ExpressionAttributeValues[":to"] = to;
+  }
+
+  const input: QueryCommandInput = {
+    TableName: PhotoConfig.TABLE_NAME,
+    IndexName: indexName,
+    ScanIndexForward: scanIndexForward,
+    KeyConditionExpression,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+    Limit: page.limit,
+    // ExclusiveStartKey: exclusiveStartKey,
+  };
+
+  if (filters.length > 0) {
+    input.FilterExpression = filters.join(" AND ");
+  }
+
+  console.log("input", input);
+
+  const command = new QueryCommand(input);
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result;
+}

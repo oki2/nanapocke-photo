@@ -68,23 +68,47 @@ export class Step15DynamodbStack extends cdk.Stack {
         type: AttributeType.STRING,
       },
     });
+    // メインテーブル：ローカルセカンダリインデックス-4
+    this.MainTable.addLocalSecondaryIndex({
+      indexName: "lsi4_index",
+      sortKey: {
+        name: "lsi4",
+        type: AttributeType.STRING,
+      },
+    });
+    // メインテーブル：ローカルセカンダリインデックス-5
+    this.MainTable.addLocalSecondaryIndex({
+      indexName: "lsi5_index",
+      sortKey: {
+        name: "lsi5",
+        type: AttributeType.STRING,
+      },
+    });
 
-    // メインテーブル：グローバルセカンダリインデックス-1
-    this.MainTable.addGlobalSecondaryIndex({
-      indexName: "gsi1_index",
-      partitionKey: {
-        name: "gsi1",
-        type: AttributeType.STRING,
-      },
-    });
-    // メインテーブル：グローバルセカンダリインデックス-2
-    this.MainTable.addGlobalSecondaryIndex({
-      indexName: "gsi2_index",
-      partitionKey: {
-        name: "gsi2",
-        type: AttributeType.STRING,
-      },
-    });
+    // // メインテーブル：グローバルセカンダリインデックス-1
+    // this.MainTable.addGlobalSecondaryIndex({
+    //   indexName: "gsi1_index",
+    //   partitionKey: {
+    //     name: "gsi1pk",
+    //     type: AttributeType.STRING,
+    //   },
+    //   sortKey: {
+    //     name: "gsi1sk",
+    //     type: AttributeType.STRING,
+    //   },
+    // });
+    // // メインテーブル：グローバルセカンダリインデックス-2
+    // this.MainTable.addGlobalSecondaryIndex({
+    //   indexName: "gsi2_index",
+    //   partitionKey: {
+    //     name: "gsi2pk",
+    //     type: AttributeType.STRING,
+    //   },
+    //   sortKey: {
+    //     name: "gsi2sk",
+    //     type: AttributeType.STRING,
+    //   },
+    // });
 
     // 認証フローテーブル
     this.AuthFlowTable = new Table(this, params.AuthFlowTable.Name, {

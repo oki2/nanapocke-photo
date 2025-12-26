@@ -22,8 +22,8 @@ export const PhotoUploadBody = v.pipe(
   v.object({
     shootingAt: common.ISODateTime,
     priceTier: PhotoPriceTier,
-    tags: v.array(v.string()),
-    albumId: v.optional(v.pipe(v.string(), v.minLength(1))),
+    tags: v.optional(v.string(), ""),
+    albums: v.optional(v.array(v.string()), []),
     fileType: common.PhotoUploadFileType,
     fileName: v.pipe(v.string(), v.minLength(1)),
   })

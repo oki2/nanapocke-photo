@@ -376,8 +376,16 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
-            resources: [props.MainTable.tableArn],
+            actions: [
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:Query",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -403,7 +411,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: 512,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -412,7 +420,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query", "dynamodb:BatchGetItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+              `${props.MainTable.tableArn}/index/lsi2_index`,
+              `${props.MainTable.tableArn}/index/lsi3_index`,
+              `${props.MainTable.tableArn}/index/lsi4_index`,
+            ],
           }),
         ],
       }

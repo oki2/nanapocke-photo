@@ -72,7 +72,11 @@ export class Step31EventTriggerStack extends cdk.Stack {
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
+            actions: [
+              "dynamodb:UpdateItem",
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+            ],
             resources: [props.MainTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({

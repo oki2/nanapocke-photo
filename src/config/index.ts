@@ -11,5 +11,6 @@ export * as AuthConfig from "./Model/Auth";
 export * as FacilityConfig from "./Model/Facility";
 export * as PhotoConfig from "./Model/Photo";
 export * as UserConfig from "./Model/User";
+export * as TagConfig from "./Model/Tag";
 
 export * as CognitoConfig from "./Cognito";

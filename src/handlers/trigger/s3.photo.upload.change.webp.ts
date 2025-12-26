@@ -33,6 +33,10 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     // 写真の情報を取得
     const photo = await Photo.get(facilityCode, photoId);
+    if (!photo) {
+      console.error("写真情報が取得できません");
+      return;
+    }
 
     // 撮影日時をDBから取得（タイムゾーンはUTC）
     const tmpShootingDate = new Date(photo?.shootingAt ?? Date.now());
@@ -196,14 +200,33 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       StorageClass.GLACIER_IR
     );
 
-    // 画像変換完了したら、DynamoDBにデータ保存
+    const shootingAtISO = shootingAt.toISOString();
+
+    // ============================================================
+    // 6. 画像変換完了したら、DynamoDBにデータ保存
     await Photo.setPhotoMeta(
       facilityCode,
       photoId,
+      `EDITABLE#${photo.createdAt}#${photoId}`,
+      `EDITABLE#${shootingAtISO}#${photoId}`,
       meta.width,
       meta.height,
-      shootingAt.toISOString()
+      shootingAtISO
     );
+
+    // ============================================================
+    // 7. アルバム指定がある場合は、写真とアルバムの紐付け情報を登録
+    if (photo.albums.length > 0) {
+      const tmp = await Photo.setAlbums(
+        facilityCode,
+        photoId,
+        photo.albums,
+        [],
+        photo.albums,
+        photo.createdBy
+      );
+      console.log("tmp", tmp);
+    }
   } catch (err) {
     console.error(err);
   }
