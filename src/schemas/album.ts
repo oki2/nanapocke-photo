@@ -56,10 +56,10 @@ export const AlbumListResponse = v.array(
       description: v.pipe(v.string(), v.minLength(1)),
       salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
       priceTable: PriceTable,
+      photoCount: v.optional(v.number()),
+      imageFile: v.optional(v.pipe(v.string()), ""),
       nbf: v.union([common.ISODateTime, v.literal("")]),
       exp: v.union([common.ISODateTime, v.literal("")]),
-      createdAt: common.ISODateTime,
-      updatedAt: common.ISODateTime,
     })
   )
 );

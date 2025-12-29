@@ -73,7 +73,7 @@ export async function list(facilityCode: string): Promise<any> {
     ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #photoCount, #imageFile, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
@@ -85,6 +85,8 @@ export async function list(facilityCode: string): Promise<any> {
       "#nbf": "nbf",
       "#exp": "exp",
       "#salesStatus": "salesStatus",
+      "#photoCount": "photoCount",
+      "#imageFile": "imageFile",
       "#createdAt": "createdAt",
       "#createdBy": "createdBy",
       "#updatedAt": "updatedAt",
@@ -151,7 +153,7 @@ export async function update(
 export async function setAlbumImage(
   facilityCode: string,
   albumId: string,
-  imageName: string,
+  imageFile: string,
   userId: string
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
@@ -163,16 +165,16 @@ export async function setAlbumImage(
       pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
     },
-    UpdateExpression: `SET #imageName = :imageName, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #imageFile = :imageFile, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
-      "#imageName": "imageName",
+      "#imageFile": "imageFile",
       "#salesStatus": "salesStatus",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":imageName": imageName,
+      ":imageFile": imageFile,
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
       ":updatedAt": nowISO,
       ":updatedBy": userId,

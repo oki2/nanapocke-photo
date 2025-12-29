@@ -12,30 +12,32 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
   // データの取得
-  const data = await Album.list(authContext.facilityCode);
-  console.log("data", data);
+  const albums = await Album.list(authContext.facilityCode);
+  console.log("albums", albums);
 
   const result: AlbumListResponseT = [];
   const userRole: Role = authContext.role;
   const viewStatus: string[] = AlbumConfig.VIEW_STATUS[userRole];
 
-  for (const item of data) {
+  for (const album of albums) {
     // 権限別の表示制限
-    if (!viewStatus.includes(item.salesStatus)) {
+    if (!viewStatus.includes(album.salesStatus)) {
       continue;
     }
 
     result.push({
-      albumId: item.albumId,
-      sequenceId: item.sequenceId,
-      title: item.title,
-      description: item.description,
-      salesStatus: item.salesStatus,
-      priceTable: item.priceTable,
-      nbf: item.nbf ?? "",
-      exp: item.exp ?? "",
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
+      albumId: album.albumId,
+      sequenceId: album.sequenceId,
+      title: album.title,
+      description: album.description,
+      salesStatus: album.salesStatus,
+      priceTable: album.priceTable,
+      nbf: album.nbf ?? "",
+      exp: album.exp ?? "",
+      imageFile: album.imageFile
+        ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.imageFile}`
+        : "",
+      ...(album.photoCount ? {photoCount: album.photoCount} : {}),
     });
   }
 

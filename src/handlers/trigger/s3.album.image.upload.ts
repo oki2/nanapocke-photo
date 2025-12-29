@@ -49,8 +49,8 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     // ============================================================
     // 3. S3へ保存 =====
-    const imageName = Date.now().toString() + ".webp";
-    const webpKeyPath = `thumbnail/${facilityCode}/album/${albumId}/${imageName}`;
+    const imageFile = Date.now().toString() + ".webp";
+    const webpKeyPath = `thumbnail/${facilityCode}/album/${albumId}/${imageFile}`;
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
       webpKeyPath,
@@ -60,7 +60,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     // ============================================================
     // 4. 画像変換完了したら、DynamoDBにデータ保存
-    await Album.setAlbumImage(facilityCode, albumId, imageName, userId);
+    await Album.setAlbumImage(facilityCode, albumId, imageFile, userId);
   } catch (err) {
     console.error(err);
   }
