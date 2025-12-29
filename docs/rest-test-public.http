@@ -162,6 +162,9 @@ Authorization: Bearer {{accessToken}}
   }
 }
 
+### 写真一覧：保護者指定
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
+Authorization: Bearer {{accessToken}}
 
 
 

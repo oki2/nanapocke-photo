@@ -167,6 +167,49 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       }
     );
 
+    // Access Token : Guardian（保護者）を判定するオーソライザー
+    const AuthorizerGuardianlVeifyFn = new NodejsFunction(
+      this,
+      "AuthorizerGuardianlVeifyFn",
+      {
+        functionName: `${functionPrefix}-AuthorizerGuardianlVeifyFn`,
+        description: `${functionPrefix}-AuthorizerGuardianlVeifyFn`,
+        entry: "src/handlers/authorizer/guardian.veify.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      }
+    );
+    const AuthorizerGuardianlVeify = new HttpLambdaAuthorizer(
+      "AuthorizerGuardianlVeify",
+      AuthorizerGuardianlVeifyFn,
+      {
+        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        identitySource: [
+          "$request.header.Authorization",
+          "$request.header.x-origin-verify-token",
+        ],
+        // 必要に応じてキャッシュを有効化
+        resultsCacheTtl: cdk.Duration.seconds(60),
+      }
+    );
+
     // ==========================================================
     // HTTP API の設定
     // ==========================================================
@@ -283,6 +326,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         props.lambdaFnPublic.albumSalseFn
       ),
       authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // 指定した販売中アルバムの写真一覧を取得（保護者専用）
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/album/{albumId}/photo/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "AlbumPhotoListIntegration",
+        props.lambdaFnPublic.albumPhotoListFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
     });
 
     // === 写真関連 === //

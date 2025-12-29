@@ -133,6 +133,7 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   MainTable: stackStep15.MainTable,
   NanapockeUserTable: stackStep15.NanapockeUserTable,
   bucketUpload: stackStep10.bucketUpload,
+  bucketPhoto: stackStep10.bucketPhoto,
 });
 
 const stackStep31 = new Step31EventTriggerStack(

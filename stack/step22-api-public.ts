@@ -14,6 +14,7 @@ export interface Props extends cdk.StackProps {
   readonly MainTable: Table;
   readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
+  readonly bucketPhoto: Bucket;
   // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
 }
 
@@ -368,6 +369,38 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               `${props.bucketUpload.bucketArn}/action/albumPublished/*`,
             ],
+          }),
+        ],
+      }
+    );
+
+    // 指定した販売中アルバムの写真一覧を取得
+    this.lambdaFn.albumPhotoListFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumPhotoListFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumPhotoList`,
+        description: `${functionPrefix}-ApiPublicAlbumPhotoList`,
+        entry: "src/handlers/api.public.album.photo.list.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketPhoto.bucketArn}/sales/*`],
           }),
         ],
       }
