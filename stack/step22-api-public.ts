@@ -263,12 +263,18 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
             resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [`${props.bucketUpload.bucketArn}/album-image-upload/*`],
           }),
         ],
       }

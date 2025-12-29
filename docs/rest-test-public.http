@@ -43,6 +43,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### アルバム追加
+# @name albumImageUploadUrl
 POST https://{{customDomainName}}/api/facility/{{facilityCode}}/album HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
@@ -50,8 +51,16 @@ Authorization: Bearer {{accessToken}}
 {
   "title": "テストアルバム",
   "description": "アルバムの説明",
-  "priceTable": "BASIC"
+  "priceTable": "BASIC",
+  "fileName": "test.jpg"
 }
+
+### アルバム画像ファイルを実際に送信
+# no-exif.jpg
+# test101.jpg
+PUT {{albumImageUploadUrl.response.body.$.url}} HTTP/1.1
+
+< /home/tomo/work/00_sampledata/test101.jpg
 
 ### アルバム一覧取得
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/list HTTP/1.1
@@ -59,7 +68,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = de20be73-4b0c-49c8-b0ac-7ac29c565c1f
+@albumId = 413b63eb-52d3-46a7-a59c-1ccf685bdc1d
 
 ### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
@@ -74,7 +83,7 @@ Authorization: Bearer {{accessToken}}
   "exp": "2025-12-19T00:00:00Z"
 }
 
-### 写真追加（画像）
+### 写真追加（画像ファイル版）
 # @name photoUploadUrl
 POST https://{{customDomainName}}/api/facility/{{facilityCode}}/photo HTTP/1.1
 content-type: application/json

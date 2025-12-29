@@ -15,6 +15,7 @@ export const AlbumCreateBody = v.pipe(
     priceTable: PriceTable,
     nbf: v.optional(common.ISODateTime),
     exp: v.optional(common.ISODateTime),
+    fileName: v.optional(v.pipe(v.string(), v.minLength(1))),
   })
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
@@ -41,6 +42,7 @@ export const AlbumCreateResponse = v.pipe(
   v.object({
     albumId: common.AlbumId,
     title: v.pipe(v.string(), v.minLength(1)),
+    url: v.optional(v.pipe(v.string(), v.minLength(1))),
   })
 );
 export type AlbumCreateResponseT = v.InferOutput<typeof AlbumCreateResponse>;

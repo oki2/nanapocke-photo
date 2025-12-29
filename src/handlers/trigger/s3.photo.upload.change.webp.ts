@@ -83,7 +83,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       .toFormat("webp", {quality: 80})
       .toBuffer();
 
-    const webpKeyPath = `thumbnail/${facilityCode}/${userId}/${photoId}.webp`;
+    const webpKeyPath = `thumbnail/${facilityCode}/photo/${userId}/${photoId}.webp`;
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
       webpKeyPath,

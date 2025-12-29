@@ -105,6 +105,7 @@ async function albumPublished(bucketName: string, keyPath: string) {
   await Album.actionSalesPublished(
     data.facilityCode,
     data.albumId,
+    photosObj.length,
     data.userId
   );
 

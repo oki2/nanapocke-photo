@@ -148,6 +148,42 @@ export async function update(
   return true;
 }
 
+export async function setAlbumImage(
+  facilityCode: string,
+  albumId: string,
+  imageName: string,
+  userId: string
+): Promise<boolean> {
+  const nowISO = new Date().toISOString();
+
+  // コマンド生成
+  const command = new UpdateCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#META`,
+      sk: albumId,
+    },
+    UpdateExpression: `SET #imageName = :imageName, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    ConditionExpression: "#salesStatus = :salesStatus",
+    ExpressionAttributeNames: {
+      "#imageName": "imageName",
+      "#salesStatus": "salesStatus",
+      "#updatedAt": "updatedAt",
+      "#updatedBy": "updatedBy",
+    },
+    ExpressionAttributeValues: {
+      ":imageName": imageName,
+      ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
+      ":updatedAt": nowISO,
+      ":updatedBy": userId,
+    },
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+  return true;
+}
+
 export async function setPhoto(
   facilityCode: string,
   userId: string,
@@ -279,15 +315,17 @@ export async function actionSalesPublishing(
 export async function actionSalesPublished(
   facilityCode: string,
   albumId: string,
+  photoCount: number,
   userId: string
 ): Promise<void> {
   const nowISO = new Date().toISOString();
 
   let UpdateExpression =
-    "SET #salesStatus = :salesStatus, #updatedAt = :updatedAt, #updatedBy = :updatedBy, #publishedAt = :publishedAt, #publishedBy = :publishedBy";
+    "SET #salesStatus = :salesStatus, #photoCount = :photoCount, #updatedAt = :updatedAt, #updatedBy = :updatedBy, #publishedAt = :publishedAt, #publishedBy = :publishedBy";
 
   let ExpressionAttributeNames: any = {
     "#salesStatus": "salesStatus",
+    "#photoCount": "photoCount",
     "#updatedAt": "updatedAt",
     "#updatedBy": "updatedBy",
     "#publishedAt": "publishedAt",
@@ -297,6 +335,7 @@ export async function actionSalesPublished(
   let ExpressionAttributeValues: any = {
     ":salesStatus": AlbumConfig.SALES_STATUS.PUBLISHED,
     ":beforeSalesStatus": AlbumConfig.SALES_STATUS.PUBLISHING,
+    ":photoCount": photoCount,
     ":updatedAt": nowISO,
     ":updatedBy": userId,
     ":publishedAt": nowISO,
