@@ -106,7 +106,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1&tagQuery=TAG-A　TAG-あいうえお HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
@@ -138,3 +138,44 @@ Authorization: Bearer {{accessToken}}
 ### メタ情報一覧取得
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/meta/list HTTP/1.1
 Authorization: Bearer {{accessToken}}
+
+### アルバムの販売開始を行う
+PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/sales HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "action": "START",
+  "topics": {
+    "send": true,
+    "classReceivedList": ["0000101"],
+    "academicYear": "2025" 
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### test
+POST https://stg.nanapocke.com/manage/api/v1/topics HTTP/1.1
+content-type: application/json
+Authorization: Bearer Dc9b7LWpmu-uwa8cEee6OI_pKceEt7zAvb2YJZW8BHSyMrAiM-Y
+
+{}

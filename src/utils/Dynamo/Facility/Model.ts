@@ -4,47 +4,70 @@ import {
   QueryCommand,
   GetCommand,
   UpdateCommand,
+  BatchWriteCommand,
+  TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {FacilityConfig} from "../../../config";
 
+type ClassData = {
+  code: string;
+  name: string;
+  grade: string;
+};
 export async function create(
   code: string,
   name: string,
   nbf: string,
-  exp: string
-): Promise<Record<string, any>> {
+  exp: string,
+  classList: ClassData[],
+  userId: string
+): Promise<void> {
   const nowISO = new Date().toISOString();
 
-  // コマンド生成
-  const command = new PutCommand({
-    TableName: FacilityConfig.TABLE_NAME,
-    Item: {
-      pk: "FACILITY",
-      sk: code,
-      code: code,
-      name: name,
-      nbf: nbf,
-      exp: exp,
-      status: FacilityConfig.STATUS.ACTIVE,
-      createdAt: nowISO,
-      updatedAt: nowISO,
-    },
-    ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-  });
+  const TransactItems: any[] = [];
 
-  // コマンド実行
-  const result = await docClient().send(command);
-  return result.$metadata.httpStatusCode == 200
-    ? {
+  TransactItems.push({
+    Put: {
+      TableName: FacilityConfig.TABLE_NAME,
+      Item: {
+        pk: "FACILITY",
+        sk: code,
         code: code,
         name: name,
         nbf: nbf,
         exp: exp,
         status: FacilityConfig.STATUS.ACTIVE,
         createdAt: nowISO,
+        createdBy: userId,
         updatedAt: nowISO,
-      }
-    : {};
+        updatedBy: userId,
+      },
+    },
+  });
+
+  for (const data of classList) {
+    TransactItems.push({
+      Put: {
+        TableName: FacilityConfig.TABLE_NAME,
+        Item: {
+          pk: `FACILITY#${code}#CLASS`,
+          sk: data.code,
+          facilityCode: code,
+          classCode: data.code,
+          className: data.name,
+          gradeCode: data.grade,
+          lsi1: data.grade,
+          createdAt: nowISO,
+          createdBy: userId,
+        },
+      },
+    });
+  }
+
+  // コマンド実行
+  const result = await docClient().send(
+    new TransactWriteCommand({TransactItems: TransactItems})
+  );
 }
 
 export async function list(): Promise<any> {
@@ -146,4 +169,63 @@ export async function get(
   // コマンド実行
   const result = await docClient().send(command);
   return result.Item;
+}
+
+// クラス管理 ===========================================
+export async function classList(facilityCode: string): Promise<any> {
+  const command = new QueryCommand({
+    TableName: FacilityConfig.TABLE_NAME,
+    KeyConditionExpression: "#pk = :pk",
+    IndexName: "lsi1_index",
+    ProjectionExpression:
+      "#sk, #classCode, #className, #gradeCode, #createdAt, #createdBy",
+    ExpressionAttributeNames: {
+      "#pk": "pk",
+      "#sk": "sk",
+      "#classCode": "classCode",
+      "#className": "className",
+      "#gradeCode": "gradeCode",
+      "#createdAt": "createdAt",
+      "#createdBy": "createdBy",
+    },
+    ExpressionAttributeValues: {
+      ":pk": `FACILITY#${facilityCode}#CLASS`,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Items;
+}
+
+export async function addClass(
+  facilityCode: string,
+  classList: ClassData[],
+  userId: string
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+
+  // タグを全て保存する（BatchWriteで実行）
+  const requestItems = classList.map((data) => ({
+    PutRequest: {
+      Item: {
+        pk: `FACILITY#${facilityCode}#CLASS`,
+        sk: data.code,
+        facilityCode: facilityCode,
+        classCode: data.code,
+        gradeCode: data.grade,
+        lsi1: data.grade,
+        createdAt: nowISO,
+        createdBy: userId,
+      },
+    },
+  }));
+  const command = new BatchWriteCommand({
+    RequestItems: {
+      [FacilityConfig.TABLE_NAME]: requestItems,
+    },
+  });
+
+  // コマンド実行
+  await docClient().send(command);
 }

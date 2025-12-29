@@ -16,9 +16,16 @@ const MetaStaff = v.object({
   userName: v.pipe(v.string(), v.minLength(1)),
 });
 
+const MetaClass = v.object({
+  classCode: nanapocke.ClassCode,
+  className: v.pipe(v.string(), v.minLength(1)),
+});
+
 export const MetaListResponse = v.object({
   tags: v.optional(v.array(v.string()), []),
   albums: v.optional(v.array(MetaAlbum), []),
   staff: v.optional(v.array(MetaStaff)),
+  classList: v.optional(v.array(MetaClass)),
+  academicYear: v.optional(v.array(nanapocke.AcademicYear)),
 });
 export type MetaListResponseT = v.InferOutput<typeof MetaListResponse>;

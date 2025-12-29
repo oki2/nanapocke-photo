@@ -18,3 +18,16 @@ export const VIEW_STATUS = {
   GUARDIAN: [SALES_STATUS.PUBLISHED],
   PHOTOGRAPHER: [SALES_STATUS.DRAFT],
 };
+
+export const PRICE_TABLE = {
+  BASIC: "BASIC",
+  PREMIUM: "PREMIUM",
+  SALE: "SALE",
+};
+
+export const MAX_PHOTO_COUNT = 150;
+
+export const SALES_ACTION = {
+  START: "START",
+  STOP: "STOP",
+};

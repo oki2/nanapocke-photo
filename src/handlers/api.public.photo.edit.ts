@@ -11,7 +11,6 @@ import {parseOrThrow} from "../libs/validate";
 import {PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
-import {GetParameter} from "../utils/ParameterStore";
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
 import {config} from "process";

@@ -41,3 +41,7 @@ const uuidV7 = v.pipe(
 
 export const AlbumId = uuidV4;
 export const PhotoId = uuidV4;
+
+export const ResultOK = v.object({
+  ok: v.literal(true),
+});

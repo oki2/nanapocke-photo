@@ -1,7 +1,7 @@
 import {StorageClass} from "@aws-sdk/client-s3";
 import {EventBridgeHandler} from "aws-lambda";
 
-import {AppConfig} from "../../config";
+import {AppConfig, PhotoConfig} from "../../config";
 import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 import * as Photo from "../../utils/Dynamo/Photo";
 
@@ -65,6 +65,8 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     shootingAt.setHours(shootingAt.getHours() - 9);
     console.log("shootingAt", shootingAt);
 
+    const salesSize: string[] = [];
+
     // ============================================================
     // 1. webp へ変換 100px x 100px に縮小 =====
     const webpImg = orgImg.clone();
@@ -118,11 +120,12 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
-      `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-dl.jpg`,
+      `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
       finalBuffer,
       "image/jpeg",
       StorageClass.STANDARD_IA
     );
+    salesSize.push(PhotoConfig.SALES_SIZE.DONWLOAD);
 
     // ============================================================
     // 3. 印刷L画像 1051 x 1500 以上
@@ -150,11 +153,12 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
       await S3FilePut(
         AppConfig.BUCKET_PHOTO_NAME,
-        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-printl.jpg`,
+        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
         plBf,
         "image/jpeg",
         StorageClass.STANDARD_IA
       );
+      salesSize.push(PhotoConfig.SALES_SIZE.PRINT_L);
     }
 
     // ============================================================
@@ -183,11 +187,12 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
       await S3FilePut(
         AppConfig.BUCKET_PHOTO_NAME,
-        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-print2l.jpg`,
+        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
         p2lBf,
         "image/jpeg",
         StorageClass.STANDARD_IA
       );
+      salesSize.push(PhotoConfig.SALES_SIZE.PRINT_2L);
     }
 
     // ============================================================
@@ -211,6 +216,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       `EDITABLE#${shootingAtISO}#${photoId}`,
       meta.width,
       meta.height,
+      salesSize,
       shootingAtISO
     );
 

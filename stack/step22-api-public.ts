@@ -330,6 +330,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     );
 
     // アルバムへ写真登録
+    // ※※※※　削除予定　※※※※
     this.lambdaFn.albumSetPhotoFn = new NodejsFunction(
       this,
       "ApiPublicAlbumSetPhotoFn",
@@ -350,6 +351,44 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:PutItem"],
             resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
+    // アルバムの販売状況の編集
+    this.lambdaFn.albumSalseFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumSalseFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumSalse`,
+        description: `${functionPrefix}-ApiPublicAlbumSalse`,
+        entry: "src/handlers/api.public.album.sales.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:Query",
+              "dynamodb:UpdateItem",
+            ],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [
+              `${props.bucketUpload.bucketArn}/action/albumPublished/*`,
+            ],
           }),
         ],
       }

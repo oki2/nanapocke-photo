@@ -32,3 +32,9 @@ export const SORT_ORDER = {
   ASC: "ASC",
   DESC: "DESC",
 };
+
+export const SALES_SIZE = {
+  PRINT_L: "printl",
+  PRINT_2L: "print2l",
+  DONWLOAD: "dl",
+};

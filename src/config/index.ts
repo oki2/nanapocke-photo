@@ -13,4 +13,6 @@ export * as PhotoConfig from "./Model/Photo";
 export * as UserConfig from "./Model/User";
 export * as TagConfig from "./Model/Tag";
 
+export * as PriceConfig from "./Price";
+
 export * as CognitoConfig from "./Cognito";

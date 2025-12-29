@@ -6,12 +6,19 @@ import * as nanapocke from "./common.nanapocke";
 export const Name = v.pipe(v.string(), v.minLength(1));
 export const Status = v.picklist(["ACTIVE", "INACTIVE"]);
 
+const FacilityClass = v.object({
+  code: nanapocke.ClassCode,
+  name: Name,
+  grade: v.pipe(v.string(), v.regex(/^[0-9]{1}$/)),
+});
+
 export const FacilityCreateBody = v.pipe(
   v.object({
     code: nanapocke.FacilityCode,
     name: Name,
     nbf: common.ISODateTime,
     exp: common.ISODateTime,
+    classList: v.array(FacilityClass),
   }),
   v.custom((input) => {
     const d = input as {nbf?: string; exp?: string};
@@ -52,9 +59,7 @@ export const FacilityResponse = v.object({
   name: Name,
   nbf: common.ISODateTime,
   exp: common.ISODateTime,
-  status: Status,
-  createdAt: common.ISODateTime,
-  updatedAt: common.ISODateTime,
+  classCount: v.number(),
 });
 
 export const FacilityListResponse = v.array(

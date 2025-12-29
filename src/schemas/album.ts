@@ -5,7 +5,7 @@ import {created} from "../http";
 import {AlbumConfig} from "../config";
 
 // アルバム販売テーブル
-export const PriceTable = v.picklist(["BASIC", "PREMIUM", "SALE"]);
+export const PriceTable = v.picklist(Object.values(AlbumConfig.PRICE_TABLE));
 
 // アルバム新規作成時のリクエストボディ
 export const AlbumCreateBody = v.pipe(
@@ -75,3 +75,38 @@ export const AlbumSetPhotoBody = v.pipe(
   })
 );
 export type AlbumSetPhotoBodyT = v.InferOutput<typeof AlbumSetPhotoBody>;
+
+// アルバム販売開始・停止のリクエストボディ ================================================
+const SalesTopicsSend = v.object({
+  send: v.literal(true),
+  classReceivedList: v.array(nanapocke.ClassCode),
+  academicYear: nanapocke.AcademicYear,
+});
+
+const SalesTopicsNotSend = v.object({
+  send: v.literal(false),
+});
+
+export const AlbumSalesStart = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.START),
+    topics: v.variant("send", [SalesTopicsSend, SalesTopicsNotSend]),
+    // topics: v.object({
+    //   send: v.boolean(),
+    //   classReceivedList: v.array(nanapocke.ClassCode),
+    //   academicYear: nanapocke.AcademicYear,
+    // }),
+  })
+);
+
+export const AlbumSalesStop = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.STOP),
+  })
+);
+
+// Signin Response 判別共用体（state が判別キー）
+export const AlbumSalesBody = v.variant("action", [
+  AlbumSalesStart,
+  AlbumSalesStop,
+]);

@@ -7,6 +7,20 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import {AlbumConfig} from "../../../config";
 
+export async function get(facilityCode: string, albumId: string): Promise<any> {
+  const command = new GetCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#META`,
+      sk: albumId,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
+}
+
 export async function create(
   facilityCode: string,
   userId: string,
@@ -160,6 +174,203 @@ export async function setPhoto(
     })
   );
 
+  return;
+}
+
+/**
+ * アルバム内の写真枚数を取得
+ *
+ * @param {string} facilityCode - Facility code.
+ * @param {string} albumId - Album ID.
+ * @returns {Promise<number>} - Promise of count of photos.
+ */
+export async function photoCount(
+  facilityCode: string,
+  albumId: string
+): Promise<number> {
+  const nowISO = new Date().toISOString();
+
+  // コマンド実行
+  const result = await docClient().send(
+    new QueryCommand({
+      TableName: AlbumConfig.TABLE_NAME,
+      KeyConditionExpression: "#pk = :pk",
+      Select: "COUNT",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+      },
+      ExpressionAttributeValues: {
+        ":pk": `FAC#${facilityCode}#ALBUM#${albumId}`,
+      },
+    })
+  );
+  return result.Count ?? 0;
+}
+
+/**
+ * アルバムを公開準備にする
+ *
+ * @param {string} facilityCode - Facility code.
+ * @param {string} albumId - Album ID.
+ * @param {string} userId - User ID.
+ * @returns {Promise<void>} - Promise of void.
+ */
+export async function actionSalesPublishing(
+  facilityCode: string,
+  albumId: string,
+  userId: string,
+  topicsSend: boolean,
+  topicsAcademicYear: string,
+  topicsClassReceivedList: string[]
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+
+  let UpdateExpression =
+    "SET #salesStatus = :salesStatus, #topicsSend = :topicsSend, #topicsAcademicYear = :topicsAcademicYear, #topicsClassReceivedList = :topicsClassReceivedList, #updatedAt = :updatedAt, #updatedBy = :updatedBy, #publishingAt = :publishingAt, #publishingBy = :publishingBy";
+
+  let ExpressionAttributeNames: any = {
+    "#salesStatus": "salesStatus",
+    "#topicsSend": "topicsSend",
+    "#topicsAcademicYear": "topicsAcademicYear",
+    "#topicsClassReceivedList": "topicsClassReceivedList",
+    "#updatedAt": "updatedAt",
+    "#updatedBy": "updatedBy",
+    "#publishingAt": "publishingAt",
+    "#publishingBy": "publishingBy",
+  };
+
+  let ExpressionAttributeValues: any = {
+    ":salesStatus": AlbumConfig.SALES_STATUS.PUBLISHING,
+    ":topicsSend": topicsSend,
+    ":topicsAcademicYear": topicsAcademicYear,
+    ":topicsClassReceivedList": topicsClassReceivedList,
+    ":beforeSalesStatus": AlbumConfig.SALES_STATUS.DRAFT,
+    ":updatedAt": nowISO,
+    ":updatedBy": userId,
+    ":publishingAt": nowISO,
+    ":publishingBy": userId,
+  };
+
+  // コマンド生成
+  const command = new UpdateCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#META`,
+      sk: albumId,
+    },
+    UpdateExpression: UpdateExpression,
+    ConditionExpression: "#salesStatus = :beforeSalesStatus",
+    ExpressionAttributeNames: ExpressionAttributeNames,
+    ExpressionAttributeValues: ExpressionAttributeValues,
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+}
+
+/**
+ * アルバムを公開状態にする
+ *
+ * @param {string} facilityCode - Facility code.
+ * @param {string} albumId - Album ID.
+ * @param {string} userId - User ID.
+ * @returns {Promise<void>} - Promise of void.
+ */
+export async function actionSalesPublished(
+  facilityCode: string,
+  albumId: string,
+  userId: string
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+
+  let UpdateExpression =
+    "SET #salesStatus = :salesStatus, #updatedAt = :updatedAt, #updatedBy = :updatedBy, #publishedAt = :publishedAt, #publishedBy = :publishedBy";
+
+  let ExpressionAttributeNames: any = {
+    "#salesStatus": "salesStatus",
+    "#updatedAt": "updatedAt",
+    "#updatedBy": "updatedBy",
+    "#publishedAt": "publishedAt",
+    "#publishedBy": "publishedBy",
+  };
+
+  let ExpressionAttributeValues: any = {
+    ":salesStatus": AlbumConfig.SALES_STATUS.PUBLISHED,
+    ":beforeSalesStatus": AlbumConfig.SALES_STATUS.PUBLISHING,
+    ":updatedAt": nowISO,
+    ":updatedBy": userId,
+    ":publishedAt": nowISO,
+    ":publishedBy": userId,
+  };
+
+  // コマンド生成
+  const command = new UpdateCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#META`,
+      sk: albumId,
+    },
+    UpdateExpression: UpdateExpression,
+    ConditionExpression: "#salesStatus = :beforeSalesStatus",
+    ExpressionAttributeNames: ExpressionAttributeNames,
+    ExpressionAttributeValues: ExpressionAttributeValues,
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+  return;
+}
+
+/**
+ * アルバムを非公開にする
+ *
+ * @param {string} facilityCode - Facility code.
+ * @param {string} albumId - Album ID.
+ * @param {string} userId - User ID.
+ * @returns {Promise<void>} - Promise of void.
+ */
+export async function actionSalesUnpublished(
+  facilityCode: string,
+  albumId: string,
+  userId: string
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+
+  let UpdateExpression =
+    "SET #salesStatus = :salesStatus, #updatedAt = :updatedAt, #updatedBy = :updatedBy, #unpublishedAt = :unpublishedAt, #unpublishedBy = :unpublishedBy";
+
+  let ExpressionAttributeNames: any = {
+    "#salesStatus": "salesStatus",
+    "#updatedAt": "updatedAt",
+    "#updatedBy": "updatedBy",
+    "#unpublishedAt": "unpublishedAt",
+    "#unpublishedBy": "unpublishedBy",
+  };
+
+  let ExpressionAttributeValues: any = {
+    ":salesStatus": AlbumConfig.SALES_STATUS.UNPUBLISHED,
+    ":beforeSalesStatus": AlbumConfig.SALES_STATUS.PUBLISHED,
+    ":updatedAt": nowISO,
+    ":updatedBy": userId,
+    ":unpublishedAt": nowISO,
+    ":unpublishedBy": userId,
+  };
+
+  // コマンド生成
+  const command = new UpdateCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#META`,
+      sk: albumId,
+    },
+    UpdateExpression: UpdateExpression,
+    ConditionExpression: "#salesStatus = :beforeSalesStatus",
+    ExpressionAttributeNames: ExpressionAttributeNames,
+    ExpressionAttributeValues: ExpressionAttributeValues,
+  });
+
+  // コマンド実行
+  await docClient().send(command);
   return;
 }
 

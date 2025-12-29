@@ -38,3 +38,18 @@ export function albumIdSplitter(albumIdStr: string): string[] {
     ),
   ];
 }
+
+/**
+ * 現在の日付から年度を取得する
+ * @returns {number} 年度
+ */
+export function getAacademicYearJST(): number {
+  const now = new Date(
+    new Date().toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"})
+  );
+
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
+  return month >= 4 ? year : year - 1;
+}
