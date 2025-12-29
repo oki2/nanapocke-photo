@@ -335,33 +335,6 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
-    // アルバムへ写真登録
-    // ※※※※　削除予定　※※※※
-    this.lambdaFn.albumSetPhotoFn = new NodejsFunction(
-      this,
-      "ApiPublicAlbumSetPhotoFn",
-      {
-        functionName: `${functionPrefix}-ApiPublicAlbumSetPhoto`,
-        description: `${functionPrefix}-ApiPublicAlbumSetPhoto`,
-        entry: "src/handlers/api.public.album.setPhoto.ts",
-        handler: "handler",
-        runtime: lambda.Runtime.NODEJS_22_X,
-        architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
-        environment: {
-          ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
-        },
-        initialPolicy: [
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:PutItem"],
-            resources: [props.MainTable.tableArn],
-          }),
-        ],
-      }
-    );
-
     // アルバムの販売状況の編集
     this.lambdaFn.albumSalseFn = new NodejsFunction(
       this,

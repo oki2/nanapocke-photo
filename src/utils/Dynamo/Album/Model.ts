@@ -186,35 +186,6 @@ export async function setAlbumImage(
   return true;
 }
 
-export async function setPhoto(
-  facilityCode: string,
-  userId: string,
-  albumId: string,
-  photoId: string
-): Promise<void> {
-  const nowISO = new Date().toISOString();
-
-  // コマンド実行
-  const result = await docClient().send(
-    new PutCommand({
-      TableName: AlbumConfig.TABLE_NAME,
-      Item: {
-        pk: `FAC#${facilityCode}#ALBUM#PHOTO`,
-        sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
-        lsi1: photoId,
-        facilityCode: facilityCode,
-        albumId: albumId,
-        photoId: photoId,
-        createdAt: nowISO,
-        createdBy: userId,
-      },
-      // ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
-  );
-
-  return;
-}
-
 /**
  * アルバム内の写真枚数を取得
  *

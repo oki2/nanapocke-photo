@@ -274,17 +274,6 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
-    // アルバムへ写真登録
-    this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/album/{albumId}/photo",
-      methods: [apigwv2.HttpMethod.PUT],
-      integration: new HttpLambdaIntegration(
-        "AlbumSetPhotoIntegration",
-        props.lambdaFnPublic.albumSetPhotoFn
-      ),
-      authorizer: AuthorizerPrincipalVeify,
-    });
-
     // アルバムの販売設定変更
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/album/{albumId}/sales",
