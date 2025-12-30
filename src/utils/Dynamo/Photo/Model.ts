@@ -20,7 +20,8 @@ export type Photo = {
   tags: string[];
   albums: string[];
   priceTier: string;
-  salesSize: string[];
+  salesSizeDl: string[];
+  salesSizePrint: string[];
   width: number;
   height: number;
   shootingAt: string; // ISO8601
@@ -170,7 +171,8 @@ export async function setPhotoMeta(
   lsi2: string,
   width: number,
   height: number,
-  salesSize: string[],
+  salesSizeDl: string[],
+  salesSizePrint: string[],
   shootingAt: string
 ): Promise<Record<string, any> | undefined> {
   // コマンド生成
@@ -181,7 +183,7 @@ export async function setPhotoMeta(
       pk: `FAC#${facilityCode}#PHOTO#META`,
       sk: photoId,
     },
-    UpdateExpression: `SET #lsi1 = :lsi1, #lsi2 = :lsi2, #lsi3 = :lsi3, #lsi4 = :lsi4, #status = :status, #width = :width, #height = :height, #salesSize = :salesSize, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
+    UpdateExpression: `SET #lsi1 = :lsi1, #lsi2 = :lsi2, #lsi3 = :lsi3, #lsi4 = :lsi4, #status = :status, #width = :width, #height = :height, #salesSizeDl = :salesSizeDl, #salesSizePrint = :salesSizePrint, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
     ExpressionAttributeNames: {
       "#lsi1": "lsi1",
       "#lsi2": "lsi2",
@@ -190,7 +192,8 @@ export async function setPhotoMeta(
       "#status": "status",
       "#width": "width",
       "#height": "height",
-      "#salesSize": "salesSize",
+      "#salesSizeDl": "salesSizeDl",
+      "#salesSizePrint": "salesSizePrint",
       "#shootingAt": "shootingAt",
       "#updatedAt": "updatedAt",
     },
@@ -202,7 +205,8 @@ export async function setPhotoMeta(
       ":status": PhotoConfig.STATUS.ACTIVE,
       ":width": width,
       ":height": height,
-      ":salesSize": salesSize,
+      ":salesSizeDl": salesSizeDl,
+      ":salesSizePrint": salesSizePrint,
       ":shootingAt": shootingAt,
       ":updatedAt": nowISO,
     },

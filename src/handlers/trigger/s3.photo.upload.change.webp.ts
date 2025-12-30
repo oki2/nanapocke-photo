@@ -65,7 +65,8 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     shootingAt.setHours(shootingAt.getHours() - 9);
     console.log("shootingAt", shootingAt);
 
-    const salesSize: string[] = [];
+    const salesSizePrint: string[] = [];
+    const salesSizeDl: string[] = [];
 
     // ============================================================
     // 1. webp へ変換 100px x 100px に縮小 =====
@@ -125,7 +126,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       "image/jpeg",
       StorageClass.STANDARD_IA
     );
-    salesSize.push(PhotoConfig.SALES_SIZE.DONWLOAD);
+    salesSizeDl.push(PhotoConfig.SALES_SIZE.DONWLOAD);
 
     // ============================================================
     // 3. 印刷L画像 1051 x 1500 以上
@@ -158,7 +159,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         "image/jpeg",
         StorageClass.STANDARD_IA
       );
-      salesSize.push(PhotoConfig.SALES_SIZE.PRINT_L);
+      salesSizePrint.push(PhotoConfig.SALES_SIZE.PRINT_L);
     }
 
     // ============================================================
@@ -192,7 +193,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         "image/jpeg",
         StorageClass.STANDARD_IA
       );
-      salesSize.push(PhotoConfig.SALES_SIZE.PRINT_2L);
+      salesSizePrint.push(PhotoConfig.SALES_SIZE.PRINT_2L);
     }
 
     // ============================================================
@@ -216,7 +217,8 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       `EDITABLE#${shootingAtISO}#${photoId}`,
       meta.width,
       meta.height,
-      salesSize,
+      salesSizeDl,
+      salesSizePrint,
       shootingAtISO
     );
 

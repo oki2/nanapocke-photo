@@ -72,7 +72,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = eadbd270-9cd9-4380-8975-a637d055d81c
+@albumId = 56f6fa3f-8d14-4d9f-b5ab-309320353964
 
 ### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
@@ -82,9 +82,11 @@ Authorization: Bearer {{accessToken}}
 {
   "title": "テストアルバムa",
   "description": "アルバムaの説明",
-  "priceTable": "STANDARD",
-  "nbf": "2025-12-16T00:00:00Z",
-  "exp": "2025-12-19T00:00:00Z"
+  "priceTable": "BASIC",
+  "salesPeriod": {
+    "start": "2025-12-16T00:00:00Z",
+    "end": "2026-12-19T00:00:00Z"
+  }
 }
 
 ### 写真追加（画像ファイル版）

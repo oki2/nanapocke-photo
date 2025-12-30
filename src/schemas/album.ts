@@ -68,24 +68,23 @@ export const AlbumEditResponse = v.object({
 });
 export type AlbumEditResponseT = v.InferOutput<typeof AlbumEditResponse>;
 
-export const AlbumListResponse = v.array(
-  v.pipe(
-    v.object({
-      albumId: common.AlbumId,
-      sequenceId: v.number(),
-      title: v.pipe(v.string(), v.minLength(1)),
-      description: v.pipe(v.string(), v.minLength(1)),
-      salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
-      priceTable: PriceTable,
-      photoCount: v.optional(v.number()),
-      coverImageUrl: v.optional(v.pipe(v.string()), ""),
-      salesPeriod: v.optional(SalesPeriod, {
-        start: "",
-        end: "",
-      }),
-    })
-  )
-);
+export const AlbumItem = v.object({
+  albumId: common.AlbumId,
+  sequenceId: v.number(),
+  title: v.pipe(v.string(), v.minLength(1)),
+  description: v.pipe(v.string(), v.minLength(1)),
+  salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
+  priceTable: PriceTable,
+  photoCount: v.optional(v.number()),
+  coverImageUrl: v.optional(v.pipe(v.string()), ""),
+  salesPeriod: v.optional(SalesPeriod, {
+    start: "",
+    end: "",
+  }),
+});
+export type AlbumItemT = v.InferOutput<typeof AlbumItem>;
+
+export const AlbumListResponse = v.array(AlbumItem);
 export type AlbumListResponseT = v.InferOutput<typeof AlbumListResponse>;
 
 export const AlbumSetPhotoPath = v.pipe(

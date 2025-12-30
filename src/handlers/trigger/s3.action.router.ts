@@ -6,6 +6,8 @@ import {
   AlbumPublishedT,
 } from "../../schemas/trigger.s3.action.router";
 
+import {AlbumItemT} from "../../schemas/album";
+
 import {AppConfig, AlbumConfig, PhotoConfig, PriceConfig} from "../../config";
 import {S3FileReadToString, S3FilePut} from "../../utils/S3";
 import * as Album from "../../utils/Dynamo/Album";
@@ -66,12 +68,19 @@ async function albumPublished(bucketName: string, keyPath: string) {
     return {
       photoId: photo.photoId,
       sequenceId: photo.sequenceId,
+      imageUrl: `/thumbnail/${photo.facilityCode}/${photo.createdBy}/${photo.photoId}.webp`,
       priceTier: photo.priceTier,
       shootingAt: photo.shootingAt,
       width: photo.width,
       height: photo.height,
-      imageUrl: `/thumbnail/${photo.facilityCode}/${photo.createdBy}/${photo.photoId}.webp`,
-      salesSize: photo.salesSize.map((size) => {
+      salesSizeDl: photo.salesSizeDl.map((size) => {
+        return {
+          size: size,
+          price:
+            PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][size],
+        };
+      }),
+      salesSizePrint: photo.salesSizePrint.map((size) => {
         return {
           size: size,
           price:
@@ -81,16 +90,22 @@ async function albumPublished(bucketName: string, keyPath: string) {
     };
   });
 
-  const albumObj = {
-    album: {
-      albumId: album.albumId,
-      sequenceId: album.sequenceId,
-      title: album.title,
-      description: album.description,
-      priceTable: album.priceTable,
-      nbf: album.nbf,
-      exp: album.exp,
-    },
+  const albumObj: AlbumItemT = {
+    albumId: album.albumId,
+    sequenceId: album.sequenceId,
+    title: album.title,
+    description: album.description,
+    salesStatus: album.salesStatus,
+    priceTable: album.priceTable,
+    photoCount: photosObj.length,
+    coverImageUrl: album.coverImage
+      ? `/thumbnail/${album.facilityCode}/album/${album.albumId}/${album.coverImage}`
+      : "",
+    salesPeriod: album.salesPeriod,
+  };
+
+  const dataObj = {
+    album: albumObj,
     photos: photosObj,
   };
 
@@ -98,7 +113,7 @@ async function albumPublished(bucketName: string, keyPath: string) {
   await S3FilePut(
     AppConfig.BUCKET_PHOTO_NAME,
     `sales/${data.facilityCode}/${data.albumId}.json`,
-    JSON.stringify(albumObj)
+    JSON.stringify(dataObj)
   );
 
   // 6. アルバム情報を更新（販売中に変更）
