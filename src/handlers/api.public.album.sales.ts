@@ -89,7 +89,20 @@ async function salesStart(
     };
   }
 
-  // 2. 対象のアルバムに含まれる写真の枚数を取得
+  // 2. アルバム販売期間を確認、未設定、又は終了日が過去日の場合はエラー
+  if (
+    !album.salesPeriod ||
+    !album.salesPeriod.start ||
+    !album.salesPeriod.end ||
+    album.salesPeriod.end < new Date().toISOString()
+  ) {
+    return {
+      ok: false,
+      detail: `販売期間を設定してください`,
+    };
+  }
+
+  // 3. 対象のアルバムに含まれる写真の枚数を取得
   const photoCount = await Album.photoCount(facilityCode, albumId);
   console.log("photoCount", photoCount);
 
@@ -109,7 +122,7 @@ async function salesStart(
     };
   }
 
-  // 3. アルバムを販売開始処理ステータスに変更
+  // 4. アルバムを販売開始処理ステータスに変更
   await Album.actionSalesPublishing(
     facilityCode,
     albumId,
@@ -119,7 +132,7 @@ async function salesStart(
     data.topics.send ? data.topics.classReceivedList : []
   );
 
-  // 4. アルバムの販売データ作成処理（Eventトリガーで実行のためS3に保存）
+  // 5. アルバムの販売データ作成処理（Eventトリガーで実行のためS3に保存）
   const triggerData: AlbumPublishedT = {
     facilityCode: facilityCode,
     albumId: albumId,

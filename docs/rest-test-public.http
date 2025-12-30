@@ -51,8 +51,12 @@ Authorization: Bearer {{accessToken}}
 {
   "title": "テストアルバム",
   "description": "アルバムの説明",
-  "priceTable": "BASIC",
-  "fileName": "test.jpg"
+  "coverImage": "test.jpg",
+  "salesPeriod": {
+    "start": "2025-12-16T00:00:00Z",
+    "end": "2025-12-30T00:00:00Z"
+  },
+  "priceTable": "BASIC"
 }
 
 ### アルバム画像ファイルを実際に送信
@@ -68,7 +72,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 413b63eb-52d3-46a7-a59c-1ccf685bdc1d
+@albumId = eadbd270-9cd9-4380-8975-a637d055d81c
 
 ### アルバム編集・更新
 PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1

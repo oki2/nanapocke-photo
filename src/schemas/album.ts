@@ -7,36 +7,33 @@ import {AlbumConfig} from "../config";
 // アルバム販売テーブル
 export const PriceTable = v.picklist(Object.values(AlbumConfig.PRICE_TABLE));
 
+// アルバムの販売期間
+export const SalesPeriod = v.pipe(
+  v.object({
+    start: v.union([common.ISODateTime, v.literal("")]),
+    end: v.union([common.ISODateTime, v.literal("")]),
+  }),
+  v.check(({start, end}) => {
+    // どちらかが未入力（空文字）の場合は OK
+    if (start === "" || end === "") {
+      return true;
+    }
+    return new Date(end).getTime() > new Date(start).getTime();
+  }, "end は start より後の日時を指定してください")
+);
+export type SalesPeriodT = v.InferOutput<typeof SalesPeriod>;
+
 // アルバム新規作成時のリクエストボディ
 export const AlbumCreateBody = v.pipe(
   v.object({
     title: v.pipe(v.string(), v.minLength(1)),
     description: v.optional(v.pipe(v.string(), v.minLength(1))),
     priceTable: PriceTable,
-    nbf: v.optional(common.ISODateTime),
-    exp: v.optional(common.ISODateTime),
-    fileName: v.optional(v.pipe(v.string(), v.minLength(1))),
+    salesPeriod: v.optional(SalesPeriod),
+    coverImage: v.optional(v.pipe(v.string(), v.minLength(1))),
   })
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
-
-export const AlbumPathParameters = v.pipe(
-  v.object({
-    facilityCode: nanapocke.FacilityCode,
-    albumId: common.AlbumId,
-  })
-);
-
-export const AlbumUpdateBody = v.pipe(
-  v.object({
-    title: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string(), v.minLength(1))),
-    priceTable: PriceTable,
-    nbf: common.ISODateTime,
-    exp: common.ISODateTime,
-  })
-);
-export type AlbumUpdateBodyT = v.InferOutput<typeof AlbumUpdateBody>;
 
 export const AlbumCreateResponse = v.pipe(
   v.object({
@@ -46,6 +43,30 @@ export const AlbumCreateResponse = v.pipe(
   })
 );
 export type AlbumCreateResponseT = v.InferOutput<typeof AlbumCreateResponse>;
+
+export const AlbumPathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    albumId: common.AlbumId,
+  })
+);
+
+export const AlbumEditBody = v.pipe(
+  v.object({
+    title: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    priceTable: PriceTable,
+    salesPeriod: SalesPeriod,
+    coverImage: v.optional(v.pipe(v.string(), v.minLength(1))),
+  })
+);
+export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;
+
+export const AlbumEditResponse = v.object({
+  ok: v.literal(true),
+  url: v.optional(v.pipe(v.string(), v.minLength(1))),
+});
+export type AlbumEditResponseT = v.InferOutput<typeof AlbumEditResponse>;
 
 export const AlbumListResponse = v.array(
   v.pipe(
@@ -57,9 +78,11 @@ export const AlbumListResponse = v.array(
       salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
       priceTable: PriceTable,
       photoCount: v.optional(v.number()),
-      imageFile: v.optional(v.pipe(v.string()), ""),
-      nbf: v.union([common.ISODateTime, v.literal("")]),
-      exp: v.union([common.ISODateTime, v.literal("")]),
+      coverImageUrl: v.optional(v.pipe(v.string()), ""),
+      salesPeriod: v.optional(SalesPeriod, {
+        start: "",
+        end: "",
+      }),
     })
   )
 );

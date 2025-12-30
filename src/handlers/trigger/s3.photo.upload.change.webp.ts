@@ -120,7 +120,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
-      `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
+      `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
       finalBuffer,
       "image/jpeg",
       StorageClass.STANDARD_IA
@@ -153,7 +153,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
       await S3FilePut(
         AppConfig.BUCKET_PHOTO_NAME,
-        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
+        `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
         plBf,
         "image/jpeg",
         StorageClass.STANDARD_IA
@@ -187,7 +187,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
       await S3FilePut(
         AppConfig.BUCKET_PHOTO_NAME,
-        `storage/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
+        `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
         p2lBf,
         "image/jpeg",
         StorageClass.STANDARD_IA

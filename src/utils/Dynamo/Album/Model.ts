@@ -27,8 +27,7 @@ export async function create(
   title: string,
   description: string,
   priceTable: string,
-  nbf: string | undefined,
-  exp: string | undefined
+  salesPeriod: any | undefined
 ): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
   const albumId = crypto.randomUUID();
@@ -48,8 +47,7 @@ export async function create(
         title: title,
         description: description,
         priceTable: priceTable,
-        nbf: nbf,
-        exp: exp,
+        salesPeriod: salesPeriod,
         salesStatus: AlbumConfig.SALES_STATUS.DRAFT,
         createdAt: nowISO,
         createdBy: userId,
@@ -73,7 +71,7 @@ export async function list(facilityCode: string): Promise<any> {
     ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #nbf, #exp, #salesStatus, #photoCount, #imageFile, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #salesPeriod, #salesStatus, #photoCount, #coverImage, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
@@ -82,11 +80,10 @@ export async function list(facilityCode: string): Promise<any> {
       "#title": "title",
       "#description": "description",
       "#priceTable": "priceTable",
-      "#nbf": "nbf",
-      "#exp": "exp",
+      "#salesPeriod": "salesPeriod",
       "#salesStatus": "salesStatus",
       "#photoCount": "photoCount",
-      "#imageFile": "imageFile",
+      "#coverImage": "coverImage",
       "#createdAt": "createdAt",
       "#createdBy": "createdBy",
       "#updatedAt": "updatedAt",
@@ -109,8 +106,7 @@ export async function update(
   title: string,
   description: string,
   priceTable: string,
-  nbf: string,
-  exp: string
+  salesPeriod: any | undefined
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
 
@@ -121,14 +117,13 @@ export async function update(
       pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
     },
-    UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #nbf = :nbf, #exp = :exp, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
       "#title": "title",
       "#description": "description",
       "#priceTable": "priceTable",
-      "#nbf": "nbf",
-      "#exp": "exp",
+      "#salesPeriod": "salesPeriod",
       "#salesStatus": "salesStatus",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
@@ -137,8 +132,7 @@ export async function update(
       ":title": title,
       ":description": description,
       ":priceTable": priceTable,
-      ":nbf": nbf,
-      ":exp": exp,
+      ":salesPeriod": salesPeriod,
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
       ":updatedAt": nowISO,
       ":updatedBy": userId,
@@ -150,10 +144,10 @@ export async function update(
   return true;
 }
 
-export async function setAlbumImage(
+export async function setCoverImage(
   facilityCode: string,
   albumId: string,
-  imageFile: string,
+  coverImage: string,
   userId: string
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
@@ -165,16 +159,16 @@ export async function setAlbumImage(
       pk: `FAC#${facilityCode}#ALBUM#META`,
       sk: albumId,
     },
-    UpdateExpression: `SET #imageFile = :imageFile, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #coverImage = :coverImage, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
-      "#imageFile": "imageFile",
+      "#coverImage": "coverImage",
       "#salesStatus": "salesStatus",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":imageFile": imageFile,
+      ":coverImage": coverImage,
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
       ":updatedAt": nowISO,
       ":updatedBy": userId,

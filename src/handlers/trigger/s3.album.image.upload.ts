@@ -60,7 +60,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     // ============================================================
     // 4. 画像変換完了したら、DynamoDBにデータ保存
-    await Album.setAlbumImage(facilityCode, albumId, imageFile, userId);
+    await Album.setCoverImage(facilityCode, albumId, imageFile, userId);
   } catch (err) {
     console.error(err);
   }

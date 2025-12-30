@@ -32,10 +32,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       description: album.description,
       salesStatus: album.salesStatus,
       priceTable: album.priceTable,
-      nbf: album.nbf ?? "",
-      exp: album.exp ?? "",
-      imageFile: album.imageFile
-        ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.imageFile}`
+      salesPeriod: album.salesPeriod,
+      coverImageUrl: album.coverImage
+        ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.coverImage}`
         : "",
       ...(album.photoCount ? {photoCount: album.photoCount} : {}),
     });
