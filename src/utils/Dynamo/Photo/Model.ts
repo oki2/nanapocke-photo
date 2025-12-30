@@ -477,6 +477,24 @@ export async function photoListBatchgetAll(
   return allItems;
 }
 
+export async function getPhotoByAlbumIdAndPhotoId(
+  facilityCode: string,
+  albumId: string,
+  photoId: string
+) {
+  const command = new GetCommand({
+    TableName: PhotoConfig.TABLE_NAME,
+    Key: {
+      pk: `FAC#${facilityCode}#ALBUM#${albumId}`,
+      sk: photoId,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
+}
+
 const chunk = <T>(arr: T[], size: number): T[][] => {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));

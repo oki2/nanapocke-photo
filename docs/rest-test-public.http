@@ -125,7 +125,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = acf1433c-6761-46c8-b4d4-ab0cbcd4bf7b
+@photoId = 7a1ca146-c497-4f14-8b3c-1eed246db830
 
 # ### アルバムへ写真設定する
 # # @name photoUploadUrl
@@ -172,10 +172,71 @@ Authorization: Bearer {{accessToken}}
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
+### カートに写真追加：保護者指定
+POST https://{{customDomainName}}/api/facility/{{facilityCode}}/cart HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
+{
+  "albumId": "{{albumId}}",
+  "photoId": "{{photoId}}"
+}
 
+### カート内写真一覧：保護者指定
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/cart/list HTTP/1.1
+Authorization: Bearer {{accessToken}}
 
+### カート内写真削除：保護者指定
+DELETE https://{{customDomainName}}/api/facility/{{facilityCode}}/cart/item/{{albumId}}/{{photoId}} HTTP/1.1
+Authorization: Bearer {{accessToken}}
 
+### カート内写真枚数変更：保護者指定
+PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/cart HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+[
+  {
+    "albumId": "{{albumId}}",
+    "photoId": "7a1ca146-c497-4f14-8b3c-1eed246db830",
+    "print": [
+      {
+        "size": "printl",
+        "quantity": 1
+      },
+      {
+        "size": "print2l",
+        "quantity": 2
+      }
+    ],
+    "download": [
+      {
+        "size": "dl",
+        "selected": true
+      }
+    ]
+  },
+  {
+    "albumId": "{{albumId}}",
+    "photoId": "1533c165-96e0-4986-b60e-a0ec44aa05a0",
+    "print": [
+      {
+        "size": "printl",
+        "quantity": 1
+      },
+      {
+        "size": "print2l",
+        "quantity": 2
+      }
+    ],
+    "download": [
+      {
+        "size": "dl",
+        "selected": true
+      }
+    ]
+  }
+]
 
 
 

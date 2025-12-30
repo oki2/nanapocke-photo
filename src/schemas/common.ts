@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import {AppConfig, UserConfig, PhotoConfig} from "../config";
+import {FacilityCode} from "./common.nanapocke";
 
 // 日付型の指定 ISO世界標準時刻
 export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
@@ -44,4 +45,14 @@ export const PhotoId = uuidV4;
 
 export const ResultOK = v.object({
   ok: v.literal(true),
+});
+
+export const CartPathParameters = v.object({
+  facilityCode: FacilityCode,
+});
+
+export const CartPhotoDeletePathParameters = v.object({
+  facilityCode: FacilityCode,
+  albumId: AlbumId,
+  photoId: PhotoId,
 });

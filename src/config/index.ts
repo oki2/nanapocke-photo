@@ -8,6 +8,7 @@ export const AppConfig = {
 
 export * as AlbumConfig from "./Model/Album";
 export * as AuthConfig from "./Model/Auth";
+export * as CartConfig from "./Model/Cart";
 export * as FacilityConfig from "./Model/Facility";
 export * as PhotoConfig from "./Model/Photo";
 export * as UserConfig from "./Model/User";

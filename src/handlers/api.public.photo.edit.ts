@@ -13,7 +13,6 @@ import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
-import {config} from "process";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};

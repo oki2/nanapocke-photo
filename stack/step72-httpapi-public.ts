@@ -385,6 +385,51 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // === カート関連 === //
+    // カートに追加
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/cart",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "CartAddIntegration",
+        props.lambdaFnPublic.cartAddFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // カート内購入枚数の編集
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/cart",
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: new HttpLambdaIntegration(
+        "CartEditIntegration",
+        props.lambdaFnPublic.cartEditFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // カートの中身を取得
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/cart/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "CartListIntegration",
+        props.lambdaFnPublic.cartListFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // カートの中身を削除
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/cart/item/{albumId}/{photoId}",
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration(
+        "CartPhotoDeleteIntegration",
+        props.lambdaFnPublic.cartPhotoDeleteFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
     // ==========================================================
     // 後処理
     // ==========================================================

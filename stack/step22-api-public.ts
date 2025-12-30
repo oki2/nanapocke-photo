@@ -532,7 +532,6 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         ...defaultEnvironment,
         TABLE_NAME_MAIN: props.MainTable.tableName,
         TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
-        BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
@@ -543,6 +542,105 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             `${props.MainTable.tableArn}/index/lsi1_index`,
             props.NanapockeUserTable.tableArn,
             `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
+          ],
+        }),
+      ],
+    });
+
+    // === カート関連 === //
+    // カートに追加
+    this.lambdaFn.cartAddFn = new NodejsFunction(this, "ApiPublicCartAddFn", {
+      functionName: `${functionPrefix}-ApiPublicCartAdd`,
+      description: `${functionPrefix}-ApiPublicCartAdd`,
+      entry: "src/handlers/api.public.cart.add.ts",
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 256,
+      environment: {
+        ...defaultEnvironment,
+        TABLE_NAME_MAIN: props.MainTable.tableName,
+      },
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ["dynamodb:GetItem", "dynamodb:PutItem"],
+          resources: [props.MainTable.tableArn],
+        }),
+      ],
+    });
+
+    // カートの中身を取得
+    this.lambdaFn.cartListFn = new NodejsFunction(this, "ApiPublicCartListFn", {
+      functionName: `${functionPrefix}-ApiPublicCartListFn`,
+      description: `${functionPrefix}-ApiPublicCartListFn`,
+      entry: "src/handlers/api.public.cart.list.ts",
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 256,
+      environment: {
+        ...defaultEnvironment,
+        TABLE_NAME_MAIN: props.MainTable.tableName,
+      },
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ["dynamodb:Query"],
+          resources: [
+            props.MainTable.tableArn,
+            `${props.MainTable.tableArn}/index/lsi1_index`,
+          ],
+        }),
+      ],
+    });
+
+    // カートの中身を削除
+    this.lambdaFn.cartPhotoDeleteFn = new NodejsFunction(
+      this,
+      "ApiPublicCartPhotoDeleteFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicCartPhotoDelete`,
+        description: `${functionPrefix}-ApiPublicCartPhotoDelete`,
+        entry: "src/handlers/api.public.cart.photo.delete.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:DeleteItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+        ],
+      }
+    );
+
+    // カート内の購入枚数の変更
+    this.lambdaFn.cartEditFn = new NodejsFunction(this, "ApiPublicCartEditFn", {
+      functionName: `${functionPrefix}-ApiPublicCartEditFn`,
+      description: `${functionPrefix}-ApiPublicCartEditFn`,
+      entry: "src/handlers/api.public.cart.edit.ts",
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 256,
+      environment: {
+        ...defaultEnvironment,
+        TABLE_NAME_MAIN: props.MainTable.tableName,
+      },
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ["dynamodb:Query", "dynamodb:UpdateItem"],
+          resources: [
+            props.MainTable.tableArn,
+            `${props.MainTable.tableArn}/index/lsi1_index`,
           ],
         }),
       ],
