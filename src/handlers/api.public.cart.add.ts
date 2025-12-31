@@ -1,6 +1,6 @@
 import {AppConfig, AlbumConfig, PhotoConfig, PriceConfig} from "../config";
 import * as http from "../http";
-import {CartPathParameters, ResultOK} from "../schemas/common";
+import {ResultOK} from "../schemas/common";
 import {CartAddBody} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
 
@@ -12,9 +12,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
 
-  // パスパラメータの施設コード、写真ID取得
-  const path = parseOrThrow(CartPathParameters, event.pathParameters ?? {});
-
+  // リクエストボディの確認
   const raw = event.body ? JSON.parse(event.body) : {};
   const data = parseOrThrow(CartAddBody, raw);
   console.log("data", data);

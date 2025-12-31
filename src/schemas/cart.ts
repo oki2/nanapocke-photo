@@ -4,6 +4,12 @@ import * as nanapocke from "./common.nanapocke";
 import {created} from "../http";
 import {PhotoConfig} from "../config";
 
+// カートから写真削除時のパスパラメータ
+export const CartPhotoDeletePathParameters = v.object({
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+});
+
 // カート登録時のリクエストボディ
 export const CartAddBody = v.object({
   albumId: common.AlbumId,

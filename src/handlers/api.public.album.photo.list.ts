@@ -1,11 +1,7 @@
 import * as http from "../http";
 
 import {AppConfig, AlbumConfig} from "../config";
-import {
-  AlbumUpdateBody,
-  AlbumPathParameters,
-  AlbumCreateResponse,
-} from "../schemas/album";
+import {AlbumPathParameters} from "../schemas/album";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
@@ -18,6 +14,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // パスパラメータのアルバムID
   const path = parseOrThrow(AlbumPathParameters, event.pathParameters ?? {});
+
+  // 施設コードのチェック、保護者用のAuthorizerはパスパラメータとのチェックを行わないのでこちらで判定
+  if (path.facilityCode !== authContext.facilityCode) {
+    return http.forbidden();
+  }
 
   // 1. アルバム情報の取得
   const album = await Album.get(authContext.facilityCode, path.albumId);

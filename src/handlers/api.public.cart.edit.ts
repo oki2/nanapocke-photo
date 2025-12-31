@@ -1,6 +1,6 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-import {CartPathParameters, ResultOK} from "../schemas/common";
+import {ResultOK} from "../schemas/common";
 import {CartEditBody, CartEditT} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
 
@@ -11,9 +11,6 @@ import * as Photo from "../utils/Dynamo/Photo";
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
-
-  // パスパラメータの施設コード、写真ID取得
-  const path = parseOrThrow(CartPathParameters, event.pathParameters ?? {});
 
   // Request Bodyデータの確認・バリデーション
   const raw = event.body ? JSON.parse(event.body) : {};

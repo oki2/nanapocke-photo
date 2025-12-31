@@ -1,12 +1,10 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-import {CartPhotoDeletePathParameters, ResultOK} from "../schemas/common";
-import {CartEditBody} from "../schemas/cart";
+import {ResultOK} from "../schemas/common";
+import {CartPhotoDeletePathParameters} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Cart from "../utils/Dynamo/Cart";
-import * as Album from "../utils/Dynamo/Album";
-import * as Photo from "../utils/Dynamo/Photo";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};

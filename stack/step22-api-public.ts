@@ -41,8 +41,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       this,
       "NanapockeAuthFn",
       {
-        functionName: `${functionPrefix}-PublicNanapockeAuthFn`,
-        description: `${functionPrefix}-PublicNanapockeAuthFn`,
+        functionName: `${functionPrefix}-PublicNanapockeAuth`,
+        description: `${functionPrefix}-PublicNanapockeAuth`,
         entry: "src/handlers/public.nanapocke.auth.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
@@ -488,8 +488,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       this,
       "ApiPublicPhotoEditFn",
       {
-        functionName: `${functionPrefix}-ApiPublicPhotoEditFn`,
-        description: `${functionPrefix}-ApiPublicPhotoEditFn`,
+        functionName: `${functionPrefix}-ApiPublicPhotoEdit`,
+        description: `${functionPrefix}-ApiPublicPhotoEdit`,
         entry: "src/handlers/api.public.photo.edit.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
@@ -572,8 +572,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
 
     // カートの中身を取得
     this.lambdaFn.cartListFn = new NodejsFunction(this, "ApiPublicCartListFn", {
-      functionName: `${functionPrefix}-ApiPublicCartListFn`,
-      description: `${functionPrefix}-ApiPublicCartListFn`,
+      functionName: `${functionPrefix}-ApiPublicCartList`,
+      description: `${functionPrefix}-ApiPublicCartList`,
       entry: "src/handlers/api.public.cart.list.ts",
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -623,8 +623,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
 
     // カート内の購入枚数の変更
     this.lambdaFn.cartEditFn = new NodejsFunction(this, "ApiPublicCartEditFn", {
-      functionName: `${functionPrefix}-ApiPublicCartEditFn`,
-      description: `${functionPrefix}-ApiPublicCartEditFn`,
+      functionName: `${functionPrefix}-ApiPublicCartEdit`,
+      description: `${functionPrefix}-ApiPublicCartEdit`,
       entry: "src/handlers/api.public.cart.edit.ts",
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,

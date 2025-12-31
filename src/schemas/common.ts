@@ -46,13 +46,3 @@ export const PhotoId = uuidV4;
 export const ResultOK = v.object({
   ok: v.literal(true),
 });
-
-export const CartPathParameters = v.object({
-  facilityCode: FacilityCode,
-});
-
-export const CartPhotoDeletePathParameters = v.object({
-  facilityCode: FacilityCode,
-  albumId: AlbumId,
-  photoId: PhotoId,
-});

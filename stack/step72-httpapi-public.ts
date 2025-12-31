@@ -388,7 +388,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // === カート関連 === //
     // カートに追加
     this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/cart",
+      path: "/api/my/cart",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "CartAddIntegration",
@@ -399,7 +399,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // カート内購入枚数の編集
     this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/cart",
+      path: "/api/my/cart",
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "CartEditIntegration",
@@ -410,7 +410,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // カートの中身を取得
     this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/cart/list",
+      path: "/api/my/cart/list",
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "CartListIntegration",
@@ -421,7 +421,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     // カートの中身を削除
     this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/cart/item/{albumId}/{photoId}",
+      path: "/api/my/cart/item/{albumId}/{photoId}",
       methods: [apigwv2.HttpMethod.DELETE],
       integration: new HttpLambdaIntegration(
         "CartPhotoDeleteIntegration",
