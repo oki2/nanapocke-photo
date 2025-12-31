@@ -645,5 +645,44 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         }),
       ],
     });
+
+    // カートから決済情報の作成
+    this.lambdaFn.cartCheckoutFn = new NodejsFunction(
+      this,
+      "ApiPublicCartCheckoutFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicCartCheckout`,
+        description: `${functionPrefix}-ApiPublicCartCheckout`,
+        entry: "src/handlers/api.public.cart.checkout.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:Query",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [`${props.bucketUpload.bucketArn}/order/*`],
+          }),
+        ],
+      }
+    );
   }
 }

@@ -173,7 +173,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}
 Authorization: Bearer {{accessToken}}
 
 ### カートに写真追加：保護者指定
-POST https://{{customDomainName}}/api/facility/{{facilityCode}}/cart HTTP/1.1
+POST https://{{customDomainName}}/api/my/cart HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
@@ -183,15 +183,15 @@ Authorization: Bearer {{accessToken}}
 }
 
 ### カート内写真一覧：保護者指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/cart/list HTTP/1.1
+GET https://{{customDomainName}}/api/my/cart/list HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### カート内写真削除：保護者指定
-DELETE https://{{customDomainName}}/api/facility/{{facilityCode}}/cart/item/{{albumId}}/{{photoId}} HTTP/1.1
+DELETE https://{{customDomainName}}/api/my/cart/item/{{albumId}}/{{photoId}} HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### カート内写真枚数変更：保護者指定
-PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/cart HTTP/1.1
+PUT https://{{customDomainName}}/api/my/cart HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
@@ -202,11 +202,11 @@ Authorization: Bearer {{accessToken}}
     "print": [
       {
         "size": "printl",
-        "quantity": 1
+        "quantity": 0
       },
       {
         "size": "print2l",
-        "quantity": 2
+        "quantity": 1
       }
     ],
     "download": [
@@ -238,6 +238,20 @@ Authorization: Bearer {{accessToken}}
   }
 ]
 
+### カート内写真からチェックアウト情報を作成：保護者専用
+POST https://{{customDomainName}}/api/my/cart/checkout HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "type": "shipping",
+  "address": {
+    "name": "山田たろう",
+    "postalCode": "1234567",
+    "line": "東京都どっか",
+    "phone": "01234567890"
+  }
+}
 
 
 

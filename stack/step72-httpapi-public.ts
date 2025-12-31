@@ -430,6 +430,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerGuardianlVeify,
     });
 
+    // カートから決済情報の作成
+    this.httpApi.addRoutes({
+      path: "/api/my/cart/checkout",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "CartCheckoutIntegration",
+        props.lambdaFnPublic.cartCheckoutFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
     // ==========================================================
     // 後処理
     // ==========================================================

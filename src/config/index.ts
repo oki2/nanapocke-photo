@@ -10,6 +10,7 @@ export * as AlbumConfig from "./Model/Album";
 export * as AuthConfig from "./Model/Auth";
 export * as CartConfig from "./Model/Cart";
 export * as FacilityConfig from "./Model/Facility";
+export * as PaymentConfig from "./Model/Payment";
 export * as PhotoConfig from "./Model/Photo";
 export * as UserConfig from "./Model/User";
 export * as TagConfig from "./Model/Tag";

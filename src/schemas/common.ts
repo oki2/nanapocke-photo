@@ -46,3 +46,6 @@ export const PhotoId = uuidV4;
 export const ResultOK = v.object({
   ok: v.literal(true),
 });
+
+// 写真タイプ
+export const PhotoPriceTier = v.picklist(Object.values(PhotoConfig.PRICE_TIER));

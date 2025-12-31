@@ -4,9 +4,6 @@ import * as nanapocke from "./common.nanapocke";
 import {created} from "../http";
 import {PhotoConfig} from "../config";
 
-// 写真タイプ
-export const PhotoPriceTier = v.picklist(Object.values(PhotoConfig.PRICE_TIER));
-
 // 写真絞込み項目関連 ===
 export const FilterAlbum = v.picklist(["ALL", "UNSET"]);
 export const FilterDateType = v.picklist(Object.values(PhotoConfig.DATE_TYPE));
@@ -21,7 +18,7 @@ export const FilterEditability = v.picklist(
 export const PhotoUploadBody = v.pipe(
   v.object({
     shootingAt: common.ISODateTime,
-    priceTier: PhotoPriceTier,
+    priceTier: common.PhotoPriceTier,
     tags: v.optional(v.string(), ""),
     albums: v.optional(v.array(v.string()), []),
     fileType: common.PhotoUploadFileType,
@@ -79,7 +76,7 @@ export const PhotoListResponse = v.object({
         status: v.pipe(v.string(), v.minLength(1)),
         tags: v.optional(v.array(v.string())),
         albums: v.optional(v.array(common.AlbumId)),
-        priceTier: PhotoPriceTier,
+        priceTier: common.PhotoPriceTier,
         shootingAt: common.ISODateTime,
         createdAt: common.ISODateTime,
       })

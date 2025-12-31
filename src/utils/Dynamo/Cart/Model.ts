@@ -10,12 +10,14 @@ import {
 import {CartConfig, PhotoConfig} from "../../../config";
 
 import * as Photo from "../Photo";
+import {PriceTable} from "../../../schemas/album";
 
 type AddOptions = {
   albumSequenceId: number;
   photoSequenceId: number;
   albumTitle: string;
   purchaseDeadline: string;
+  priceTable: string;
   priceTier: string;
   downloadOption: Record<string, any>;
   printLOption: Record<string, any>;
@@ -49,6 +51,7 @@ export async function add(
         photoSequenceId: options.photoSequenceId,
         albumTitle: options.albumTitle,
         purchaseDeadline: options.purchaseDeadline,
+        priceTable: options.priceTable,
         priceTier: options.priceTier,
         ttl: ttl,
         createdAt: nowISO,
@@ -135,7 +138,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTier, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
@@ -145,6 +148,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
       "#photoSequenceId": "photoSequenceId",
       "#albumTitle": "albumTitle",
       "#purchaseDeadline": "purchaseDeadline",
+      "#priceTable": "priceTable",
       "#priceTier": "priceTier",
       "#downloadOption": "downloadOption",
       "#printLOption": "printLOption",

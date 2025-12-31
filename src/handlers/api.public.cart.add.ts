@@ -115,6 +115,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       photoSequenceId: photo.sequenceId,
       albumTitle: album.title,
       purchaseDeadline: album.salesPeriod.end,
+      priceTable: album.priceTable,
       priceTier: photo.priceTier,
       downloadOption: dlOption,
       printLOption: printLOption,

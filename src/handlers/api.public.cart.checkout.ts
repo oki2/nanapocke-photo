@@ -1,0 +1,146 @@
+import {AppConfig, PhotoConfig, PaymentConfig} from "../config";
+import * as http from "../http";
+import {ResultOK} from "../schemas/common";
+import {
+  CheckoutBody,
+  CartItemList,
+  CartItemListT,
+  CurrentOrder,
+  CurrentOrderT,
+} from "../schemas/cart";
+import {parseOrThrow} from "../libs/validate";
+
+import * as Cart from "../utils/Dynamo/Cart";
+import * as Album from "../utils/Dynamo/Album";
+import * as Photo from "../utils/Dynamo/Photo";
+import * as Payment from "../utils/Dynamo/Payment";
+import {FacilityCode} from "../schemas/common.nanapocke";
+
+import {S3FilePut} from "../utils/S3";
+
+import * as SMBC from "../utils/External/SMBC";
+
+export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
+  const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
+  console.log("authContext", authContext);
+
+  // リクエストボディの確認
+  const raw = event.body ? JSON.parse(event.body) : {};
+  const data = parseOrThrow(CheckoutBody, raw);
+  console.log("data", data);
+
+  // 1. 現在のカートの中身を取得
+  const cart = await Cart.list(authContext.facilityCode, authContext.userId);
+  console.log("cart", cart);
+
+  // 2. 印刷有無の判定
+  const byTier = await Cart.summarizeItemsByPriceTier(cart);
+  console.log("byTier", byTier);
+  const summary = Cart.sumAllTiers(byTier);
+  console.log("summary", summary);
+
+  // デジタルのみ指定なのに、印刷が存在する場合はエラーとする
+  if (
+    data.type === "digital" &&
+    summary.printLQuantityTotal + summary.print2LQuantityTotal > 0
+  ) {
+    return http.badRequest({
+      detail: "印刷購入を行う場合は配送先情報が必要です",
+    });
+  }
+
+  // 写真の合計金額
+  const subTotalPrice =
+    summary.print2LTotalPrice +
+    summary.printLTotalPrice +
+    summary.downloadTotalPrice;
+
+  // 送料計算
+  const shippingFee =
+    Math.ceil(
+      (summary.print2LQuantityTotal + summary.printLQuantityTotal) /
+        PaymentConfig.POSTAGE_MAIL_LIMIT
+    ) * PaymentConfig.SHIPPING_POSTAGE_MAIL_FEE;
+
+  // 3. アルバム、写真の販売可否チェック
+
+  // 5. 決済情報の作成（DynamoDB）
+  const {orderId, signature} = await Payment.create(
+    authContext.facilityCode,
+    authContext.userId,
+    byTier[`${PhotoConfig.PRICE_TIER.STANDARD}`],
+    byTier[`${PhotoConfig.PRICE_TIER.PREMIUM}`],
+    subTotalPrice,
+    shippingFee,
+    subTotalPrice + shippingFee
+  );
+  console.log("orderId", orderId);
+
+  // 6. 購入情報の保存（S3）
+  const orderData = {
+    orderId: orderId,
+    facilityCode: authContext.facilityCode,
+    userId: authContext.userId,
+    cart: cart,
+    subTotalPrice: subTotalPrice,
+    shippingFee: shippingFee,
+    grandTotal: subTotalPrice + shippingFee,
+    createdAt: new Date().toISOString(),
+  };
+  await S3FilePut(
+    AppConfig.BUCKET_UPLOAD_NAME,
+    `order/${orderId}/order.json`,
+    JSON.stringify(orderData)
+  );
+
+  // 7. 印刷有りの場合は、印刷情報の保存（S3）
+  if (data.type === "shipping") {
+    await S3FilePut(
+      AppConfig.BUCKET_UPLOAD_NAME,
+      `order/${orderId}/userInfo.json`,
+      JSON.stringify(data.address)
+    );
+  }
+
+  // 8. SMBCの決済リンク作成
+  const paymentUrl = await SMBC.createSmbcPaymentLink({
+    paymentUrl: "https://pt01.smbc-gp.co.jp/payment/GetLinkplusUrlPayment.json",
+    configId: "photo",
+    shopId: "tshop00009520",
+    shopPass: "85td5ygq",
+    // configId: "test01",
+    // shopId: "tshop00003139",
+    // shopPass: "bfyepd1m",
+    orderId: orderId,
+    amount: subTotalPrice + shippingFee,
+    completeUrl: `https://work.uxbrew.jp/work/complete/?action=complete&signature=${signature}`,
+    cancelUrl: `https://work.uxbrew.jp/work/cancel/?action=cancel&signature=${signature}`,
+  });
+  console.log("paymentUrl", paymentUrl);
+
+  // 9. レスポンス形式に変換
+  const items = Cart.toOrderItems(cart, {
+    resolveImageSrc: (src) => `https://example.com/images/${src.photoId}.jpg`,
+  });
+  console.log("items", items);
+
+  const response: CurrentOrderT = {
+    orderId: orderId,
+    summary: {
+      ...(data.type === "shipping"
+        ? {shipping: {method: "ゆうパック", address: data.address}}
+        : {}),
+      items: items,
+      hasDownloadPurchases: summary.downloadSelectedCount > 0,
+      downloadPeriod: "",
+      subTotal: subTotalPrice,
+      shippingFee: {
+        after: shippingFee,
+      },
+      grandTotal: subTotalPrice + shippingFee,
+    },
+    paymentUrl: paymentUrl,
+  };
+
+  return http.ok(parseOrThrow(CurrentOrder, response));
+});
