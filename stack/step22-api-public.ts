@@ -662,6 +662,9 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
+          SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+          SMBC_API_GET_LINKPLUS: props.Config.External.Smbc.ApiUrl.getLinkplus,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -680,6 +683,115 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:PutObject"],
             resources: [`${props.bucketUpload.bucketArn}/order/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+            ],
+          }),
+        ],
+      }
+    );
+
+    // SMBC からのcallback
+    this.lambdaFn.smbcCallbackFn = new NodejsFunction(
+      this,
+      "ApiPublicSmbcCallbackFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicSmbcCallback`,
+        description: `${functionPrefix}-ApiPublicSmbcCallback`,
+        entry: "src/handlers/api.public.smbc.callback.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
+          SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+          SMBC_API_SEARCH_TRADE_MULTI:
+            props.Config.External.Smbc.ApiUrl.searchTradeMulti,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              // `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketUpload.bucketArn}/order/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+            ],
+          }),
+        ],
+      }
+    ); // SMBC からの通知
+    this.lambdaFn.smbcNotificationFn = new NodejsFunction(
+      this,
+      "ApiPublicSmbcNotificationFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicSmbcNotification`,
+        description: `${functionPrefix}-ApiPublicSmbcNotification`,
+        entry: "src/handlers/api.public.smbc.notification.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
+          SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+          SMBC_API_SEARCH_TRADE_MULTI:
+            props.Config.External.Smbc.ApiUrl.searchTradeMulti,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:Query",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              // `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject", "s3:PutObject"],
+            resources: [
+              `${props.bucketUpload.bucketArn}/order/*`,
+              `${props.bucketUpload.bucketArn}/action/*`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/smbc/setting`,
+            ],
           }),
         ],
       }

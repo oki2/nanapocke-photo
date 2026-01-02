@@ -202,11 +202,11 @@ Authorization: Bearer {{accessToken}}
     "print": [
       {
         "size": "printl",
-        "quantity": 0
+        "quantity": 1
       },
       {
         "size": "print2l",
-        "quantity": 1
+        "quantity": 2
       }
     ],
     "download": [
@@ -264,6 +264,31 @@ Authorization: Bearer {{accessToken}}
 
 
 
+### SMBC callback テスト
+POST https://{{customDomainName}}/api/payments/smbc/callback?hoge=fuge HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+result=eyJ0cmFuc2FjdGlvbnJlc3VsdCI6eyJBY2Nlc3NJRCI6bnVsbCwiQWNjZXNzUGFzcyI6bnVsbCwiT3JkZXJJRCI6IlhYWFgtMjYwMTAxLTAwMzMtMDAwMDAwMDAxMCIsIlJlc3VsdCI6IlBBWVNUQVJUIiwiUHJvY2Vzc2RhdGUiOiIyMDI2LzAxLzAxIDAwOjMzOjE3IiwiRXJyQ29kZSI6bnVsbCwiRXJySW5mbyI6bnVsbCwiUGF5bWV0aG9kIjpudWxsfX0%3D.5a120c23c579009f742e4bc71d6371c6b3ea1b5905957fa0d5d2b2f68bd1ae5d
+
+### SMBC Setting
+@ShopID = tshop00009520
+@ShopPass = 85td5ygq
+@OrderID = DNP2-260102-1554-0000000016
+@PayType = 45
+
+### SMBC notification テスト
+POST https://{{customDomainName}}/api/payments/smbc/notification HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
+
+
+
+
+
+### SMBC SearchTradeMulti
+GET https://pt01.smbc-gp.co.jp/payment/SearchTradeMulti.idPass?ShopID={{ShopID}}&ShopPass={{ShopPass}}&OrderID={{OrderID}}&PayType={{PayType}} HTTP/1.1
+
 
 
 ### test
@@ -272,3 +297,9 @@ content-type: application/json
 Authorization: Bearer Dc9b7LWpmu-uwa8cEee6OI_pKceEt7zAvb2YJZW8BHSyMrAiM-Y
 
 {}
+
+### 
+POST https://dev-kids.uxbrew.jp/api/payment/smbc/notification/ HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=

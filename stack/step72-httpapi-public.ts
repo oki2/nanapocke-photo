@@ -441,6 +441,25 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerGuardianlVeify,
     });
 
+    // SMBC関連 ====================================
+    this.httpApi.addRoutes({
+      path: "/api/payments/smbc/callback",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "SmbcCallbackIntegration",
+        props.lambdaFnPublic.smbcCallbackFn
+      ),
+    });
+
+    this.httpApi.addRoutes({
+      path: "/api/payments/smbc/notification",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "SmbcNotificationIntegration",
+        props.lambdaFnPublic.smbcNotificationFn
+      ),
+    });
+
     // ==========================================================
     // 後処理
     // ==========================================================

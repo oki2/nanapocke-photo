@@ -23,6 +23,11 @@
         "rootDomain": "sandbox.uxbrew.jp",
         "publicDomain": "nanaphoto.sandbox.uxbrew.jp"
       },
+      "setting": {
+        "payment": {
+          "orderIdPrefix": "DNP2"
+        }
+      },
       "s3": {
         "setting": {
           "autoDeleteObjects": true
@@ -38,6 +43,12 @@
           "api": {
             "accessToken": "https://work.uxbrew.jp/test-npp/accessToken.php",
             "userInfo": "https://work.uxbrew.jp/test-npp/userInfo.php"
+          }
+        },
+        "smbc": {
+          "api": {
+            "getLinkplus": "https://pt01.smbc-gp.co.jp/payment/GetLinkplusUrlPayment.json",
+            "searchTradeMulti": "https://pt01.smbc-gp.co.jp/payment/SearchTradeMulti.idPass"
           }
         }
       }

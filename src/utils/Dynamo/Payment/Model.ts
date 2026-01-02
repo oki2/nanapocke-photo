@@ -11,12 +11,13 @@ import {PaymentConfig} from "../../../config";
 
 type PaymentCreateResult = {
   orderId: string;
-  signature: string;
 };
 
 export async function create(
   facilityCode: string,
   userId: string,
+  countPrint: number,
+  countDl: number,
   tierStandard: Record<string, any>,
   tierPremium: Record<string, any>,
   subTotal: number,
@@ -27,9 +28,8 @@ export async function create(
   const seq = await nextSequence();
   const seqStr = String(seq).padStart(10, "0");
   const orderId = `${
-    PaymentConfig.PAYMENT_ID_PREFIX
+    PaymentConfig.ORDER_ID_PREFIX
   }-${dateYmdHiJST()}-${seqStr}`;
-  const signature = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
 
   // コマンド実行
   const result = await docClient().send(
@@ -40,7 +40,8 @@ export async function create(
         sk: orderId,
         lsi1: `USER#${userId}#SEQ#${seqStr}`,
         orderId: orderId,
-        signature: signature,
+        countPrint: countPrint,
+        countDl: countDl,
         sequenceId: seq,
         userId: userId,
         facilityCode: facilityCode,
@@ -59,7 +60,21 @@ export async function create(
     })
   );
 
-  return {orderId: orderId, signature: signature};
+  return {orderId: orderId};
+}
+
+export async function get(orderId: string): Promise<any> {
+  const command = new GetCommand({
+    TableName: PaymentConfig.TABLE_NAME,
+    Key: {
+      pk: `PAYMENT#META`,
+      sk: orderId,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
 }
 
 function dateYmdHiJST(baseDate: Date = new Date()): string {
@@ -74,6 +89,38 @@ function dateYmdHiJST(baseDate: Date = new Date()): string {
   const ii = String(jstDate.getUTCMinutes()).padStart(2, "0");
 
   return `${yy}${mm}${dd}-${HH}${ii}`;
+}
+
+export async function setCompleted(
+  orderId: string,
+  smbcProcessDate: string,
+  userId: string
+): Promise<void> {
+  const command = new UpdateCommand({
+    TableName: PaymentConfig.TABLE_NAME,
+    Key: {
+      pk: `PAYMENT#META`,
+      sk: orderId,
+    },
+    UpdateExpression:
+      "SET #paymentStatus = :paymentStatus, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
+    ExpressionAttributeNames: {
+      "#paymentStatus": "paymentStatus",
+      "#smbcProcessDate": "smbcProcessDate",
+      "#updatedAt": "updatedAt",
+      "#updatedBy": "updatedBy",
+    },
+    ExpressionAttributeValues: {
+      ":paymentStatus": PaymentConfig.STATUS.COMPLETED,
+      ":smbcProcessDate": smbcProcessDate,
+      ":updatedAt": new Date().toISOString(),
+      ":updatedBy": userId,
+    },
+    ReturnValues: "UPDATED_NEW",
+  });
+
+  // コマンド実行
+  await docClient().send(command);
 }
 
 async function nextSequence(): Promise<number> {

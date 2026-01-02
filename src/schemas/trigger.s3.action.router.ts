@@ -6,6 +6,7 @@ import {AlbumConfig} from "../config";
 
 export const TRIGGER_ACTION = {
   ALBUM_PUBLISHED: "albumPublished",
+  PAYMENT_COMPLETE: "paymentComplete",
 };
 
 // アルバムの公開処理（

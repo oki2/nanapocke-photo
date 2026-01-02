@@ -85,18 +85,18 @@ export class Step15DynamodbStack extends cdk.Stack {
       },
     });
 
-    // // メインテーブル：グローバルセカンダリインデックス-1
-    // this.MainTable.addGlobalSecondaryIndex({
-    //   indexName: "gsi1_index",
-    //   partitionKey: {
-    //     name: "gsi1pk",
-    //     type: AttributeType.STRING,
-    //   },
-    //   sortKey: {
-    //     name: "gsi1sk",
-    //     type: AttributeType.STRING,
-    //   },
-    // });
+    // メインテーブル：グローバルセカンダリインデックス-1
+    this.MainTable.addGlobalSecondaryIndex({
+      indexName: "gsi1_index",
+      partitionKey: {
+        name: "gsi1pk",
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: "gsi1sk",
+        type: AttributeType.STRING,
+      },
+    });
     // // メインテーブル：グローバルセカンダリインデックス-2
     // this.MainTable.addGlobalSecondaryIndex({
     //   indexName: "gsi2_index",

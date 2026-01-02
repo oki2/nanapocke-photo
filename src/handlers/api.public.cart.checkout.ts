@@ -16,7 +16,7 @@ import * as Photo from "../utils/Dynamo/Photo";
 import * as Payment from "../utils/Dynamo/Payment";
 import {FacilityCode} from "../schemas/common.nanapocke";
 
-import {S3FilePut} from "../utils/S3";
+import * as S3 from "../utils/S3";
 
 import * as SMBC from "../utils/External/SMBC";
 
@@ -65,9 +65,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 3. アルバム、写真の販売可否チェック
 
   // 5. 決済情報の作成（DynamoDB）
-  const {orderId, signature} = await Payment.create(
+  const {orderId} = await Payment.create(
     authContext.facilityCode,
     authContext.userId,
+    summary.printLQuantityTotal + summary.print2LQuantityTotal,
+    summary.downloadSelectedCount,
     byTier[`${PhotoConfig.PRICE_TIER.STANDARD}`],
     byTier[`${PhotoConfig.PRICE_TIER.PREMIUM}`],
     subTotalPrice,
@@ -87,34 +89,19 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     grandTotal: subTotalPrice + shippingFee,
     createdAt: new Date().toISOString(),
   };
-  await S3FilePut(
-    AppConfig.BUCKET_UPLOAD_NAME,
-    `order/${orderId}/order.json`,
-    JSON.stringify(orderData)
-  );
+  await S3.saveOrderData(orderId, orderData);
 
   // 7. 印刷有りの場合は、印刷情報の保存（S3）
   if (data.type === "shipping") {
-    await S3FilePut(
-      AppConfig.BUCKET_UPLOAD_NAME,
-      `order/${orderId}/userInfo.json`,
-      JSON.stringify(data.address)
-    );
+    await S3.saveUserInfo(orderId, data.address);
   }
 
   // 8. SMBCの決済リンク作成
   const paymentUrl = await SMBC.createSmbcPaymentLink({
-    paymentUrl: "https://pt01.smbc-gp.co.jp/payment/GetLinkplusUrlPayment.json",
-    configId: "photo",
-    shopId: "tshop00009520",
-    shopPass: "85td5ygq",
-    // configId: "test01",
-    // shopId: "tshop00003139",
-    // shopPass: "bfyepd1m",
     orderId: orderId,
     amount: subTotalPrice + shippingFee,
-    completeUrl: `https://work.uxbrew.jp/work/complete/?action=complete&signature=${signature}`,
-    cancelUrl: `https://work.uxbrew.jp/work/cancel/?action=cancel&signature=${signature}`,
+    completeUrl: `https://work.uxbrew.jp/work/complete/?action=complete`,
+    cancelUrl: `https://work.uxbrew.jp/work/cancel/?action=cancel`,
   });
   console.log("paymentUrl", paymentUrl);
 

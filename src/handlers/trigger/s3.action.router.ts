@@ -9,7 +9,7 @@ import {
 import {AlbumItemT} from "../../schemas/album";
 
 import {AppConfig, AlbumConfig, PhotoConfig, PriceConfig} from "../../config";
-import {S3FileReadToString, S3FilePut} from "../../utils/S3";
+import * as S3 from "../../utils/S3";
 import * as Album from "../../utils/Dynamo/Album";
 import * as Photo from "../../utils/Dynamo/Photo";
 
@@ -34,13 +34,18 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     case TRIGGER_ACTION.ALBUM_PUBLISHED:
       // 写真の情報を取得
       await albumPublished(bucketName, keyPath);
+      break;
+    case TRIGGER_ACTION.PAYMENT_COMPLETE:
+      // 支払い完了処理
+      await paymentComplete(bucketName, keyPath);
+      break;
   }
 };
 
 async function albumPublished(bucketName: string, keyPath: string) {
   // S3からデータ取得
   const data: AlbumPublishedT = JSON.parse(
-    await S3FileReadToString(bucketName, keyPath)
+    await S3.S3FileReadToString(bucketName, keyPath)
   );
 
   // 1. アルバム情報を取得
@@ -110,7 +115,7 @@ async function albumPublished(bucketName: string, keyPath: string) {
   };
 
   // 5. S3へ保存
-  await S3FilePut(
+  await S3.S3FilePut(
     AppConfig.BUCKET_PHOTO_NAME,
     `sales/${data.facilityCode}/${data.albumId}.json`,
     JSON.stringify(dataObj)
@@ -128,4 +133,13 @@ async function albumPublished(bucketName: string, keyPath: string) {
   if (album.topicsSend) {
     console.log("album.topicsSend", album.topicsSend);
   }
+}
+
+async function paymentComplete(bucketName: string, keyPath: string) {
+  // S3からデータ取得
+  const orderData = JSON.parse(
+    await S3.S3FileReadToString(bucketName, keyPath)
+  );
+
+  console.log("orderData", orderData);
 }

@@ -19,6 +19,7 @@ import {Step72HttpApiPublicStack} from "../stack/step72-httpapi-public";
 import {Step81CertificateStack} from "../stack/step81-certificate";
 
 import {Step82CloudfrontStack} from "../stack/step82-cloudfront";
+import {Setting} from "../src/utils/Cloudfront/Setting";
 
 const app = new cdk.App();
 
@@ -80,6 +81,17 @@ const Config = {
         AccessToken: context.external.nanapocke.api.accessToken,
         UserInfo: context.external.nanapocke.api.userInfo,
       },
+    },
+    Smbc: {
+      ApiUrl: {
+        getLinkplus: context.external.smbc.api.getLinkplus,
+        searchTradeMulti: context.external.smbc.api.searchTradeMulti,
+      },
+    },
+  },
+  Setting: {
+    Payment: {
+      OrderIdPrefix: context.setting.payment.orderIdPrefix,
     },
   },
 };

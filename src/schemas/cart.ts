@@ -3,7 +3,7 @@ import * as common from "./common";
 import * as nanapocke from "./common.nanapocke";
 
 import {created} from "../http";
-import {PhotoConfig} from "../config";
+import {PhotoConfig, PaymentConfig} from "../config";
 import {add} from "../utils/Dynamo/Cart";
 
 // カートから写真削除時のパスパラメータ
