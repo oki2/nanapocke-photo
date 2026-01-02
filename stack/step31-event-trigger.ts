@@ -252,18 +252,25 @@ export class Step31EventTriggerStack extends cdk.Stack {
               "dynamodb:PutItem",
               "dynamodb:Query",
               "dynamodb:BatchGetItem",
+              "dynamodb:BatchWriteItem",
             ],
             resources: [props.MainTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:GetObject"],
-            resources: [`${props.bucketUpload.bucketArn}/action/*`],
+            resources: [
+              `${props.bucketUpload.bucketArn}/action/*`,
+              `${props.bucketUpload.bucketArn}/order/*`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:PutObject"],
-            resources: [`${props.bucketPhoto.bucketArn}/sales/*`],
+            resources: [
+              `${props.bucketPhoto.bucketArn}/sales/*`,
+              `${props.bucketPhoto.bucketArn}/paymentLog/*`,
+            ],
           }),
         ],
       }

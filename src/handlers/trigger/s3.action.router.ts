@@ -7,11 +7,20 @@ import {
 } from "../../schemas/trigger.s3.action.router";
 
 import {AlbumItemT} from "../../schemas/album";
+import {ShippingAddressT} from "../../schemas/cart";
 
-import {AppConfig, AlbumConfig, PhotoConfig, PriceConfig} from "../../config";
+import {
+  AppConfig,
+  AlbumConfig,
+  PhotoConfig,
+  PriceConfig,
+  PaymentConfig,
+} from "../../config";
 import * as S3 from "../../utils/S3";
 import * as Album from "../../utils/Dynamo/Album";
 import * as Photo from "../../utils/Dynamo/Photo";
+import * as Cart from "../../utils/Dynamo/Cart";
+import * as Payment from "../../utils/Dynamo/Payment";
 
 interface Detail {
   bucketName: string;
@@ -135,11 +144,96 @@ async function albumPublished(bucketName: string, keyPath: string) {
   }
 }
 
+/**
+ * 決済完了後に実行される処理
+ * DL用のレコード登録、印刷送信等を実行
+ *
+ * @param {string} bucketName - S3 bucket name
+ * @param {string} keyPath - S3 key path
+ */
 async function paymentComplete(bucketName: string, keyPath: string) {
   // S3からデータ取得
   const orderData = JSON.parse(
     await S3.S3FileReadToString(bucketName, keyPath)
   );
+  console.log("orderData", orderData);
+
+  // 注文情報を取得
+  const payment = await Payment.get(orderData.orderId);
+
+  // しまうま用の注文番号を生成
+  const pOrderId =
+    orderData.orderId[0] + orderData.orderId[3] + orderData.orderId.slice(19);
+  const printDataAry = [];
+
+  // 印刷がある場合は送付先情報を取得
+  let address: ShippingAddressT | null = null;
+  if (orderData.countPrint > 0) {
+    address = await S3.getUserInfo(orderData.orderId);
+  }
+  // 現在日時（日本時間）のyyyyMMdd を取得
+  const now = new Date();
+  const jstTime = now.getTime() + 9 * 60 * 60 * 1000;
+  const jstDate = new Date(jstTime);
+  const yyyy = jstDate.getUTCFullYear();
+  const mm = String(jstDate.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(jstDate.getUTCDate()).padStart(2, "0");
+  const orderYmd = `${yyyy}${mm}${dd}`;
+
+  // DL用
+  const dlData = [];
+
+  // カート内情報を処理
+  for (const cart of orderData.cart) {
+    // 印刷Lがある場合
+    if (cart.printLOption.quantity) {
+      printDataAry.push({
+        photoId: cart.photoId,
+        photoSequanceId: cart.photoSequenceId,
+        size: "L",
+        quantity: cart.printLOption.quantity,
+      });
+    }
+
+    // 印刷2Lがある場合
+    if (cart.print2LOption.quantity) {
+      printDataAry.push({
+        photoId: cart.photoId,
+        photoSequanceId: cart.photoSequenceId,
+        size: "2L",
+        quantity: cart.print2LOption.quantity,
+      });
+    }
+
+    // DLがある場合
+    if (cart.downloadOption.selected) {
+      dlData.push(cart.photoId);
+    }
+  }
+
+  console.log("printDataAry", printDataAry);
+  console.log("dlData", dlData);
+
+  // DL購入が存在する場合は、DL用のレコードを登録
+  if (dlData.length > 0) {
+    const exp = Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
+    await Photo.downloadAceptPhoto(
+      payment.facilityCode,
+      payment.userId,
+      dlData,
+      exp
+    );
+  }
+
+  // 決済ログをS3のストレージ領域へコピー
+  await S3.S3FileCopy(
+    bucketName,
+    keyPath,
+    AppConfig.BUCKET_PHOTO_NAME,
+    `paymentLog/${payment.userId}/${orderData.orderId}/order.json`
+  );
+
+  // 印刷購入が存在する場合は、印刷用のレコードを登録
 
   console.log("orderData", orderData);
 }

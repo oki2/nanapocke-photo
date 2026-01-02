@@ -84,6 +84,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     facilityCode: authContext.facilityCode,
     userId: authContext.userId,
     cart: cart,
+    countPrint: summary.printLQuantityTotal + summary.print2LQuantityTotal,
+    countDownload: summary.downloadSelectedCount,
     subTotalPrice: subTotalPrice,
     shippingFee: shippingFee,
     grandTotal: subTotalPrice + shippingFee,

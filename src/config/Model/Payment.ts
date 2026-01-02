@@ -18,3 +18,5 @@ export const ORDER_TYPE = {
 
 export const SHIPPING_POSTAGE_MAIL_FEE = 101; // ゆうメール送料
 export const POSTAGE_MAIL_LIMIT = 200; // ゆうメール 1配送辺りの上限枚数
+
+export const PHOTO_DOWNLOAD_EXPIRES_DAYS = 60; // Download の有効期限：60日;

@@ -84,6 +84,7 @@ const ShippingAddress = v.object({
   line: v.string(),
   phone: v.pipe(v.string(), v.regex(/^\d{10,11}$/)),
 });
+export type ShippingAddressT = v.InferOutput<typeof ShippingAddress>;
 
 export const CheckoutDigtalOnly = v.object({
   type: v.picklist(["digital"]),

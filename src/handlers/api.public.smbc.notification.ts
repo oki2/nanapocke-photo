@@ -48,6 +48,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         "Content-Type": "text/html; charset=UTF-8",
       }); // SMBC側には不正を返す（再コール）
     }
+    // SMBCのログを保存
+    await S3.savePaymentLog(postObj.OrderID, payment.userId, postObj);
+
     // カートを空にする
     await Cart.cleare(payment.facilityCode, payment.userId);
 
@@ -105,6 +108,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   await Payment.setCompleted(
     postObj.OrderID,
     smbcResult.ProcessDate,
+    payment.userId,
     SMBC.CALLBACK_USER_ID
   );
 
@@ -115,6 +119,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   ) {
     await Cart.cleare(payment.facilityCode, payment.userId);
   }
+
+  // 12.SMBCのログを保存
+  await S3.savePaymentLog(postObj.OrderID, payment.userId, postObj);
 
   return http.ok(SMBC.NOTIFICATION_RESPONSE.RETURN_SUCCESS, {
     "Content-Type": "text/html; charset=UTF-8",

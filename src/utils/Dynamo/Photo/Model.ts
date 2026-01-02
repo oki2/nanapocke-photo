@@ -590,3 +590,35 @@ export async function queryPhotos(
   const result = await docClient().send(command);
   return result;
 }
+
+export async function downloadAceptPhoto(
+  facilityCode: string,
+  userId: string,
+  photoIds: string[],
+  expiredAt: string
+) {
+  const nowISO = new Date().toISOString();
+  const ttl = Math.floor(new Date(expiredAt).getTime() / 1000) + 15552000; // 有効期限切れの半年後にレコード消す
+
+  const requestItems = photoIds.map((photoId) => ({
+    PutRequest: {
+      Item: {
+        pk: `FAC#${facilityCode}#USER#${userId}#DONWLOADACCEPT`,
+        sk: `PHOTO#${photoId}`,
+        facilityCode: facilityCode,
+        photoId: photoId,
+        expiredAt: expiredAt,
+        ttl: ttl,
+        createdAt: nowISO,
+      },
+    },
+  }));
+  const command = new BatchWriteCommand({
+    RequestItems: {
+      [PhotoConfig.TABLE_NAME]: requestItems,
+    },
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+}

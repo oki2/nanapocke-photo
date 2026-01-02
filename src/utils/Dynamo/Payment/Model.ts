@@ -38,7 +38,6 @@ export async function create(
       Item: {
         pk: `PAYMENT#META`,
         sk: orderId,
-        lsi1: `USER#${userId}#SEQ#${seqStr}`,
         orderId: orderId,
         countPrint: countPrint,
         countDl: countDl,
@@ -94,7 +93,8 @@ function dateYmdHiJST(baseDate: Date = new Date()): string {
 export async function setCompleted(
   orderId: string,
   smbcProcessDate: string,
-  userId: string
+  userId: string,
+  updatedBy: string
 ): Promise<void> {
   const command = new UpdateCommand({
     TableName: PaymentConfig.TABLE_NAME,
@@ -103,20 +103,21 @@ export async function setCompleted(
       sk: orderId,
     },
     UpdateExpression:
-      "SET #paymentStatus = :paymentStatus, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
+      "SET #paymentStatus = :paymentStatus, #lsi1 = :lsi1, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
     ExpressionAttributeNames: {
       "#paymentStatus": "paymentStatus",
+      "#lsi1": "lsi1",
       "#smbcProcessDate": "smbcProcessDate",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
       ":paymentStatus": PaymentConfig.STATUS.COMPLETED,
+      ":lsi1": `USER#${userId}#PROCESS#${smbcProcessDate}`,
       ":smbcProcessDate": smbcProcessDate,
       ":updatedAt": new Date().toISOString(),
-      ":updatedBy": userId,
+      ":updatedBy": updatedBy,
     },
-    ReturnValues: "UPDATED_NEW",
   });
 
   // コマンド実行

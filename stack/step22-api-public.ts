@@ -758,6 +758,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
           ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
           SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
           SMBC_API_SEARCH_TRADE_MULTI:
@@ -784,6 +785,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               `${props.bucketUpload.bucketArn}/order/*`,
               `${props.bucketUpload.bucketArn}/action/*`,
+              `${props.bucketPhoto.bucketArn}/paymentLog/*`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
