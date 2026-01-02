@@ -253,7 +253,15 @@ Authorization: Bearer {{accessToken}}
   }
 }
 
+### 決済履歴一覧を取得：保護者専用
+GET https://{{customDomainName}}/api/my/payment/list HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
+### 決済履歴詳細を取得：保護者専用
+GET https://{{customDomainName}}/api/my/payment/{{OrderID}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
 
 
@@ -273,7 +281,7 @@ result=eyJ0cmFuc2FjdGlvbnJlc3VsdCI6eyJBY2Nlc3NJRCI6bnVsbCwiQWNjZXNzUGFzcyI6bnVsb
 ### SMBC Setting
 @ShopID = tshop00009520
 @ShopPass = 85td5ygq
-@OrderID = DNP2-260102-1554-0000000016
+@OrderID = DNP2-260102-2130-0000000017
 @PayType = 45
 
 ### SMBC notification テスト

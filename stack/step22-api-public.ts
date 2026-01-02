@@ -695,6 +695,69 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       }
     );
 
+    // 購入履歴関連 ================================================================
+    // 購入履歴一覧の取得
+    this.lambdaFn.paymentListFn = new NodejsFunction(
+      this,
+      "ApiPublicPaymentListFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPaymentList`,
+        description: `${functionPrefix}-ApiPublicPaymentList`,
+        entry: "src/handlers/api.public.payment.list.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+        ],
+      }
+    );
+
+    // 購入履歴詳細の取得
+    this.lambdaFn.paymentDetailFn = new NodejsFunction(
+      this,
+      "ApiPublicPaymentDetailFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPaymentDetail`,
+        description: `${functionPrefix}-ApiPublicPaymentDetail`,
+        entry: "src/handlers/api.public.payment.detail.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketPhoto.bucketArn}/paymentLog/*`],
+          }),
+        ],
+      }
+    );
+
+    // SMBC 関連 ================================================================
     // SMBC からのcallback
     this.lambdaFn.smbcCallbackFn = new NodejsFunction(
       this,

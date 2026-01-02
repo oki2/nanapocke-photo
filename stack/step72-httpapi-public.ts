@@ -441,6 +441,29 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerGuardianlVeify,
     });
 
+    // 決済履歴関連 ===================================
+    // 決済履歴一覧
+    this.httpApi.addRoutes({
+      path: "/api/my/payment/list",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PaymentListIntegration",
+        props.lambdaFnPublic.paymentListFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // 決済履歴詳細取得
+    this.httpApi.addRoutes({
+      path: "/api/my/payment/{orderId}",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PaymentDetailIntegration",
+        props.lambdaFnPublic.paymentDetailFn
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
     // SMBC関連 ====================================
     this.httpApi.addRoutes({
       path: "/api/payments/smbc/callback",

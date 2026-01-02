@@ -124,6 +124,35 @@ export async function setCompleted(
   await docClient().send(command);
 }
 
+export async function myList(userId: string): Promise<any> {
+  const command = new QueryCommand({
+    TableName: PaymentConfig.TABLE_NAME,
+    IndexName: "lsi1_index",
+    ScanIndexForward: false,
+    KeyConditionExpression: "#pk = :pk AND begins_with(#lsi1, :lsi1)",
+    ProjectionExpression:
+      "#sk, #orderId, #countPrint, #countDl, #smbcProcessDate, grandTotal",
+    ExpressionAttributeNames: {
+      "#pk": "pk",
+      "#lsi1": "lsi1",
+      "#sk": "sk",
+      "#orderId": "orderId",
+      "#countPrint": "countPrint",
+      "#countDl": "countDl",
+      "#smbcProcessDate": "smbcProcessDate",
+      "#grandTotal": "grandTotal",
+    },
+    ExpressionAttributeValues: {
+      ":pk": `PAYMENT#META`,
+      ":lsi1": `USER#${userId}#PROCESS#`,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Items;
+}
+
 async function nextSequence(): Promise<number> {
   const command = new UpdateCommand({
     TableName: PaymentConfig.TABLE_NAME,
