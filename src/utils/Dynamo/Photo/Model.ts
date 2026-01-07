@@ -12,6 +12,8 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import {PhotoConfig} from "../../../config";
 
+import {chunk, sleep} from "../../../libs/tool";
+
 export type Photo = {
   facilityCode: string;
   photoId: string;
@@ -495,12 +497,6 @@ export async function getPhotoByAlbumIdAndPhotoId(
   return result.Item;
 }
 
-const chunk = <T>(arr: T[], size: number): T[][] => {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-};
-
 export async function queryPhotos(
   keys: any,
   indexName: string,
@@ -600,25 +596,60 @@ export async function downloadAceptPhoto(
   const nowISO = new Date().toISOString();
   const ttl = Math.floor(new Date(expiredAt).getTime() / 1000) + 15552000; // 有効期限切れの半年後にレコード消す
 
-  const requestItems = photoIds.map((photoId) => ({
-    PutRequest: {
-      Item: {
-        pk: `FAC#${facilityCode}#USER#${userId}#DONWLOADACCEPT`,
-        sk: `PHOTO#${photoId}`,
-        facilityCode: facilityCode,
-        photoId: photoId,
-        expiredAt: expiredAt,
-        ttl: ttl,
-        createdAt: nowISO,
-      },
-    },
-  }));
-  const command = new BatchWriteCommand({
-    RequestItems: {
-      [PhotoConfig.TABLE_NAME]: requestItems,
-    },
-  });
+  // 25件ずつに分割
+  const batches = chunk(photoIds, 25);
 
-  // コマンド実行
-  await docClient().send(command);
+  // リトライ設定（必要に応じて調整）
+  const MAX_RETRIES = 8; // 合計リトライ回数
+  const BASE_DELAY_MS = 100; // 初期待ち
+  const MAX_DELAY_MS = 3000; // 最大待ち
+
+  for (const photoIdBatch of batches) {
+    // 1バッチ分の PutRequest を作成
+    let requestItems: Record<string, any>[] = photoIdBatch.map((photoId) => ({
+      PutRequest: {
+        Item: {
+          pk: `FAC#${facilityCode}#USER#${userId}#DONWLOADACCEPT`,
+          sk: `PHOTO#${photoId}`,
+          facilityCode,
+          photoId,
+          expiredAt,
+          ttl,
+          createdAt: nowISO,
+        },
+      },
+    }));
+
+    // UnprocessedItems を拾いながらリトライ
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const command = new BatchWriteCommand({
+        RequestItems: {
+          [PhotoConfig.TABLE_NAME]: requestItems,
+        },
+      });
+
+      const res = await docClient().send(command);
+
+      const unprocessed = res.UnprocessedItems?.[PhotoConfig.TABLE_NAME] ?? [];
+      if (unprocessed.length === 0) {
+        // このバッチは全件完了
+        break;
+      }
+
+      // 次の試行は未処理分だけ再送
+      requestItems = unprocessed;
+
+      // リトライ上限超え → 漏れを防ぐため例外
+      if (attempt === MAX_RETRIES) {
+        throw new Error(
+          `BatchWriteCommand failed after retries. UnprocessedItems=${unprocessed.length} (table=${PhotoConfig.TABLE_NAME})`
+        );
+      }
+
+      // 指数バックオフ + ジッター（軽くランダム）
+      const exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * 2 ** attempt);
+      const jitter = Math.floor(Math.random() * 100);
+      await sleep(exp + jitter);
+    }
+  }
 }

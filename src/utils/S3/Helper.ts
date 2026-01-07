@@ -15,6 +15,17 @@ export async function saveOrderData(
   );
 }
 
+export async function getOrderData(
+  orderId: string
+): Promise<Record<string, any>> {
+  return JSON.parse(
+    await S3Base.S3FileReadToString(
+      AppConfig.BUCKET_UPLOAD_NAME,
+      `order/${orderId}/order.json`
+    )
+  );
+}
+
 export async function saveUserInfo(
   orderId: string,
   address: object

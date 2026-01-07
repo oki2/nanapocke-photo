@@ -120,6 +120,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       downloadOption: dlOption,
       printLOption: printLOption,
       print2LOption: print2LOption,
+      shootingBy: photo.createdBy,
     }
   );
 

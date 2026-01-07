@@ -281,7 +281,7 @@ result=eyJ0cmFuc2FjdGlvbnJlc3VsdCI6eyJBY2Nlc3NJRCI6bnVsbCwiQWNjZXNzUGFzcyI6bnVsb
 ### SMBC Setting
 @ShopID = tshop00009520
 @ShopPass = 85td5ygq
-@OrderID = DNP2-260102-2130-0000000017
+@OrderID = DNP2-260107-1330-0000000021
 @PayType = 45
 
 ### SMBC notification テスト
@@ -291,7 +291,11 @@ content-type: application/x-www-form-urlencoded
 ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
 
 
+### SMBC notification テスト 開発環境一次受け
+POST https://work.uxbrew.jp/photo2/smbc/notification/ HTTP/1.1
+content-type: application/x-www-form-urlencoded
 
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
 
 
 ### SMBC SearchTradeMulti

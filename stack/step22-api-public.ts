@@ -6,6 +6,7 @@ import {UserPool, UserPoolClient} from "aws-cdk-lib/aws-cognito";
 import {Bucket} from "aws-cdk-lib/aws-s3";
 import {Table} from "aws-cdk-lib/aws-dynamodb";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import {Queue} from "aws-cdk-lib/aws-sqs";
 
 export interface Props extends cdk.StackProps {
   readonly Config: any;
@@ -15,6 +16,7 @@ export interface Props extends cdk.StackProps {
   readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
+  readonly queueMain: Queue;
   // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
 }
 
@@ -826,6 +828,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
           SMBC_API_SEARCH_TRADE_MULTI:
             props.Config.External.Smbc.ApiUrl.searchTradeMulti,
+          SQS_QUEUE_URL_MAIN: props.queueMain.queueUrl,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -857,6 +860,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/smbc/setting`,
             ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["sqs:sendmessage"],
+            resources: [props.queueMain.queueArn],
           }),
         ],
       }

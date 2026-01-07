@@ -14,6 +14,8 @@ import type {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
 import * as SMBC from "../utils/External/SMBC";
 import * as S3 from "../utils/S3";
 
+import * as SQS from "../utils/SQS";
+
 import * as crypto from "crypto";
 import {Buffer} from "buffer";
 
@@ -104,13 +106,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 9. 決済情報をS3へコピー（DL可否、印刷有無はEventトリガー経由で処理）
   await S3.paymentComplete(postObj.OrderID);
 
-  // 10. 決済情報を「決済済み」に更新する
-  await Payment.setCompleted(
-    postObj.OrderID,
-    smbcResult.ProcessDate,
-    payment.userId,
-    SMBC.CALLBACK_USER_ID
-  );
+  // 10.SMBCのログを保存
+  await S3.savePaymentLog(postObj.OrderID, payment.userId, postObj);
 
   // 11. カートを空にする : クレカ、PayPayの場合
   if (
@@ -120,14 +117,30 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     await Cart.cleare(payment.facilityCode, payment.userId);
   }
 
-  // 12.SMBCのログを保存
-  await S3.savePaymentLog(postObj.OrderID, payment.userId, postObj);
+  // 12. 決済情報を「決済済み」に更新する
+  await Payment.setCompleted(
+    postObj.OrderID,
+    smbcResult.ProcessDate,
+    payment.userId,
+    SMBC.CALLBACK_USER_ID
+  );
+
+  // 印刷がある場合はSQS経由で実行
+  if (payment.countPrint > 0) {
+    console.log("sendPrintJob", postObj);
+    await SQS.sendPhotoFileByOrderId(postObj.OrderID);
+  }
 
   return http.ok(SMBC.NOTIFICATION_RESPONSE.RETURN_SUCCESS, {
     "Content-Type": "text/html; charset=UTF-8",
   });
 });
 
+/**
+ * Parse body of APIGatewayProxyEventV2
+ * @param {APIGatewayProxyEventV2} event
+ * @returns {Record<string, string>}
+ */
 function parseBody(event: APIGatewayProxyEventV2): Record<string, string> {
   const raw = event.body
     ? event.isBase64Encoded

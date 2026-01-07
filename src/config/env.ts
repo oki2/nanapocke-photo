@@ -11,6 +11,10 @@ export const env = {
   BUCKET_UPLOAD_NAME: process.env.BUCKET_UPLOAD_NAME || "",
   BUCKET_PHOTO_NAME: process.env.BUCKET_PHOTO_NAME || "",
 
+  // SQS
+  SQS_QUEUE_URL_MAIN: process.env.SQS_QUEUE_URL_MAIN || "",
+  SQS_JOB_SEND_PHOTO_FILE_BY_ORDERID: "SqsJobSendPhotoFileByOrderId",
+
   // Cloudfront Verify Token
   X_ORIGIN_VERIFY_TOKEN: process.env.X_ORIGIN_VERIFY_TOKEN || "",
 

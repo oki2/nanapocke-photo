@@ -92,3 +92,20 @@ export function nextUtc17(dateUtc: Date): Date {
     )
   );
 }
+
+/**
+ * Split an array into chunks of a specified size.
+ * @template T
+ * @param {T[]} arr - The array to split.
+ * @param {number} size - The size of each chunk.
+ * @returns {T[][]} An array of chunks.
+ */
+export function chunk<T>(arr: T[], size: number): T[][] {
+  const res: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
+  return res;
+}
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

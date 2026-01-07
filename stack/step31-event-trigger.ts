@@ -8,6 +8,8 @@ import {Table} from "aws-cdk-lib/aws-dynamodb";
 import {EventField, Rule, RuleTargetInput} from "aws-cdk-lib/aws-events";
 import {LambdaFunction as targetLambda} from "aws-cdk-lib/aws-events-targets";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import {Queue} from "aws-cdk-lib/aws-sqs";
+import {SqsEventSource} from "aws-cdk-lib/aws-lambda-event-sources";
 
 export interface Props extends cdk.StackProps {
   readonly Config: any;
@@ -15,6 +17,7 @@ export interface Props extends cdk.StackProps {
   // readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
+  readonly queueMain: Queue;
   // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
 }
 
@@ -308,5 +311,57 @@ export class Step31EventTriggerStack extends cdk.Stack {
         }),
       ],
     });
+
+    // =====================================================================================
+    // SQS トリガー
+    // =====================================================================================
+    // 印刷送信用
+    const triggerSqsMainQueueFn = new NodejsFunction(
+      this,
+      "TriggerSqsMainQueueFn",
+      {
+        functionName: `${functionPrefix}-TriggerSqsMainQueue`,
+        description: `${functionPrefix}-TriggerSqsMainQueue`,
+        entry: "src/handlers/trigger/sqs.queue.main.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 1024,
+        timeout: cdk.Duration.minutes(15),
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:PutItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [
+              `${props.bucketUpload.bucketArn}/order/*`,
+              `${props.bucketPhoto.bucketArn}/storage/*`,
+            ],
+          }),
+          // new cdk.aws_iam.PolicyStatement({
+          //   effect: cdk.aws_iam.Effect.ALLOW,
+          //   actions: ["s3:PutObject"],
+          //   resources: [`${props.bucketPhoto.bucketArn}/paymentLog/*`],
+          // }),
+        ],
+      }
+    );
+    triggerSqsMainQueueFn.addEventSource(
+      new SqsEventSource(props.queueMain, {
+        batchSize: 1,
+        maxConcurrency: 5,
+        reportBatchItemFailures: true,
+      })
+    );
   }
 }

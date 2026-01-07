@@ -3,6 +3,7 @@ import {Construct} from "constructs";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {Bucket, ObjectOwnership} from "aws-cdk-lib/aws-s3";
+import {Queue} from "aws-cdk-lib/aws-sqs";
 
 export interface Props extends cdk.StackProps {
   readonly Config: any;
@@ -13,6 +14,7 @@ export class Step10ResourceStack extends cdk.Stack {
   public cfKeyGroupNanaPhoto: cloudfront.KeyGroup;
   public bucketUpload: Bucket;
   public bucketPhoto: Bucket;
+  public queueMain: Queue;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id, props);
@@ -77,6 +79,23 @@ export class Step10ResourceStack extends cdk.Stack {
         // ],
       }
     );
+
+    //====================================
+    // SQS
+    //====================================
+    // DLQ
+    const dlq = new Queue(this, "Dlq", {
+      retentionPeriod: cdk.Duration.days(14),
+    });
+
+    // メインキュー
+    this.queueMain = new Queue(this, "MainQueue", {
+      visibilityTimeout: cdk.Duration.seconds(60), // consumer timeoutより長め推奨
+      deadLetterQueue: {
+        queue: dlq,
+        maxReceiveCount: 5,
+      },
+    });
 
     // //====================================
     // // Cloudfront PublicKey and KeyGroup

@@ -181,37 +181,13 @@ async function paymentComplete(bucketName: string, keyPath: string) {
   const orderYmd = `${yyyy}${mm}${dd}`;
 
   // DL用
-  const dlData = [];
-
-  // カート内情報を処理
-  for (const cart of orderData.cart) {
-    // 印刷Lがある場合
-    if (cart.printLOption.quantity) {
-      printDataAry.push({
-        photoId: cart.photoId,
-        photoSequanceId: cart.photoSequenceId,
-        size: "L",
-        quantity: cart.printLOption.quantity,
-      });
-    }
-
-    // 印刷2Lがある場合
-    if (cart.print2LOption.quantity) {
-      printDataAry.push({
-        photoId: cart.photoId,
-        photoSequanceId: cart.photoSequenceId,
-        size: "2L",
-        quantity: cart.print2LOption.quantity,
-      });
-    }
-
-    // DLがある場合
-    if (cart.downloadOption.selected) {
-      dlData.push(cart.photoId);
-    }
-  }
-
-  console.log("printDataAry", printDataAry);
+  const dlData = orderData.cart
+    .filter((cart: any) => {
+      return cart.downloadOption.selected;
+    })
+    .map((cart: any) => {
+      return cart.photoId;
+    });
   console.log("dlData", dlData);
 
   // DL購入が存在する場合は、DL用のレコードを登録

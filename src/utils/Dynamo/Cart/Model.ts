@@ -12,6 +12,8 @@ import {CartConfig, PhotoConfig} from "../../../config";
 import * as Photo from "../Photo";
 import {PriceTable} from "../../../schemas/album";
 
+import {chunk, sleep} from "../../../libs/tool";
+
 type AddOptions = {
   albumSequenceId: number;
   photoSequenceId: number;
@@ -22,6 +24,7 @@ type AddOptions = {
   downloadOption: Record<string, any>;
   printLOption: Record<string, any>;
   print2LOption: Record<string, any>;
+  shootingBy: string;
 };
 
 export async function add(
@@ -51,9 +54,10 @@ export async function add(
         photoSequenceId: options.photoSequenceId,
         albumTitle: options.albumTitle,
         purchaseDeadline: options.purchaseDeadline,
+        ttl: ttl,
         priceTable: options.priceTable,
         priceTier: options.priceTier,
-        ttl: ttl,
+        shootingBy: options.shootingBy,
         createdAt: nowISO,
         createdBy: userId,
         downloadOption: options.downloadOption,
@@ -138,7 +142,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #shootingBy, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
@@ -150,6 +154,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
       "#purchaseDeadline": "purchaseDeadline",
       "#priceTable": "priceTable",
       "#priceTier": "priceTier",
+      "#shootingBy": "shootingBy",
       "#downloadOption": "downloadOption",
       "#printLOption": "printLOption",
       "#print2LOption": "print2LOption",
@@ -274,11 +279,3 @@ export async function cleare(
 
   return {deleted: deletedCount};
 }
-
-function chunk<T>(arr: T[], size: number): T[][] {
-  const res: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
-  return res;
-}
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
