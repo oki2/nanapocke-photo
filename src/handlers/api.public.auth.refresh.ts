@@ -1,6 +1,8 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
 
+import {CognitoJwtVerifier} from "aws-jwt-verify";
+
 import {
   RefreshTokenCookie,
   SigninResponse,
@@ -9,6 +11,9 @@ import {
 import {parseOrThrow} from "../libs/validate";
 
 import * as Auth from "../utils/Cognito";
+
+import * as User from "../utils/Dynamo/User";
+import * as Facility from "../utils/Dynamo/Facility";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("event", event);
@@ -36,10 +41,27 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     return "";
   }
 
+  // ユーザー情報を取得
+  const verifier = CognitoJwtVerifier.create({
+    userPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
+    tokenUse: "access",
+    clientId: AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
+  });
+  const payload = await verifier.verify(res.accessToken);
+  console.log("Token is valid. Payload:", payload);
+
+  const userInfo = await User.get(payload.sub);
+  console.log("userInfo", userInfo);
+
+  // 施設情報を取得
+  const facilityInfo = await Facility.get(userInfo.facilityCode);
+
   const result: SigninResponseT = {
     state: "success",
-    idToken: res.idToken,
     accessToken: res.accessToken,
+    name: userInfo.userName,
+    organizationName: facilityInfo.name,
+    role: userInfo.userRole,
   };
   return http.ok(parseOrThrow(SigninResponse, result));
 });

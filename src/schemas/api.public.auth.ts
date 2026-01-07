@@ -1,8 +1,12 @@
 import * as v from "valibot";
 import * as common from "./common";
 
+import {UserConfig} from "../config";
+
 // export const Id = v.pipe(v.string(), v.minLength(1), v.maxLength(64));
 // export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
+
+const Role = v.picklist(Object.values(UserConfig.ROLE));
 
 // Signin Request body
 export const AuthSigninBody = v.pipe(
@@ -18,8 +22,10 @@ export type AuthSigninBodyT = v.InferOutput<typeof AuthSigninBody>;
 // Signin Response Success
 export const SigninSuccess = v.object({
   state: v.literal("success"),
-  idToken: v.string(),
   accessToken: v.string(),
+  name: v.string(),
+  organizationName: v.string(),
+  role: Role,
 });
 
 // Signin Response Challenge

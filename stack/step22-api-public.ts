@@ -166,6 +166,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           NANAPOCKE_AUTHPOOL_CLIENT_ID:
             props.NanapockeAuthPoolClient.userPoolClientId,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -174,6 +175,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               props.NanapockeAuthPool.userPoolArn,
               props.NanapockeAuthPool.userPoolArn,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [
+              props.NanapockeUserTable.tableArn,
+              props.MainTable.tableArn,
             ],
           }),
         ],

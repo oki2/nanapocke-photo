@@ -155,9 +155,7 @@ export async function update(
   return result.Attributes;
 }
 
-export async function get(
-  code: string
-): Promise<Record<string, any> | undefined> {
+export async function get(code: string): Promise<any> {
   const command = new GetCommand({
     TableName: FacilityConfig.TABLE_NAME,
     Key: {
