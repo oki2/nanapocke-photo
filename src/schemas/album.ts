@@ -30,7 +30,8 @@ export const AlbumCreateBody = v.pipe(
     description: v.optional(v.pipe(v.string(), v.minLength(1))),
     priceTable: PriceTable,
     salesPeriod: v.optional(SalesPeriod),
-    coverImage: v.optional(v.pipe(v.string(), v.minLength(1))),
+    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
+    copyFromAlbumId: v.optional(common.AlbumId),
   })
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
@@ -57,7 +58,7 @@ export const AlbumEditBody = v.pipe(
     description: v.optional(v.pipe(v.string(), v.minLength(1))),
     priceTable: PriceTable,
     salesPeriod: SalesPeriod,
-    coverImage: v.optional(v.pipe(v.string(), v.minLength(1))),
+    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
   })
 );
 export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;

@@ -12,6 +12,7 @@ import {PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import * as Album from "../utils/Dynamo/Album";
+import * as Photo from "../utils/Dynamo/Photo";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -36,9 +37,30 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     title: album.title,
   };
 
-  // 3. アルバム画像が存在する場合は、署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
-  if (data.coverImage) {
-    const key = `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${album.albumId}/${authContext.userId}/${data.coverImage}`;
+  // 3. コピーの場合
+  if (data.copyFromAlbumId) {
+    // コピー元のアルバムに属する写真一覧を取得
+    const photoIds = await Photo.photoIdsByAlbumId(
+      authContext.facilityCode,
+      data.copyFromAlbumId
+    );
+
+    // DynamoDB に写真とアルバムの紐付け情報を登録
+    for (const photoId of photoIds) {
+      await Photo.setAlbums(
+        authContext.facilityCode,
+        photoId,
+        [album.albumId],
+        [],
+        [album.albumId],
+        authContext.userId
+      );
+    }
+  }
+
+  // 4. アルバム画像が存在する場合は、署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
+  if (data.coverImageFileName) {
+    const key = `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${album.albumId}/${authContext.userId}/${data.coverImageFileName}`;
     const s3Client = new S3Client({region: AppConfig.MAIN_REGION});
     const s3Command = new PutObjectCommand({
       Bucket: AppConfig.BUCKET_UPLOAD_NAME,
