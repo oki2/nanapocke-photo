@@ -52,6 +52,7 @@ Authorization: Bearer {{accessToken}}
   "title": "テストアルバム",
   "description": "アルバムの説明",
   "copyFromAlbumId": "56f6fa3f-8d14-4d9f-b5ab-309320353964",
+  "coverImageFileName": "test.jpg",
   "salesPeriod": {
     "start": "2025-12-16T00:00:00Z",
     "end": "2025-12-30T00:00:00Z"
@@ -102,7 +103,6 @@ Authorization: Bearer {{accessToken}}
   "fileName": "test.jpg",
   "priceTier": "STANDARD",
   "shootingAt": "2025-11-16T00:00:00+09:00",
-  "albums": ["{{albumId}}"],
   "tags": "TAG-A,TAG-あいうえお#イベント"
 }
 

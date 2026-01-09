@@ -2,6 +2,7 @@ import * as v from "valibot";
 import * as common from "./common";
 
 import {UserConfig} from "../config";
+import {FacilityCode} from "./common.nanapocke";
 
 // export const Id = v.pipe(v.string(), v.minLength(1), v.maxLength(64));
 // export const ISODateTime = v.pipe(v.string(), v.isoTimestamp());
@@ -23,8 +24,9 @@ export type AuthSigninBodyT = v.InferOutput<typeof AuthSigninBody>;
 export const SigninSuccess = v.object({
   state: v.literal("success"),
   accessToken: v.string(),
-  name: v.string(),
-  organizationName: v.string(),
+  userName: v.string(),
+  facilityCode: FacilityCode,
+  facilityName: v.string(),
   role: Role,
 });
 

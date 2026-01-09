@@ -59,8 +59,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const result: SigninResponseT = {
     state: "success",
     accessToken: res.accessToken,
-    name: userInfo.userName,
-    organizationName: facilityInfo.name,
+    userName: userInfo.userName,
+    facilityName: facilityInfo.name,
+    facilityCode: userInfo.facilityCode,
     role: userInfo.userRole,
   };
   return http.ok(parseOrThrow(SigninResponse, result));
