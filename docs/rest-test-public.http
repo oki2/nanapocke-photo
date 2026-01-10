@@ -5,9 +5,11 @@
 @facilityCode = 00001
 
 ### Nanapocke 認証受け口 : 園長
+# @no-redirect
 GET https://{{customDomainName}}/auth/nanapocke?code=Ptest01 HTTP/1.1
 
 ### Nanapocke 認証受け口 : 保護者
+# @no-redirect
 GET https://{{customDomainName}}/auth/nanapocke?code=Gtest01 HTTP/1.1
 
 ### フォトグラファー Signin API
@@ -32,9 +34,9 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "Photo001",
+  "userCode": "Photo002",
   "password": "test1234",
-  "userName": "フォトグラファー1"
+  "userName": "フォトグラファー2"
 }
 
 ### フォトグラファー一覧取得
@@ -171,7 +173,7 @@ Authorization: Bearer {{accessToken}}
 }
 
 ### 写真一覧：保護者指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/56f6fa3f-8d14-4d9f-b5ab-309320353964/photo/list HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### カートに写真追加：保護者指定

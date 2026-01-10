@@ -1,7 +1,7 @@
 import * as http from "../http";
-
 import {AppConfig, AlbumConfig} from "../config";
-import {AlbumPathParameters} from "../schemas/album";
+
+import {AlbumPathParameters, AlbumPhotoListResponse} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
@@ -43,7 +43,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   );
   console.log("salesObj", salesObj);
 
-  return http.ok(salesObj);
+  return http.ok(parseOrThrow(AlbumPhotoListResponse, salesObj));
 
   // return http.ok(
   //   parseOrThrow(AlbumCreateResponse, {

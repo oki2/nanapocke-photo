@@ -1,11 +1,11 @@
 import {AppConfig, CognitoConfig} from "../config";
 import * as http from "../http";
+import {parseOrThrow} from "../libs/validate";
 import {
   AuthSigninBody,
   SigninResponse,
   SigninResponseT,
-} from "../schemas/api.admin.auth";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/admin";
 
 import * as Auth from "../utils/Cognito";
 import * as ChallengeSession from "../utils/Dynamo/Auth/ChallengeSession";

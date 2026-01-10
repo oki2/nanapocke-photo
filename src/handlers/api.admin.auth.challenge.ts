@@ -1,12 +1,11 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-
+import {parseOrThrow} from "../libs/validate";
 import {
   ChallengeBody,
   ChallengeSuccess,
   ChallengeSuccessT,
-} from "../schemas/api.admin.auth";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/admin";
 
 import * as Auth from "../utils/Cognito";
 import * as ChallengeSession from "../utils/Dynamo/Auth/ChallengeSession";

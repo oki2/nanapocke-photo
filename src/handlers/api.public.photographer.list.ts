@@ -1,9 +1,6 @@
 import * as http from "../http";
 
-import {
-  PhotographerCreateBody,
-  PhotographerCreateResponse,
-} from "../schemas/api.public.photographer";
+import {PhotographerList} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as User from "../utils/Dynamo/User";
@@ -18,5 +15,5 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = await User.photographerList(authContext.facilityCode);
   console.log("data", data);
 
-  return http.ok(data);
+  return http.ok(parseOrThrow(PhotographerList, data));
 });

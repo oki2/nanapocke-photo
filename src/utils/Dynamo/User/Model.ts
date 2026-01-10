@@ -120,13 +120,14 @@ export async function photographerList(facilityCode: string): Promise<any> {
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk AND #lsi1 = :lsi1",
     ProjectionExpression:
-      "#sk, #userCode, #userName, #nbf, #exp, #status, #createdAt, #updatedAt",
+      "#sk, #userCode, #userName, #description, #nbf, #exp, #status, #createdAt, #updatedAt",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#lsi1": "lsi1",
       "#sk": "sk",
       "#userCode": "userCode",
       "#userName": "userName",
+      "#description": "description",
       "#nbf": "nbf",
       "#exp": "exp",
       "#status": "status",

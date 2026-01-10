@@ -1,14 +1,9 @@
 import {AppConfig, TagConfig} from "../config";
 import * as http from "../http";
-import {
-  PhotoUploadBody,
-  PhotoUploadResponse,
-  PhotoUploadResponseT,
-} from "../schemas/photo";
 import {parseOrThrow} from "../libs/validate";
+import {PhotoUploadBody, PhotoUploadResponse} from "../schemas/public";
 
-import {PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+import {S3PutObjectSignedUrl} from "../utils/S3";
 
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
@@ -82,20 +77,16 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
 
   // 4. 署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
-  const key = `${prefix}/${authContext.facilityCode}/${authContext.userId}/${uploadId}/${data.fileName}`;
-  const s3Client = new S3Client({region: AppConfig.MAIN_REGION});
-  const s3Command = new PutObjectCommand({
-    Bucket: AppConfig.BUCKET_UPLOAD_NAME,
-    Key: key,
-  });
-  const preSignedUrl = await getSignedUrl(s3Client, s3Command, {
-    expiresIn: 60, // 即時アップされる想定なので、有効期限を短く1分とする
-  });
+  const preSignedUrl = await S3PutObjectSignedUrl(
+    AppConfig.BUCKET_UPLOAD_NAME,
+    `${prefix}/${authContext.facilityCode}/${authContext.userId}/${uploadId}/${data.fileName}`,
+    60 // 即時アップされる想定なので、有効期限を短く1分とする
+  );
 
-  // 5. レスポンス作成
-  const result: PhotoUploadResponseT = {
-    url: preSignedUrl,
-  };
-
-  return http.ok(parseOrThrow(PhotoUploadResponse, result));
+  // 5. レスポンス
+  return http.ok(
+    parseOrThrow(PhotoUploadResponse, {
+      url: preSignedUrl,
+    })
+  );
 });

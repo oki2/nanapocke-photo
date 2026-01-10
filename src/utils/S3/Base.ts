@@ -262,6 +262,31 @@ export async function S3GetObjectSignedUrl(
 }
 
 /**
+ * Generates a pre-signed URL for uploading a file to an S3 bucket.
+ *
+ * @param {string} bucket - The name of the S3 bucket.
+ * @param {string} key - The key of the file to upload.
+ * @param {number} [expiresIn=SIGNED_URL_DEFAULT_EXPIRES_IN] - The expiration time in seconds for the pre-signed URL.
+ * @return {Promise<string>} A promise that resolves to the pre-signed URL.
+ */
+export async function S3PutObjectSignedUrl(
+  bucket: string,
+  key: string,
+  expiresIn: number = SIGNED_URL_DEFAULT_EXPIRES_IN
+): Promise<string> {
+  return await getSignedUrl(
+    s3Client,
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }),
+    {
+      expiresIn: expiresIn,
+    }
+  );
+}
+
+/**
  * Calculates the total size of all objects in an S3 bucket that match a given path.
  *
  * @param {string} bucketName - The name of the S3 bucket.

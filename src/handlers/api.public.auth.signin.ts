@@ -1,12 +1,12 @@
 import {AppConfig, UserConfig, CognitoConfig} from "../config";
 import * as http from "../http";
+import {parseOrThrow} from "../libs/validate";
 import {
   AuthSigninBody,
   SigninSuccess,
   SigninSuccessT,
   IdTokenPayload,
-} from "../schemas/api.public.auth";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/public";
 
 import * as jwt from "jsonwebtoken";
 
@@ -54,7 +54,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     }) ?? {}
   );
   console.log("payload", payload);
-  if ((await User.Photographer.isActive(payload.sub)) === false) {
+  const user = await User.Photographer.isActive(payload.sub);
+  if (!user) {
     console.log(
       `フォトグラファー利用不可 : ${payload.sub} / user : ${data.userName}`
     );
@@ -65,7 +66,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const result: SigninSuccessT = {
     state: "success",
     accessToken: auth.accessToken ?? "",
-    userName: data.userName,
+    userName: user.userName,
     facilityCode: data.facilityCode,
     facilityName: facilityInfo.name,
     role: UserConfig.ROLE.PHOTOGRAPHER,

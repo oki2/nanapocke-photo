@@ -20,24 +20,24 @@ export async function create(
   );
 }
 
-export const isActive = async (userId: string): Promise<boolean> => {
+export const isActive = async (userId: string): Promise<any> => {
   const user = await UserModel.get(userId);
 
   const nowDate = new Date(); // 現在日時
   const nbfDate = new Date(user?.nbf);
   // 利用期間開始前の場合はfalse
   if (nowDate < nbfDate) {
-    return false;
+    return undefined;
   }
 
   // 利用期間終了後の場合はfalse
   if (user.hasOwnProperty("exp")) {
     const expDate = new Date(user.exp);
     if (nowDate > expDate) {
-      return false;
+      return undefined;
     }
   }
 
-  // 状態がINACTIVEの場合はfalse
-  return user.status === UserConfig.STATUS.ACTIVE;
+  // 状態がINACTIVEの場合は undefined
+  return user.status === UserConfig.STATUS.ACTIVE ? user : undefined;
 };

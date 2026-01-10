@@ -1,7 +1,6 @@
 import {AppConfig, AlbumConfig, PhotoConfig, PriceConfig} from "../config";
 import * as http from "../http";
-import {ResultOK} from "../schemas/common";
-import {CartAddBody} from "../schemas/cart";
+import {ResultOK, CartAddBody} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Cart from "../utils/Dynamo/Cart";

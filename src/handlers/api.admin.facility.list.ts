@@ -1,10 +1,6 @@
 import * as http from "../http";
-
-import {
-  FacilityListResponse,
-  FacilityListResponseT,
-} from "../schemas/api.admin.facility";
 import {parseOrThrow} from "../libs/validate";
+import {FacilityListResponse, FacilityListResponseT} from "../schemas/admin";
 
 import * as Facility from "../utils/Dynamo/Facility";
 
@@ -29,9 +25,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     });
   }
 
-  const tmp = parseOrThrow(FacilityListResponse, result);
-  console.log("tmp", tmp);
-  return http.ok(tmp);
+  return http.ok(parseOrThrow(FacilityListResponse, result));
 
   // return ok(parseOrThrow(Facility, result));
 });

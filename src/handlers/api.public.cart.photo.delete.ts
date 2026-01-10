@@ -1,8 +1,7 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-import {ResultOK} from "../schemas/common";
-import {CartPhotoDeletePathParameters} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
+import {CartPhotoDeletePathParameters, ResultOK} from "../schemas/public";
 
 import * as Cart from "../utils/Dynamo/Cart";
 

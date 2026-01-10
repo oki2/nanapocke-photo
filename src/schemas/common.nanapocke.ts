@@ -5,6 +5,7 @@ export const FacilityCode = v.pipe(v.string(), v.regex(/^[0-9]{5}$/));
 
 // 保育園クラスCode：ナナポケの仕様に合わせて7桁の文字
 export const ClassCode = v.pipe(v.string(), v.regex(/^[0-9]{7}$/));
+export const ClassName = v.pipe(v.string(), v.minLength(1));
 
 // 保育園年齢Code：ナナポケの仕様に合わせて数値型
 export const GradeCode = v.number();

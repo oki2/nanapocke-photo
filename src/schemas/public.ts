@@ -1,0 +1,530 @@
+import * as v from "valibot";
+import {AppConfig, UserConfig, PhotoConfig, AlbumConfig} from "../config";
+import * as common from "./common";
+import * as nanapocke from "./common.nanapocke";
+
+// 共通 ==========================================================================
+
+// アルバム販売テーブル
+export const PriceTable = v.picklist(Object.values(AlbumConfig.PRICE_TABLE));
+
+// アルバムの販売期間
+export const SalesPeriod = v.pipe(
+  v.object({
+    start: v.union([common.ISODateTime, v.literal("")]),
+    end: v.union([common.ISODateTime, v.literal("")]),
+  }),
+  v.check(({start, end}) => {
+    // どちらかが未入力（空文字）の場合は OK
+    if (start === "" || end === "") {
+      return true;
+    }
+    return new Date(end).getTime() > new Date(start).getTime();
+  }, "end は start より後の日時を指定してください")
+);
+export type SalesPeriodT = v.InferOutput<typeof SalesPeriod>;
+
+export const PhotoDetail = v.object({
+  photoId: common.PhotoId,
+  sequenceId: v.number(),
+  imageUrl: common.Url,
+  priceTier: common.PhotoPriceTier,
+  shootingAt: common.ISODateTime,
+  width: v.number(),
+  height: v.number(),
+  salesSizeDl: v.array(common.SalesSizeDl),
+  salesSizePrint: v.array(common.SalesSizePrint),
+});
+
+// アルバム販売開始・停止のナナポケ通知送信
+const SalesTopicsSend = v.object({
+  send: v.literal(true),
+  classReceivedList: v.array(nanapocke.ClassCode),
+  academicYear: nanapocke.AcademicYear,
+});
+
+const SalesTopicsNotSend = v.object({
+  send: v.literal(false),
+});
+
+export const AlbumSalesStart = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.START),
+    topics: v.variant("send", [SalesTopicsSend, SalesTopicsNotSend]),
+    // topics: v.object({
+    //   send: v.boolean(),
+    //   classReceivedList: v.array(nanapocke.ClassCode),
+    //   academicYear: nanapocke.AcademicYear,
+    // }),
+  })
+);
+
+export const AlbumSalesStop = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.STOP),
+  })
+);
+
+/**
+ * API別 =========================================================================
+ */
+
+export const ResultOK = v.object({
+  ok: v.literal(true),
+});
+
+// api.public.auth.refresh : request cookie
+export const RefreshTokenCookie = v.object({
+  refreshToken: common.RefreshToken,
+  userRole: common.PublicRole,
+});
+export type RefreshTokenCookieT = v.InferOutput<typeof RefreshTokenCookie>;
+
+// api.public.auth.refresh : response
+export const SigninSuccess = v.object({
+  state: v.literal("success"),
+  accessToken: v.string(),
+  userName: v.string(),
+  facilityCode: nanapocke.FacilityCode,
+  facilityName: v.string(),
+  role: common.PublicRole,
+});
+
+// Signin Response Challenge
+export const SigninChallenge = v.object({
+  state: v.literal("challenge"),
+  challenge: v.string(),
+  flowId: v.string(),
+});
+
+// Signin Response 判別共用体（state が判別キー）
+export const SigninResponse = v.variant("state", [
+  SigninSuccess,
+  SigninChallenge,
+]);
+export type SigninResponseT = v.InferOutput<typeof SigninResponse>;
+export type SigninSuccessT = v.InferOutput<typeof SigninSuccess>;
+export type SigninChallengeT = v.InferOutput<typeof SigninChallenge>;
+
+// api.public.auth.signin : request
+export const AuthSigninBody = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    userName: common.Name,
+    password: v.pipe(v.string(), v.minLength(1)),
+  })
+);
+export type AuthSigninBodyT = v.InferOutput<typeof AuthSigninBody>;
+
+export const IdTokenPayload = v.object({
+  sub: v.pipe(v.string(), v.minLength(1)),
+});
+export type IdTokenPayloadT = v.InferOutput<typeof IdTokenPayload>;
+
+// api.public.album.create : request
+export const AlbumCreateBody = v.pipe(
+  v.object({
+    title: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    priceTable: PriceTable,
+    salesPeriod: v.optional(SalesPeriod),
+    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
+    copyFromAlbumId: v.optional(common.AlbumId),
+  })
+);
+export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
+
+// api.public.album.create : response
+export const AlbumCreateResponse = v.pipe(
+  v.object({
+    albumId: common.AlbumId,
+    title: v.pipe(v.string(), v.minLength(1)),
+    url: v.optional(common.Url),
+  })
+);
+export type AlbumCreateResponseT = v.InferOutput<typeof AlbumCreateResponse>;
+
+// api.public.album.list : response
+export const AlbumItem = v.object({
+  albumId: common.AlbumId,
+  sequenceId: v.number(),
+  title: v.pipe(v.string(), v.minLength(1)),
+  description: v.pipe(v.string(), v.minLength(1)),
+  salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
+  priceTable: PriceTable,
+  photoCount: v.optional(v.number()),
+  coverImageUrl: v.optional(common.Url, ""),
+  salesPeriod: v.optional(SalesPeriod, {
+    start: "",
+    end: "",
+  }),
+});
+export type AlbumItemT = v.InferOutput<typeof AlbumItem>;
+
+export const AlbumListResponse = v.array(AlbumItem);
+export type AlbumListResponseT = v.InferOutput<typeof AlbumListResponse>;
+
+// api.public.album.photo.list : pathParameters
+export const AlbumPathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    albumId: common.AlbumId,
+  })
+);
+
+// api.public.album.photo.list : response
+export const AlbumPhotoListResponse = v.object({
+  album: AlbumItem,
+  photos: v.array(PhotoDetail),
+});
+
+// api.public.album.sales : request
+// Signin Response 判別共用体（state が判別キー）
+export const AlbumSalesBody = v.variant("action", [
+  AlbumSalesStart,
+  AlbumSalesStop,
+]);
+
+// api.public.album.update : request
+export const AlbumEditBody = v.pipe(
+  v.object({
+    title: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    priceTable: PriceTable,
+    salesPeriod: SalesPeriod,
+    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
+  })
+);
+export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;
+
+// api.public.album.update : response
+export const AlbumEditResponse = v.object({
+  ok: v.literal(true),
+  url: v.optional(common.Url),
+});
+export type AlbumEditResponseT = v.InferOutput<typeof AlbumEditResponse>;
+
+// api.public.photo.upload : request
+export const PhotoUploadBody = v.pipe(
+  v.object({
+    shootingAt: common.ISODateTime,
+    priceTier: common.PhotoPriceTier,
+    tags: v.optional(v.string(), ""),
+    albums: v.optional(v.array(common.AlbumId), []),
+    fileType: common.PhotoUploadFileType,
+    fileName: v.pipe(v.string(), v.minLength(1)),
+  })
+);
+export type PhotoUploadBodyT = v.InferOutput<typeof PhotoUploadBody>;
+
+// api.public.photo.upload : response
+export const PhotoUploadResponse = v.pipe(
+  v.object({
+    url: v.pipe(v.string(), v.minLength(1)),
+  })
+);
+export type PhotoUploadResponseT = v.InferOutput<typeof PhotoUploadResponse>;
+
+// api.public.photo.edit : pathParameters
+export const PhotoPathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    photoId: common.PhotoId,
+  })
+);
+
+// api.public.photo.edit : request
+export const PhotoEditBody = v.pipe(
+  v.object({
+    album: v.object({
+      mode: v.picklist(["CHANGE"]),
+      albums: v.array(v.pipe(v.string(), v.minLength(1))),
+    }),
+  })
+);
+
+// api.public.photo.list : request query
+export const FilterAlbum = v.picklist(["ALL", "UNSET"]);
+export const FilterDateType = v.picklist(Object.values(PhotoConfig.DATE_TYPE));
+export const FilterEditability = v.picklist(
+  Object.values(PhotoConfig.EDITABILITY)
+);
+export const FilterPhotoPriceTier = v.picklist(
+  Object.values(PhotoConfig.PRICE_TIER)
+);
+export const PhotoFilters = v.object({
+  albumId: v.union([FilterAlbum, common.AlbumId]),
+  photographer: v.optional(v.string(), ""),
+  tagQuery: v.optional(v.string(), ""),
+  photoIdQuery: v.optional(v.string(), ""),
+  dateType: v.optional(v.union([FilterDateType, v.literal("")]), ""),
+  dateFrom: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
+  dateTo: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
+  // priceTier: FilterPhotoPriceTier,
+  editability: v.optional(FilterEditability, PhotoConfig.EDITABILITY.EDITABLE),
+  sortKey: v.optional(
+    v.picklist(Object.values(PhotoConfig.SORT_KEY)),
+    PhotoConfig.SORT_KEY.UPLOAD
+  ),
+  sortOrder: v.optional(
+    v.picklist(Object.values(PhotoConfig.SORT_ORDER)),
+    PhotoConfig.SORT_ORDER.DESC
+  ),
+  limit: v.pipe(
+    v.string(),
+    v.regex(/^\d+$/, "数値のみを指定してください"),
+    v.transform(Number),
+    v.number()
+  ),
+  cursor: v.optional(v.string()),
+});
+
+// api.public.photo.list : response
+export const PhotoListResponse = v.object({
+  photos: v.array(
+    v.pipe(
+      v.object({
+        facilityCode: nanapocke.FacilityCode,
+        photoId: common.AlbumId,
+        sequenceId: v.number(),
+        photoImageUrl: v.pipe(v.string(), v.minLength(1)),
+        status: v.pipe(v.string(), v.minLength(1)),
+        tags: v.optional(v.array(v.string())),
+        albums: v.optional(v.array(common.AlbumId)),
+        priceTier: common.PhotoPriceTier,
+        shootingAt: common.ISODateTime,
+        createdAt: common.ISODateTime,
+      })
+    )
+  ),
+  nextCursor: v.optional(v.string()),
+});
+export type PhotoListResponseT = v.InferOutput<typeof PhotoListResponse>;
+
+// api.public.meta.list : response
+const MetaAlbum = v.object({
+  albumId: common.AlbumId,
+  sequenceId: v.number(),
+  title: v.pipe(v.string(), v.minLength(1)),
+  salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
+});
+const MetaStaff = v.object({
+  userId: common.UserId,
+  userName: common.Name,
+});
+const MetaClass = v.object({
+  classCode: nanapocke.ClassCode,
+  className: nanapocke.ClassName,
+});
+export const MetaListResponse = v.object({
+  tags: v.optional(v.array(v.string()), []),
+  albums: v.optional(v.array(MetaAlbum), []),
+  staff: v.optional(v.array(MetaStaff)),
+  classList: v.optional(v.array(MetaClass)),
+  academicYear: v.optional(v.array(nanapocke.AcademicYear)),
+});
+export type MetaListResponseT = v.InferOutput<typeof MetaListResponse>;
+
+// api.public.payment.list : response
+const PaymentHistory = v.object({
+  orderId: common.OrderId,
+  countPrint: v.number(),
+  countDl: v.number(),
+  processDate: common.ISODateTime,
+  grandTotal: v.number(),
+});
+export const PaymentHistoryList = v.array(PaymentHistory);
+export type PaymentHistoryListT = v.InferOutput<typeof PaymentHistoryList>;
+
+// api.public.payment.detail : pathParameters
+export const PaymentPathParameters = v.object({
+  orderId: common.OrderId,
+});
+
+// api.public.photographer.create : request
+export const PhotographerCreateBody = v.pipe(
+  v.object({
+    userCode: common.AccountPhotographerId,
+    password: common.AccountPassword,
+    userName: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    nbf: v.optional(common.ISODateTime),
+    exp: v.optional(common.ISODateTime),
+  })
+);
+export type PhotographerCreateBodyT = v.InferOutput<
+  typeof PhotographerCreateBody
+>;
+
+// api.public.photographer.create : response
+export const PhotographerCreateResponse = v.pipe(
+  v.object({
+    userCode: common.AccountPhotographerId,
+    userName: v.pipe(v.string(), v.minLength(1)),
+  })
+);
+
+export type PhotographerCreateResponseT = v.InferOutput<
+  typeof PhotographerCreateResponse
+>;
+
+// api.public.photographer.list : response
+const PhotographerDetail = v.pipe(
+  v.object({
+    userCode: common.AccountPhotographerId,
+    userName: v.pipe(v.string(), v.minLength(1)),
+    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    status: v.picklist(Object.values(UserConfig.STATUS)),
+    nbf: v.optional(common.ISODateTime),
+    exp: v.optional(common.ISODateTime),
+  })
+);
+export const PhotographerList = v.array(PhotographerDetail);
+export type PhotographerListT = v.InferOutput<typeof PhotographerList>;
+
+// api.public.cart.add : request
+export const CartAddBody = v.object({
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+});
+export type CartAddBodyT = v.InferOutput<typeof CartAddBody>;
+
+// api.public.cart.list : response
+const CartPrintOption = v.object({
+  size: common.PrintSize,
+  purchasable: v.boolean(),
+  unitPrice: v.optional(v.number()),
+  quantity: v.optional(v.number()),
+});
+
+const CartDownloadOption = v.object({
+  purchasable: v.boolean(),
+  unitPrice: v.optional(v.number()),
+  selected: v.optional(v.boolean()),
+  downloadable: v.optional(v.boolean()),
+  purchasedAt: v.optional(common.ISODateTime),
+  note: v.string(),
+});
+
+export const CartItem = v.object({
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+  albumTitle: v.string(),
+  albumSequenceId: v.number(),
+  photoSequenceId: v.number(),
+  priceTier: v.picklist(Object.values(PhotoConfig.PRICE_TIER)),
+  purchaseDeadline: common.ISODateTime,
+  print: v.array(CartPrintOption),
+  download: v.array(CartDownloadOption),
+});
+export const CartItemList = v.array(CartItem);
+export type CartItemListT = v.InferOutput<typeof CartItemList>;
+
+// api.public.cart.edit : request
+const CartPrintChangeBase = v.object({
+  size: v.picklist([
+    PhotoConfig.SALES_SIZE.PRINT_L,
+    PhotoConfig.SALES_SIZE.PRINT_2L,
+  ]),
+  quantity: v.number(),
+});
+const CartDownloadChangeBase = v.object({
+  size: v.picklist([PhotoConfig.SALES_SIZE.DONWLOAD]),
+  selected: v.boolean(),
+});
+const CartEdit = v.object({
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+  print: v.optional(v.array(CartPrintChangeBase)),
+  download: v.optional(v.array(CartDownloadChangeBase)),
+});
+export type CartEditT = v.InferOutput<typeof CartEdit>;
+
+export const CartEditBody = v.array(CartEdit);
+export type CartEditBodyT = v.InferOutput<typeof CartEditBody>;
+
+// api.public.cart.photo.delete : pathParameters
+export const CartPhotoDeletePathParameters = v.object({
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+});
+
+// api.public.cart.checkout : request
+const ShippingAddress = v.object({
+  name: v.string(),
+  postalCode: v.pipe(v.string(), v.regex(/^\d{7}$/)),
+  line: v.string(),
+  phone: v.pipe(v.string(), v.regex(/^\d{10,11}$/)),
+});
+export type ShippingAddressT = v.InferOutput<typeof ShippingAddress>;
+
+export const CheckoutDigtalOnly = v.object({
+  type: v.picklist(["digital"]),
+});
+
+export const CheckoutShipping = v.object({
+  type: v.picklist(["shipping"]),
+  address: ShippingAddress,
+});
+
+export const CheckoutBody = v.variant("type", [
+  CheckoutDigtalOnly,
+  CheckoutShipping,
+]);
+export type CheckoutBodyT = v.InferOutput<typeof CheckoutBody>;
+
+// api.public.cart.checkout : response
+const OrderPrintLine = v.object({
+  size: v.picklist([
+    PhotoConfig.SALES_SIZE.PRINT_L,
+    PhotoConfig.SALES_SIZE.PRINT_2L,
+  ]),
+  quantity: v.number(),
+  subTotal: v.number(),
+});
+
+const OrderDownloadLine = v.object({
+  size: v.literal(PhotoConfig.SALES_SIZE.DONWLOAD), // 常に 'dl'
+  note: v.string(), // 例: "1920×1280"
+  subTotal: v.number(),
+  downloadUrl: v.optional(v.string()), // 履歴のみ
+});
+
+const OrderItemBase = v.object({
+  albumId: v.string(),
+  albumName: v.string(),
+  imageId: v.string(),
+  imageSrc: v.string(),
+  priceTier: common.PhotoPriceTier,
+  print: v.array(OrderPrintLine),
+  download: v.array(OrderDownloadLine),
+  // discounts: v.array(v.object({})),
+  itemTotal: v.number(),
+});
+
+const ShippingInfo = v.object({
+  method: v.string(),
+  address: ShippingAddress,
+});
+
+const CurrentOrderSummary = v.object({
+  shipping: v.optional(ShippingInfo),
+  items: v.array(OrderItemBase),
+  hasDownloadPurchases: v.boolean(), // DL購入を含むかどうか（ConfirmView のチェックボックス用）
+  downloadPeriod: v.optional(v.string()), // DL有効期間（履歴側の downloadExpiry と意味は同じ）
+  subTotal: v.number(), // 商品小計（割引前）
+  // itemsDiscountTotal: v.number(), // 割引合計（負値。0 のときは UI で非表示にできる）
+  shippingFee: v.object({
+    after: v.number(),
+    before: v.optional(v.number()),
+    label: v.optional(v.string()),
+  }),
+  grandTotal: v.number(),
+});
+
+export const CurrentOrder = v.object({
+  orderId: v.string(),
+  summary: CurrentOrderSummary,
+  paymentUrl: v.string(),
+});
+export type CurrentOrderT = v.InferOutput<typeof CurrentOrder>;

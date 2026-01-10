@@ -1,16 +1,12 @@
 import {AppConfig, ApplicationConfig} from "../config";
 import * as http from "../http";
-
+import {parseOrThrow} from "../libs/validate";
 import {
   CodeQueryParams,
-  CodeQueryParamsT,
   NanapockeAccessTokenResponse,
-  NanapockeAccessTokenResponseT,
   NanapockeUserInfoResponse,
-  IdTokenPayload,
-  IdTokenPayloadT,
-} from "../schemas/public.nanapocke.auth";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/external.nanapocke";
+import {IdTokenPayload} from "../schemas/public";
 
 import {
   CognitoIdentityProviderClient,

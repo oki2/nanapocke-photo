@@ -32,6 +32,9 @@ export const PhotoUploadFileType = v.picklist(
   Object.values(AppConfig.UPLOAD_FILE_TYPE)
 );
 
+export const AccessToken = v.pipe(v.string(), v.minLength(1));
+export const RefreshToken = v.pipe(v.string(), v.minLength(1));
+
 const uuidV4 = v.pipe(v.string(), v.uuid());
 const uuidV7 = v.pipe(
   v.string(),
@@ -40,13 +43,28 @@ const uuidV7 = v.pipe(
   )
 );
 
+export const UserId = v.pipe(v.string(), v.minLength(1));
 export const AlbumId = uuidV4;
 export const PhotoId = uuidV4;
 export const OrderId = v.string();
+export const Name = v.pipe(v.string(), v.minLength(1));
 
-export const ResultOK = v.object({
-  ok: v.literal(true),
-});
+export const Url = v.pipe(v.string(), v.minLength(1));
 
 // 写真タイプ
 export const PhotoPriceTier = v.picklist(Object.values(PhotoConfig.PRICE_TIER));
+
+export const DLSize = v.picklist(Object.values(PhotoConfig.SALES_SIZE));
+export const SalesSizeDl = v.object({
+  size: DLSize,
+  price: v.number(),
+});
+
+export const PrintSize = v.picklist([
+  PhotoConfig.SALES_SIZE.PRINT_L,
+  PhotoConfig.SALES_SIZE.PRINT_2L,
+]);
+export const SalesSizePrint = v.object({
+  size: PrintSize,
+  price: v.number(),
+});

@@ -8,7 +8,7 @@ export const isActive = async (code: string): Promise<any> => {
   const nowDate = new Date();
 
   if (nowDate < nbfDate || nowDate > expDate) {
-    return false;
+    return undefined;
   }
 
   return facility?.status === FacilityConfig.STATUS.ACTIVE

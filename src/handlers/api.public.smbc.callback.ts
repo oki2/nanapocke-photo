@@ -1,12 +1,6 @@
 import {AppConfig, PaymentConfig} from "../config";
 import * as http from "../http";
-import {ResultOK} from "../schemas/common";
-import {CartItemList, CartItemListT} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
-
-import * as Cart from "../utils/Dynamo/Cart";
-import * as Album from "../utils/Dynamo/Album";
-import * as Photo from "../utils/Dynamo/Photo";
 
 import type {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
 

@@ -6,8 +6,6 @@ import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 import * as Album from "../../utils/Dynamo/Album";
 
 import sharp from "sharp";
-import ExifReader from "exifreader";
-import {lightFormat} from "date-fns";
 
 interface Detail {
   bucketName: string;

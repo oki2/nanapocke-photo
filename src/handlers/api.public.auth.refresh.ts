@@ -7,7 +7,7 @@ import {
   RefreshTokenCookie,
   SigninResponse,
   SigninResponseT,
-} from "../schemas/api.public.auth";
+} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Auth from "../utils/Cognito";

@@ -6,8 +6,7 @@ import {
   AlbumPublishedT,
 } from "../../schemas/trigger.s3.action.router";
 
-import {AlbumItemT} from "../../schemas/album";
-import {ShippingAddressT} from "../../schemas/cart";
+import {AlbumItemT, ShippingAddressT} from "../../schemas/public";
 
 import {
   AppConfig,

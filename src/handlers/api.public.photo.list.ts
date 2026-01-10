@@ -8,7 +8,7 @@ import {
   PhotoFilters,
   PhotoListResponse,
   PhotoListResponseT,
-} from "../schemas/photo";
+} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Photo from "../utils/Dynamo/Photo";
@@ -104,9 +104,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
   result.nextCursor = data.nextCursor ?? undefined;
 
-  const tmp = parseOrThrow(PhotoListResponse, result);
-  console.log("tmp", tmp);
-  return http.ok(tmp);
+  return http.ok(parseOrThrow(PhotoListResponse, result));
 });
 
 /**

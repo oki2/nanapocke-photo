@@ -1,11 +1,10 @@
 import * as http from "../http";
-
+import {parseOrThrow} from "../libs/validate";
 import {
   FacilityCreateBody,
   FacilityResponse,
   FacilityResponseT,
-} from "../schemas/api.admin.facility";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/admin";
 
 import * as Facility from "../utils/Dynamo/Facility";
 
@@ -43,6 +42,5 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     exp: data.exp,
     classCount: data.classList.length,
   };
-
   return http.ok(parseOrThrow(FacilityResponse, result));
 });

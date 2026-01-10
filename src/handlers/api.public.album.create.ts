@@ -1,15 +1,14 @@
 import * as http from "../http";
-
 import {AppConfig} from "../config";
+
+import {S3PutObjectSignedUrl} from "../utils/S3";
+
+import {parseOrThrow} from "../libs/validate";
 import {
   AlbumCreateBody,
   AlbumCreateResponse,
   AlbumCreateResponseT,
-} from "../schemas/album";
-import {parseOrThrow} from "../libs/validate";
-
-import {PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
+} from "../schemas/public";
 
 import * as Album from "../utils/Dynamo/Album";
 import * as Photo from "../utils/Dynamo/Photo";
@@ -60,15 +59,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // 4. アルバム画像が存在する場合は、署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
   if (data.coverImageFileName) {
-    const key = `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${album.albumId}/${authContext.userId}/${data.coverImageFileName}`;
-    const s3Client = new S3Client({region: AppConfig.MAIN_REGION});
-    const s3Command = new PutObjectCommand({
-      Bucket: AppConfig.BUCKET_UPLOAD_NAME,
-      Key: key,
-    });
-    result.url = await getSignedUrl(s3Client, s3Command, {
-      expiresIn: 60, // 即時アップされる想定なので、有効期限を短く1分とする
-    });
+    result.url = await S3PutObjectSignedUrl(
+      AppConfig.BUCKET_UPLOAD_NAME,
+      `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${album.albumId}/${authContext.userId}/${data.coverImageFileName}`,
+      60 // 即時アップされる想定なので、有効期限を短く1分とする
+    );
   }
 
   return http.ok(parseOrThrow(AlbumCreateResponse, result));

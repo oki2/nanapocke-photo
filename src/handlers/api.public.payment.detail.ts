@@ -1,6 +1,6 @@
 import {AppConfig, PaymentConfig} from "../config";
 import * as http from "../http";
-import {PaymentPathParameters} from "../schemas/payment";
+import {PaymentPathParameters} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Payment from "../utils/Dynamo/Payment";

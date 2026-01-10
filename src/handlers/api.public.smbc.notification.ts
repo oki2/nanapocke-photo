@@ -1,7 +1,5 @@
 import {AppConfig, PaymentConfig} from "../config";
 import * as http from "../http";
-import {ResultOK} from "../schemas/common";
-import {CartItemList, CartItemListT} from "../schemas/cart";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Cart from "../utils/Dynamo/Cart";
@@ -103,7 +101,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
   console.log("payment", payment);
 
-  // 9. 決済情報をS3へコピー（DL可否、印刷有無はEventトリガー経由で処理）
+  // 9. 決済情報をS3へコピー（DL可否はEventトリガー経由で処理）
   await S3.paymentComplete(postObj.OrderID);
 
   // 10.SMBCのログを保存

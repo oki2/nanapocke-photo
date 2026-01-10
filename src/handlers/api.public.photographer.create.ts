@@ -3,7 +3,7 @@ import * as http from "../http";
 import {
   PhotographerCreateBody,
   PhotographerCreateResponse,
-} from "../schemas/api.public.photographer";
+} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as User from "../utils/Dynamo/User";

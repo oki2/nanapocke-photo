@@ -1,12 +1,11 @@
 import * as http from "../http";
-
+import {parseOrThrow} from "../libs/validate";
 import {
   FacilityCodePathParams,
   FacilityUpdateBody,
   FacilityResponse,
   FacilityResponseT,
-} from "../schemas/api.admin.facility";
-import {parseOrThrow} from "../libs/validate";
+} from "../schemas/admin";
 
 import * as Facility from "../utils/Dynamo/Facility";
 

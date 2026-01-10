@@ -1,14 +1,10 @@
 import * as http from "../http";
-import {
-  AlbumSalesBody,
-  AlbumPathParameters,
-  AlbumCreateResponse,
-} from "../schemas/album";
+import {AlbumPathParameters, AlbumSalesBody} from "../schemas/public";
 import {
   TRIGGER_ACTION,
   AlbumPublishedT,
 } from "../schemas/trigger.s3.action.router";
-import {ResultOK} from "../schemas/common";
+import {ResultOK} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 import {AppConfig, AlbumConfig} from "../config";
 import * as Album from "../utils/Dynamo/Album";

@@ -2,7 +2,7 @@ import * as http from "../http";
 
 import {UserConfig, PhotoConfig} from "../config";
 
-import {MetaListResponse} from "../schemas/meta";
+import {MetaListResponse} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
@@ -41,13 +41,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     console.log("academicYear", academicYear);
   }
 
-  const tmp = parseOrThrow(MetaListResponse, {
-    tags: tags.map((item: any) => item.tag),
-    albums: albums,
-    staff: staff,
-    classList: classList,
-    academicYear: academicYear,
-  });
-  console.log("tmp", tmp);
-  return http.ok(tmp);
+  return http.ok(
+    parseOrThrow(MetaListResponse, {
+      tags: tags.map((item: any) => item.tag),
+      albums: albums,
+      staff: staff,
+      classList: classList,
+      academicYear: academicYear,
+    })
+  );
 });

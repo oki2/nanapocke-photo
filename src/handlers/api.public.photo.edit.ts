@@ -1,15 +1,7 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-import {
-  PhotoEditBody,
-  PhotoPathParameters,
-  PhotoUploadResponse,
-  PhotoUploadResponseT,
-} from "../schemas/photo";
+import {PhotoEditBody, PhotoPathParameters, ResultOK} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
-
-import {PutObjectCommand, S3Client} from "@aws-sdk/client-s3";
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
@@ -61,7 +53,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
 
   // 6. DynamoDB に写真とアルバムの紐付け情報を登録
-  const tmp = await Photo.setAlbums(
+  await Photo.setAlbums(
     authContext.facilityCode,
     path.photoId,
     addAlbums,
@@ -69,12 +61,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.album.albums,
     authContext.userId
   );
-  console.log("tmp", tmp);
 
-  // 3. レスポンス作成
-  const result: PhotoUploadResponseT = {
-    url: "aaa",
-  };
-
-  return http.ok(parseOrThrow(PhotoUploadResponse, result));
+  // 3. レスポンス
+  return http.ok(parseOrThrow(ResultOK, {ok: true}));
 });

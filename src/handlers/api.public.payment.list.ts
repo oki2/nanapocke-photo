@@ -1,7 +1,7 @@
 import {AppConfig} from "../config";
 import * as http from "../http";
-import {PaymentHistoryList, PaymentHistoryListT} from "../schemas/payment";
 import {parseOrThrow} from "../libs/validate";
+import {PaymentHistoryList, PaymentHistoryListT} from "../schemas/public";
 
 import * as Payment from "../utils/Dynamo/Payment";
 

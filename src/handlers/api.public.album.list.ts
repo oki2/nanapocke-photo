@@ -1,7 +1,7 @@
 import {AlbumConfig, UserConfig} from "../config";
 import * as http from "../http";
 
-import {AlbumListResponse, AlbumListResponseT} from "../schemas/album";
+import {AlbumListResponse, AlbumListResponseT} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
@@ -40,7 +40,5 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     });
   }
 
-  const tmp = parseOrThrow(AlbumListResponse, result);
-  console.log("tmp", tmp);
-  return http.ok(tmp);
+  return http.ok(parseOrThrow(AlbumListResponse, result));
 });
