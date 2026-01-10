@@ -18,5 +18,5 @@ LIKE の運営する「ナナポケ」向け写真販売サービス用プロジ
 
 | 名前 | Type | 説明 |
 | :-- | :-: | :-- |
-| /nanapocke-photo/cfd/public-photo-upload-pem/private | Secure | CloudFront 写真アップロード用署名付き URL の秘密鍵 |
-| /nanapocke-photo/cfd/public-photo-upload-pem/public |  | CloudFront 写真アップロード用署名付き URL の公開鍵 |
+| /NanaPhoto/sandbox/cfd/thumbnail-access-cookie-pem/private | Secure | CloudFront 写真、アルバムのサムネイル画像アクセス用 URL の秘密鍵 |
+| /NanaPhoto/sandbox/cfd/thumbnail-access-cookie-pem/public |  | CloudFront アルバムのサムネイル画像アクセス用 URL の公開鍵 |

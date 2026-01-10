@@ -24,7 +24,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("data", data);
 
   // === Step.1 利用可能な施設かチェック =========== //
-  if ((await Facility.isActive(data.facilityCode)) === false) {
+  const facilityInfo = await Facility.isActive(data.facilityCode);
+  if (!facilityInfo) {
     console.log(
       `施設利用不可 : ${data.facilityCode} / user : ${data.userName}`
     );
@@ -63,8 +64,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.4 ログイン成功としてデータを返す =========== //
   const result: SigninSuccessT = {
     state: "success",
-    idToken: auth.idToken ?? "",
     accessToken: auth.accessToken ?? "",
+    userName: data.userName,
+    facilityCode: data.facilityCode,
+    facilityName: facilityInfo.name,
+    role: UserConfig.ROLE.PHOTOGRAPHER,
   };
   console.log("result", result);
   return http.ok(parseOrThrow(SigninSuccess, result), {}, [

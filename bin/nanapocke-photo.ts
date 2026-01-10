@@ -70,6 +70,17 @@ const Config = {
       },
     },
   },
+  CloudFront: {
+    PublicKey: {
+      Thumbnail: {
+        KeyId: `thumbnail-access-cookie`,
+        ParameterStoreKeyPath: {
+          Private: `/${PROJECT_NAME}/${stage}/cfd/thumbnail-access-cookie-pem/private`,
+          Public: `/${PROJECT_NAME}/${stage}/cfd/thumbnail-access-cookie-pem/public`,
+        },
+      },
+    },
+  },
   External: {
     Nanapocke: {
       Setting: {
@@ -147,6 +158,7 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   bucketUpload: stackStep10.bucketUpload,
   bucketPhoto: stackStep10.bucketPhoto,
   queueMain: stackStep10.queueMain,
+  cfPublicKeyThumbnailUrl: stackStep10.cfPublicKeyThumbnailUrl,
 });
 
 const stackStep31 = new Step31EventTriggerStack(
@@ -209,6 +221,8 @@ const stackStep82 = new Step82CloudfrontStack(app, "Step82CloudfrontStack", {
   httpApiAdmin: stackStep71.httpApi,
   httpApiPublic: stackStep72.httpApi,
   publicCertificateArn: stackStep81.publicCertificateArn,
+  bucketPhoto: stackStep10.bucketPhoto,
+  cfKeyGroupNanaPhoto: stackStep10.cfKeyGroupNanaPhoto,
 });
 
 // =======================

@@ -1,8 +1,12 @@
 *.js
 !jest.config.js
+!src/handlers/cfFunction/*.js
 *.d.ts
 node_modules
 
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# working dir
+work

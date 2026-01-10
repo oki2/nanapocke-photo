@@ -6,6 +6,7 @@ export const AppConfig = {
   ...env,
 };
 
+export * as ApplicationConfig from "./Application";
 export * as AlbumConfig from "./Model/Album";
 export * as AuthConfig from "./Model/Auth";
 export * as CartConfig from "./Model/Cart";

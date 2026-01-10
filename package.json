@@ -9,7 +9,9 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "gen:openapi:admin": "ts-node openapi/gen-admin.ts"
+    "gen:openapi:admin": "ts-node openapi/gen-admin.ts",
+    "sandbox:front:admin:deploy:dryrun": "aws s3 cp work/static-file/frontend/admin-sandbox s3://nanaphoto-sandbox-publiccfd/admin/ --recursive --dryrun --profile sandbox",
+    "sandbox:front:admin:deploy:exec": "aws s3 cp work/static-file/frontend/admin-sandbox s3://nanaphoto-sandbox-publiccfd/admin/ --recursive --profile sandbox"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.156",

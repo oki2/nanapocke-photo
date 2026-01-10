@@ -94,6 +94,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       photoId: item.photoId,
       sequenceId: item.sequenceId,
       status: item.status,
+      photoImageUrl: `/thumbnail/${item.facilityCode}/photo/${item.createdBy}/${item.photoId}.webp`,
       tags: item.tags,
       albums: item.albums,
       priceTier: item.priceTier,

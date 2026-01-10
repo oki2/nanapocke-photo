@@ -1,5 +1,6 @@
 export const env = {
   MAIN_REGION: process.env.MAIN_REGION || "",
+  NANAPHOTO_FQDN: process.env.NANAPHOTO_FQDN || "",
   // Cognito Admin
   PROVIDER_AUTHPOOL_ID: process.env.PROVIDER_AUTHPOOL_ID || "",
   PROVIDER_AUTHPOOL_CLIENT_ID: process.env.PROVIDER_AUTHPOOL_CLIENT_ID || "",
@@ -21,6 +22,11 @@ export const env = {
   // SSM パラメータストアKey
   PEM_KEYPATH_PHOTO_UPLOAD_PRIVATE:
     process.env.PEM_KEYPATH_PHOTO_UPLOAD_PRIVATE || "",
+
+  CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID:
+    process.env.CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID || "",
+  PEM_THUMBNAIL_PREVIEW_KEYPATH:
+    process.env.PEM_THUMBNAIL_PREVIEW_KEYPATH || "",
 
   // ナナポケ認証関連
   EXT_NANAPOCKE_API_URL_ACCESS_TOKEN:

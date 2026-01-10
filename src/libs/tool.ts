@@ -1,3 +1,5 @@
+import {UserConfig} from "../config";
+
 /**
  * 文字列で取得したタグを、配列に分割する
  * @param {string} tagStr
@@ -108,4 +110,21 @@ export function chunk<T>(arr: T[], size: number): T[][] {
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function thumbnailAllowedPath(
+  $facilityCode: string,
+  $role: string,
+  $userId: string
+): string {
+  switch ($role) {
+    case UserConfig.ROLE.PRINCIPAL:
+    case UserConfig.ROLE.GUARDIAN:
+      return `/thumbnail/${$facilityCode}/`;
+    case UserConfig.ROLE.TEACHER:
+    case UserConfig.ROLE.PHOTOGRAPHER:
+      return `/studio/${$facilityCode}/photo/${$userId}/`;
+    default:
+      return "/";
+  }
 }

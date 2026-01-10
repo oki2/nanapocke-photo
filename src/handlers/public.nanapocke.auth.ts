@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, ApplicationConfig} from "../config";
 import * as http from "../http";
 
 import {
@@ -67,7 +67,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("userInfo", userInfo);
 
   // === Step.4 利用可能な施設かチェック =========== //
-  if ((await Facility.isActive(userInfo.nursery_cd)) === false) {
+  const facilityInfo = await Facility.isActive(userInfo.nursery_cd);
+  if (!facilityInfo) {
     console.log(
       `施設利用不可 : ${userInfo.nursery_cd} / user : ${userInfo.user_cd}`
     );
@@ -121,14 +122,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   );
 
   // === Step.9 各権限別ページへとリダイレクト =========== //
-  return {
-    statusCode: 200,
-    headers: {Location: "https://example.com"},
-    cookies: [
-      `refreshToken=${auth.RefreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
-      `userRole=${roleName}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
-    ],
-  };
+  const location = ApplicationConfig.APPLICATION_PATH[roleName];
+  return http.seeOther(location, {}, [
+    `refreshToken=${auth.RefreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+    `userRole=${roleName}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
+  ]);
 });
 
 async function ensureUserConfirmed(

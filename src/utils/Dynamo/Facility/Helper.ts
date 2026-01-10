@@ -1,7 +1,7 @@
 import {FacilityConfig} from "../../../config";
 import * as FacilityModel from "./Model";
 
-export const isActive = async (code: string): Promise<boolean> => {
+export const isActive = async (code: string): Promise<any> => {
   const facility = await FacilityModel.get(code);
   const nbfDate = new Date(facility?.nbf);
   const expDate = new Date(facility?.exp);
@@ -11,5 +11,7 @@ export const isActive = async (code: string): Promise<boolean> => {
     return false;
   }
 
-  return facility?.status === FacilityConfig.STATUS.ACTIVE;
+  return facility?.status === FacilityConfig.STATUS.ACTIVE
+    ? facility
+    : undefined;
 };

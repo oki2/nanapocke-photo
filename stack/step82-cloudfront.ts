@@ -19,6 +19,8 @@ export interface Props extends cdk.StackProps {
   readonly httpApiAdmin: apigwv2.HttpApi;
   readonly httpApiPublic: apigwv2.HttpApi;
   readonly publicCertificateArn: string;
+  bucketPhoto: Bucket;
+  cfKeyGroupNanaPhoto: cloudfront.KeyGroup;
 }
 
 export class Step82CloudfrontStack extends cdk.Stack {
@@ -44,6 +46,17 @@ export class Step82CloudfrontStack extends cdk.Stack {
         queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
       }
     );
+
+    // 必要ならここでキャッシュポリシーやレスポンスヘッダポリシーを作り込む
+    // （index.htmlは短め、assetsは長め、など）
+    const defaultCachePolicy = cloudfront.CachePolicy.CACHING_OPTIMIZED;
+
+    // React のSPAルーティング用のCloudFrontFunction
+    const cfFnSpaRouting = new cloudfront.Function(this, "cfFnSpaRouting", {
+      code: cloudfront.FunctionCode.fromFile({
+        filePath: "src/handlers/cfFunction/spa-routing.js",
+      }),
+    });
 
     // ==========================================================================================================
     // Publicサイト用のCloudFront
@@ -72,6 +85,10 @@ export class Step82CloudfrontStack extends cdk.Stack {
         ],
       }
     );
+
+    const bucketPublicCfdOrigin =
+      origins.S3BucketOrigin.withOriginAccessControl(bucketPublicCfd);
+
     // CloudFront Origin Access Control
     // const publicOAC = new cloudfront.S3OriginAccessControl(
     //   this,
@@ -91,10 +108,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
       ),
       defaultRootObject: "index.html",
       defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(
-          bucketPublicCfd
-          // {originAccessControl: publicOAC}
-        ),
+        origin: bucketPublicCfdOrigin,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         responseHeadersPolicy:
@@ -148,6 +162,61 @@ export class Step82CloudfrontStack extends cdk.Stack {
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           responseHeadersPolicy:
             cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS,
+        },
+        "/admin/*": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
+        },
+        "/studio/*": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
+        },
+        "/member/*": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
+        },
+        "/thumbnail/*": {
+          origin: origins.S3BucketOrigin.withOriginAccessIdentity(
+            props.bucketPhoto
+          ),
+          cachePolicy: new cloudfront.CachePolicy(
+            this,
+            "cachePolicyThumbnail",
+            {
+              defaultTtl: cdk.Duration.minutes(1),
+              minTtl: cdk.Duration.minutes(1),
+              maxTtl: cdk.Duration.minutes(1),
+              cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+              queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+              headerBehavior:
+                cloudfront.CacheHeaderBehavior.allowList("Origin"),
+            }
+          ),
+          trustedKeyGroups: [props.cfKeyGroupNanaPhoto],
         },
       },
       errorResponses: [

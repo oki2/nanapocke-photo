@@ -54,6 +54,12 @@ export const ok = (data: unknown, headers?: Headers, cookies?: Cookies) =>
 export const created = (location: string, data?: unknown, headers?: Headers) =>
   json(201, data ?? {ok: true}, {location, ...(headers || {})});
 
+export const seeOther = (
+  location: string,
+  headers?: Headers,
+  cookies?: Cookies
+) => json(303, {ok: true}, {...headers, Location: location}, cookies);
+
 export const noContent = (
   headers?: Headers
 ): APIGatewayProxyStructuredResultV2 => ({

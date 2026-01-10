@@ -10,7 +10,7 @@ export interface Props extends cdk.StackProps {
 }
 
 export class Step10ResourceStack extends cdk.Stack {
-  public cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
+  public cfPublicKeyThumbnailUrl: cloudfront.PublicKey;
   public cfKeyGroupNanaPhoto: cloudfront.KeyGroup;
   public bucketUpload: Bucket;
   public bucketPhoto: Bucket;
@@ -97,31 +97,32 @@ export class Step10ResourceStack extends cdk.Stack {
       },
     });
 
-    // //====================================
-    // // Cloudfront PublicKey and KeyGroup
-    // //====================================
-    // // PublicKey ===========================================
-    // // SSM Parameter Store からの取得、Typescriptの場合 valueFromLookup だとエラーが発生する為、 valueForStringParameter を使用
-    // this.cfPublicKeyPhotoUploadUrl = new cloudfront.PublicKey(
-    //   this,
-    //   "cfPublicKeyPhotoUploadUrl",
-    //   {
-    //     encodedKey: ssm.StringParameter.valueForStringParameter(
-    //       this,
-    //       props.Config.CloudFront.Signed.PhotoUpload.ssmStoreKeyPath.Public
-    //     ),
-    //     publicKeyName: "ConsoleDocumentsCookie",
-    //   }
-    // );
+    //====================================
+    // Cloudfront PublicKey and KeyGroup
+    //====================================
+    // PublicKey ===========================================
+    // SSM Parameter Store からの取得、Typescriptの場合 valueFromLookup だとエラーが発生する為、 valueForStringParameter を使用
+    this.cfPublicKeyThumbnailUrl = new cloudfront.PublicKey(
+      this,
+      `${props.Config.ProjectName}-${props.Config.Stage}-PublicKeyThumbnailUrl`,
+      {
+        encodedKey: ssm.StringParameter.valueForStringParameter(
+          this,
+          props.Config.CloudFront.PublicKey.Thumbnail.ParameterStoreKeyPath
+            .Public
+        ),
+        publicKeyName: `${props.Config.ProjectName}-${props.Config.Stage}-PublicKeyThumbnailUrl`,
+      }
+    );
 
-    // // KeyGroup ===========================================
-    // this.cfKeyGroupNanaPhoto = new cloudfront.KeyGroup(
-    //   this,
-    //   "cfKeyGroupNanaPhoto",
-    //   {
-    //     items: [this.cfPublicKeyPhotoUploadUrl],
-    //     keyGroupName: "cfKeyGroupNanaPhoto",
-    //   }
-    // );
+    // KeyGroup ===========================================
+    this.cfKeyGroupNanaPhoto = new cloudfront.KeyGroup(
+      this,
+      "cfKeyGroupNanaPhoto",
+      {
+        items: [this.cfPublicKeyThumbnailUrl],
+        keyGroupName: "cfKeyGroupNanaPhoto",
+      }
+    );
   }
 }

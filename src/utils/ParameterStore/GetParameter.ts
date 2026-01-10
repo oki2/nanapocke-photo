@@ -1,8 +1,8 @@
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import {SSMClient, GetParameterCommand} from "@aws-sdk/client-ssm";
 
-const MAIN_REGION = process.env.MAIN_REGION || '';
+const MAIN_REGION = process.env.MAIN_REGION || "";
 
-const ssmClient = new SSMClient({ region: MAIN_REGION });
+const ssmClient = new SSMClient({region: MAIN_REGION});
 
 /**
  * Retrieves the value of a parameter from the AWS Systems Manager Parameter Store.
@@ -12,6 +12,7 @@ const ssmClient = new SSMClient({ region: MAIN_REGION });
  * @throws {Error} - If the parameter is not found.
  */
 export async function GetParameter(parameterName: string): Promise<string> {
+  console.log("parameterName", parameterName);
   const response = await ssmClient.send(
     new GetParameterCommand({
       Name: parameterName,

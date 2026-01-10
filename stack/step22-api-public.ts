@@ -17,7 +17,7 @@ export interface Props extends cdk.StackProps {
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
   readonly queueMain: Queue;
-  // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
+  readonly cfPublicKeyThumbnailUrl: cloudfront.PublicKey;
 }
 
 interface LambdaFunctions {
@@ -33,6 +33,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     const functionPrefix = `${props.Config.ProjectName}-${props.Config.Stage}`;
     const defaultEnvironment = {
       MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+      NANAPHOTO_FQDN: props.Config.HostedZone.PublicDomain,
     };
 
     // =====================================================
@@ -167,6 +168,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             props.NanapockeAuthPoolClient.userPoolClientId,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          PEM_THUMBNAIL_PREVIEW_KEYPATH:
+            props.Config.CloudFront.PublicKey.Thumbnail.ParameterStoreKeyPath
+              .Private,
+          CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID:
+            props.cfPublicKeyThumbnailUrl.publicKeyId,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -183,6 +189,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               props.NanapockeUserTable.tableArn,
               props.MainTable.tableArn,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/cfd/thumbnail-access-cookie-pem/private`,
             ],
           }),
         ],
