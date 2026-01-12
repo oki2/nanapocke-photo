@@ -49,7 +49,7 @@ export const PhotoId = uuidV4;
 export const OrderId = v.string();
 export const Name = v.pipe(v.string(), v.minLength(1));
 
-export const Url = v.pipe(v.string(), v.minLength(1));
+export const Url = v.pipe(v.string());
 
 // 写真タイプ
 export const PhotoPriceTier = v.picklist(Object.values(PhotoConfig.PRICE_TIER));

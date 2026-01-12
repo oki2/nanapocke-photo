@@ -89,6 +89,23 @@ export async function get(
   return result.Item;
 }
 
+export async function getZipMeta(
+  facilityCode: string,
+  zipId: string
+): Promise<Record<string, any> | undefined> {
+  const command = new GetCommand({
+    TableName: PhotoConfig.TABLE_NAME,
+    Key: {
+      pk: `PHOTOZIP#${facilityCode}`,
+      sk: `META#${zipId}`,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Item;
+}
+
 export async function create(
   facilityCode: string,
   userId: string,
@@ -137,10 +154,11 @@ export async function createZip(
   userId: string,
   shootingAt: string,
   priceTier: string,
-  tags: string[]
+  tags: string[],
+  albums: string[]
 ): Promise<string> {
   const nowISO = new Date().toISOString();
-  const photoId = crypto.randomUUID();
+  const zipId = crypto.randomUUID();
 
   // コマンド実行
   const result = await docClient().send(
@@ -148,22 +166,23 @@ export async function createZip(
       TableName: PhotoConfig.TABLE_NAME,
       Item: {
         pk: `PHOTOZIP#${facilityCode}`,
-        sk: `META#${photoId}`,
+        sk: `META#${zipId}`,
         facilityCode: facilityCode,
         shootingAt: shootingAt,
         priceTier: priceTier,
-        tags: tags,
         status: PhotoConfig.STATUS.CREATE,
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
         updatedBy: userId,
+        ...(tags && tags.length > 0 ? {tags} : {}),
+        ...(albums && albums.length > 0 ? {albums} : {}),
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
     })
   );
 
-  return photoId;
+  return zipId;
 }
 
 export async function setPhotoMeta(

@@ -3,6 +3,7 @@ export const defaults = {
     PREFIX: {
       PHOTO_UPLOAD: "photo-upload",
       PHOTO_ZIP_UPLOAD: "photo-zip-upload",
+      PHOTO_UNZIP: "photo-unzip",
       ALBUM_IMAGE_UPLOAD: "album-image-upload",
     },
   },

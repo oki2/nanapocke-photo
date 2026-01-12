@@ -176,6 +176,7 @@ const stackStep31 = new Step31EventTriggerStack(
     bucketUpload: stackStep10.bucketUpload,
     bucketPhoto: stackStep10.bucketPhoto,
     queueMain: stackStep10.queueMain,
+    queuePhotoConvert: stackStep10.queuePhotoConvert,
   }
 );
 

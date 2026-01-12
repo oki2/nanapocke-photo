@@ -18,6 +18,7 @@ export interface Props extends cdk.StackProps {
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
   readonly queueMain: Queue;
+  readonly queuePhotoConvert: Queue;
   // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
 }
 
@@ -134,6 +135,80 @@ export class Step31EventTriggerStack extends cdk.Stack {
     });
 
     // =====================================================
+    // 写真のzipアップロード時のunzip 処理
+    const triggerPhotoZipUploadFn = new NodejsFunction(
+      this,
+      "TriggerPhotoZipUploadFn",
+      {
+        functionName: `${functionPrefix}-TriggerPhotoZipUpload`,
+        description: `${functionPrefix}-TriggerPhotoZipUpload`,
+        entry: "src/handlers/trigger/s3.photo.zip.upload.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.X86_64,
+        memorySize: 2048,
+        timeout: cdk.Duration.minutes(5),
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+          SQS_QUEUE_URL_PHOTO_CONVERT: props.queuePhotoConvert.queueUrl,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketUpload.bucketArn}/photo-zip-upload/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [`${props.bucketUpload.bucketArn}/photo-unzip/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["sqs:sendmessage"],
+            resources: [props.queuePhotoConvert.queueArn],
+          }),
+        ],
+      }
+    );
+
+    new Rule(this, "EventPhotoZipUpload-Rule", {
+      ruleName: `${functionPrefix}-EventPhotoZipUpload-Rule`,
+      eventPattern: {
+        source: ["aws.s3"],
+        detailType: ["Object Created"],
+        detail: {
+          object: {
+            key: [{prefix: "photo-zip-upload/"}],
+          },
+          bucket: {
+            name: [props.bucketUpload.bucketName],
+          },
+        },
+        resources: [props.bucketUpload.bucketArn],
+      },
+      targets: [
+        new targetLambda(triggerPhotoZipUploadFn, {
+          event: RuleTargetInput.fromObject({
+            id: EventField.eventId,
+            account: EventField.account,
+            time: EventField.time,
+            region: EventField.region,
+            "detail-type": EventField.detailType,
+            detail: {
+              bucketName: EventField.fromPath("$.detail.bucket.name"),
+              keyPath: EventField.fromPath("$.detail.object.key"),
+              size: EventField.fromPath("$.detail.object.size"),
+            },
+          }),
+        }),
+      ],
+    });
+
+    // =====================================================
     // アルバムの画像アップロード時の変換機能
     const triggerAlbumImageUploadFn = new NodejsFunction(
       this,
@@ -149,23 +224,23 @@ export class Step31EventTriggerStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(60),
         bundling: {
           nodeModules: ["sharp"], // sharp を nodeModules に明示的に指定
-          commandHooks: {
-            beforeBundling() {
-              return [];
-            },
-            beforeInstall() {
-              return [];
-            },
-            afterBundling(inputDir: string, outputDir: string): string[] {
-              // inputDir … package.json / lockfile があるディレクトリ（= project-root）
-              // outputDir … ビルド後の JS が入るディレクトリ
+          // commandHooks: {
+          //   beforeBundling() {
+          //     return [];
+          //   },
+          //   beforeInstall() {
+          //     return [];
+          //   },
+          //   afterBundling(inputDir: string, outputDir: string): string[] {
+          //     // inputDir … package.json / lockfile があるディレクトリ（= project-root）
+          //     // outputDir … ビルド後の JS が入るディレクトリ
 
-              // project-root/lambda/watermark.png → outputDir/watermark.png にコピー
-              return [
-                `cp ${inputDir}/src/resource/watermark.png ${outputDir}/watermark.png`,
-              ];
-            },
-          },
+          //     // project-root/src/resource/watermark.png → outputDir/watermark.png にコピー
+          //     return [
+          //       `cp ${inputDir}/src/resource/watermark.png ${outputDir}/watermark.png`,
+          //     ];
+          //   },
+          // },
         },
         environment: {
           ...defaultEnvironment,
@@ -358,6 +433,80 @@ export class Step31EventTriggerStack extends cdk.Stack {
     );
     triggerSqsMainQueueFn.addEventSource(
       new SqsEventSource(props.queueMain, {
+        batchSize: 1,
+        maxConcurrency: 5,
+        reportBatchItemFailures: true,
+      })
+    );
+
+    // ZIPからの写真変換用
+    const triggerSqsPhotoConvertQueueFn = new NodejsFunction(
+      this,
+      "TriggerSqsPhotoConvertQueueFn",
+      {
+        functionName: `${functionPrefix}-TriggerSqsPhotoConvertQueueFn`,
+        description: `${functionPrefix}-TriggerSqsPhotoConvertQueueFn`,
+        entry: "src/handlers/trigger/sqs.queue.photo.convert.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.X86_64,
+        memorySize: 2048,
+        timeout: cdk.Duration.seconds(60),
+        bundling: {
+          nodeModules: ["sharp"], // sharp を nodeModules に明示的に指定
+          commandHooks: {
+            beforeBundling() {
+              return [];
+            },
+            beforeInstall() {
+              return [];
+            },
+            afterBundling(inputDir: string, outputDir: string): string[] {
+              // inputDir … package.json / lockfile があるディレクトリ（= project-root）
+              // outputDir … ビルド後の JS が入るディレクトリ
+
+              // project-root/src/resource/watermark.png → outputDir/watermark.png にコピー
+              return [
+                `cp ${inputDir}/src/resource/watermark.png ${outputDir}/watermark.png`,
+              ];
+            },
+          },
+        },
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+            ],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketUpload.bucketArn}/photo-unzip/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [
+              `${props.bucketPhoto.bucketArn}/thumbnail/*`,
+              `${props.bucketPhoto.bucketArn}/original/*`,
+              `${props.bucketPhoto.bucketArn}/storage/*`,
+            ],
+          }),
+        ],
+      }
+    );
+    triggerSqsPhotoConvertQueueFn.addEventSource(
+      new SqsEventSource(props.queuePhotoConvert, {
         batchSize: 1,
         maxConcurrency: 5,
         reportBatchItemFailures: true,

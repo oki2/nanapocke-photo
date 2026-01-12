@@ -14,7 +14,9 @@ export const env = {
 
   // SQS
   SQS_QUEUE_URL_MAIN: process.env.SQS_QUEUE_URL_MAIN || "",
+  SQS_QUEUE_URL_PHOTO_CONVERT: process.env.SQS_QUEUE_URL_PHOTO_CONVERT || "",
   SQS_JOB_SEND_PHOTO_FILE_BY_ORDERID: "SqsJobSendPhotoFileByOrderId",
+  SQS_JOB_PHOTO_UNZIP_BEFORE_SAVE: "SqsJobPhotoUnzipBeforeSave",
 
   // Cloudfront Verify Token
   X_ORIGIN_VERIFY_TOKEN: process.env.X_ORIGIN_VERIFY_TOKEN || "",

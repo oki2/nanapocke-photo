@@ -56,15 +56,23 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   let uploadId = "";
   let prefix = "";
   if (data.fileType === AppConfig.UPLOAD_FILE_TYPE.ZIP) {
+    // ZIPアップロードの場合、拡張子を確認する
+    if (data.fileName.split(".").pop() !== "zip") {
+      return http.badRequest({detail: "zipファイルのみ設定可能です"});
+    }
+
+    // ZIPアップロード の場合
     uploadId = await Photo.createZip(
       authContext.facilityCode,
       authContext.userId,
       data.shootingAt,
       data.priceTier,
-      tags
+      tags,
+      albums
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_ZIP_UPLOAD;
   } else {
+    // 通常アップロード の場合
     uploadId = await Photo.create(
       authContext.facilityCode,
       authContext.userId,

@@ -1,5 +1,11 @@
-import {SQSClient, SendMessageCommand} from "@aws-sdk/client-sqs";
+import {
+  SQSClient,
+  SendMessageCommand,
+  SendMessageBatchCommand,
+} from "@aws-sdk/client-sqs";
 import {AppConfig} from "../../config";
+
+import {chunk} from "../../libs/tool";
 
 const sqsClient = new SQSClient({region: AppConfig.MAIN_REGION});
 
@@ -28,5 +34,26 @@ export async function SqsSendMessage(
     return;
   } catch (e: any) {
     throw e;
+  }
+}
+
+export async function SqsSendMessageList(
+  queUrl: string,
+  messageBodyList: string[],
+  delaySeconds: number = 0
+): Promise<void> {
+  const messageChunk = chunk(messageBodyList, 10);
+
+  for (const messageBody of messageChunk) {
+    await sqsClient.send(
+      new SendMessageBatchCommand({
+        QueueUrl: queUrl,
+        Entries: messageBody.map((d, i) => ({
+          Id: `${i}`,
+          DelaySeconds: delaySeconds,
+          MessageBody: d,
+        })),
+      })
+    );
   }
 }

@@ -15,6 +15,7 @@ export class Step10ResourceStack extends cdk.Stack {
   public bucketUpload: Bucket;
   public bucketPhoto: Bucket;
   public queueMain: Queue;
+  public queuePhotoConvert: Queue;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id, props);
@@ -90,9 +91,23 @@ export class Step10ResourceStack extends cdk.Stack {
 
     // メインキュー
     this.queueMain = new Queue(this, "MainQueue", {
-      visibilityTimeout: cdk.Duration.seconds(60), // consumer timeoutより長め推奨
+      visibilityTimeout: cdk.Duration.minutes(30), // consumer timeoutより長め推奨
       deadLetterQueue: {
         queue: dlq,
+        maxReceiveCount: 5,
+      },
+    });
+
+    // DLQ
+    const queuePhotoConvertDlq = new Queue(this, "PhotoConvertDlq", {
+      retentionPeriod: cdk.Duration.days(14),
+    });
+
+    // ZIPから写真のリサイズ用
+    this.queuePhotoConvert = new Queue(this, "PhotoConverQueue", {
+      visibilityTimeout: cdk.Duration.minutes(2), // consumer timeoutより長め推奨
+      deadLetterQueue: {
+        queue: queuePhotoConvertDlq,
         maxReceiveCount: 5,
       },
     });
