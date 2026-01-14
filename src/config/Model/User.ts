@@ -9,3 +9,7 @@ export const STATUS = {
   ACTIVE: "ACTIVE",
   INACTIVE: "INACTIVE",
 };
+export const PHOTOGRAPHER_EXPIRE_MODE = {
+  UNLIMITED: "UNLIMITED",
+  DATE: "DATE",
+};

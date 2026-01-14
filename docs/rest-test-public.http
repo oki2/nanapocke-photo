@@ -34,9 +34,15 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "Photo002",
+  "userCode": "Photo005",
   "password": "test1234",
-  "userName": "フォトグラファー2"
+  "userName": "フォトグラファー5",
+  "description": "説明5",
+  "expireMode": "UNLIMITED",
+  "expireDate": {
+    "from": "",
+    "to": ""
+  }
 }
 
 ### フォトグラファー一覧取得

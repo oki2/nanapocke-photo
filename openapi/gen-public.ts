@@ -1,18 +1,15 @@
-import {writeFileSync} from "node:fs";
+import {mkdirSync, writeFileSync} from "node:fs";
 import {toJsonSchema} from "@valibot/to-json-schema";
-import {
-  AuthSigninBody,
-  SigninSuccess,
-  SigninChallenge,
-} from "../src/schemas/api.admin.auth";
+import * as SchemaPublic from "../src/schemas/public";
+import * as CommonPublic from "../src/schemas/common";
 
 const doc = {
   openapi: "3.1.0",
   info: {title: "Auth API", version: "1.0.0"},
   paths: {
-    "/api/admin/auth/signin": {
+    "/api/auth/signin": {
       post: {
-        summary: "Sign in",
+        summary: "Sign（フォトグラファー専用）",
         requestBody: {
           required: true,
           content: {
@@ -45,14 +42,50 @@ const doc = {
         },
       },
     },
+
+    "/api/auth/refresh": {
+      get: {
+        summary: "アクセストークンのリフレッシュ",
+        parameters: [
+          {
+            name: "refreshToken",
+            in: "cookie",
+            required: true,
+            schema: toJsonSchema(CommonPublic.RefreshToken), // もしくは components 参照
+          },
+          {
+            name: "userRole",
+            in: "cookie",
+            required: true,
+            schema: toJsonSchema(CommonPublic.PublicRole), // もしくは components 参照
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Refresh success",
+            content: {
+              "application/json": {
+                schema: {$ref: "#/components/schemas/SigninResponse"},
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
-      AuthSigninBody: toJsonSchema(AuthSigninBody),
-      SigninSuccess: toJsonSchema(SigninSuccess),
-      SigninChallenge: toJsonSchema(SigninChallenge),
+      AuthSigninBody: toJsonSchema(SchemaPublic.AuthSigninBody),
+      SigninSuccess: toJsonSchema(SchemaPublic.SigninSuccess),
+      SigninChallenge: toJsonSchema(SchemaPublic.SigninChallenge),
+      RefreshTokenCookie: toJsonSchema(SchemaPublic.RefreshTokenCookie),
+      SigninResponse: toJsonSchema(SchemaPublic.SigninResponse),
     },
   },
 } as const;
 
-writeFileSync("openapi/dist/openapi.admin.json", JSON.stringify(doc, null, 2));
+mkdirSync("work/openapi/dist", {recursive: true});
+writeFileSync(
+  "work/openapi/dist/openapi.public.json",
+  JSON.stringify(doc, null, 2)
+);

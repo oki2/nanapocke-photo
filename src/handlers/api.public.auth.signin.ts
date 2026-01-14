@@ -62,7 +62,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     return http.forbidden();
   }
 
-  // === Step.4 ログイン成功としてデータを返す =========== //
+  // === Step.4 最終ログイン日時を更新
+  await User.updateLastLoginAt(user.userId, user.userCode);
+
+  // === Step.5 ログイン成功としてデータを返す =========== //
   const result: SigninSuccessT = {
     state: "success",
     accessToken: auth.accessToken ?? "",

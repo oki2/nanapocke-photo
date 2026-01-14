@@ -18,6 +18,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(PhotographerCreateBody, raw);
   console.log("data", data);
 
+  // 日付の変換（JST -> UTCへ）
+  const expFrom = data.expireDate.from
+    ? new Date(data.expireDate.from).toISOString()
+    : "";
+  const expTo = data.expireDate.to
+    ? new Date(data.expireDate.to).toISOString()
+    : "";
+
   // 1. Cognito に Photographer を作成
   const newUserSub = await Photographer.create(
     data.userCode,
@@ -31,8 +39,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.userCode,
     data.userName,
     authContext.facilityCode,
-    data.nbf ?? new Date().toISOString(),
-    data.exp ?? undefined,
+    data.description,
+    data.expireMode,
+    {from: expFrom, to: expTo},
     authContext.userId
   );
 

@@ -120,7 +120,7 @@ export async function photographerList(facilityCode: string): Promise<any> {
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk AND #lsi1 = :lsi1",
     ProjectionExpression:
-      "#sk, #userCode, #userName, #description, #nbf, #exp, #status, #createdAt, #updatedAt",
+      "#sk, #userCode, #userName, #description, #lastLoginAt, #expireMode, #expireDate, #status, #createdAt, #updatedAt",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#lsi1": "lsi1",
@@ -128,8 +128,9 @@ export async function photographerList(facilityCode: string): Promise<any> {
       "#userCode": "userCode",
       "#userName": "userName",
       "#description": "description",
-      "#nbf": "nbf",
-      "#exp": "exp",
+      "#lastLoginAt": "lastLoginAt",
+      "#expireMode": "expireMode",
+      "#expireDate": "expireDate",
       "#status": "status",
       "#createdAt": "createdAt",
       "#updatedAt": "updatedAt",
@@ -150,21 +151,13 @@ export async function staffList(facilityCode: string): Promise<any> {
     TableName: UserConfig.TABLE_NAME,
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk AND begins_with(#lsi1, :lsi1)",
-    ProjectionExpression:
-      "#sk, #userCode, #userId, #userRole, #userName, #nbf, #exp, #status, #createdAt, #updatedAt",
+    ProjectionExpression: "#sk, #userId, #userName",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#lsi1": "lsi1",
       "#sk": "sk",
-      "#userCode": "userCode",
       "#userId": "userId",
-      "#userRole": "userRole",
       "#userName": "userName",
-      "#nbf": "nbf",
-      "#exp": "exp",
-      "#status": "status",
-      "#createdAt": "createdAt",
-      "#updatedAt": "updatedAt",
     },
     ExpressionAttributeValues: {
       ":pk": "USER",

@@ -12,6 +12,8 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import {PhotoConfig} from "../../../config";
 
+import * as User from "../User";
+
 import {chunk, sleep} from "../../../libs/tool";
 
 export type Photo = {
@@ -117,6 +119,8 @@ export async function create(
   const nowISO = new Date().toISOString();
   const photoId = crypto.randomUUID();
 
+  const userInfo = await User.get(userId);
+
   const seq = await nextSequence(facilityCode);
   console.log("next sequenceId", seq);
 
@@ -126,6 +130,7 @@ export async function create(
     facilityCode: facilityCode,
     photoId: photoId,
     shootingAt: shootingAt,
+    shootingUserName: userInfo.name,
     priceTier: priceTier,
     sequenceId: seq,
     status: PhotoConfig.STATUS.CREATE,

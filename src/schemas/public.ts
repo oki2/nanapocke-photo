@@ -347,10 +347,20 @@ export const PhotographerCreateBody = v.pipe(
     userCode: common.AccountPhotographerId,
     password: common.AccountPassword,
     userName: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string(), v.minLength(1))),
-    nbf: v.optional(common.ISODateTime),
-    exp: v.optional(common.ISODateTime),
-  })
+    description: v.optional(v.pipe(v.string()), ""),
+    expireMode: v.picklist(Object.values(UserConfig.PHOTOGRAPHER_EXPIRE_MODE)),
+    expireDate: v.object({
+      from: v.union([common.ISODateTime, v.literal("")]),
+      to: v.union([common.ISODateTime, v.literal("")]),
+    }),
+  }),
+  v.check((input) => {
+    if (input.expireMode === UserConfig.PHOTOGRAPHER_EXPIRE_MODE.UNLIMITED) {
+      return true;
+    }
+
+    return input.expireDate.from !== "" && input.expireDate.to !== "";
+  }, "expireMode が DATE の場合、expireDate.from と expireDate.to は必須です")
 );
 export type PhotographerCreateBodyT = v.InferOutput<
   typeof PhotographerCreateBody
@@ -373,10 +383,14 @@ const PhotographerDetail = v.pipe(
   v.object({
     userCode: common.AccountPhotographerId,
     userName: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string(), v.minLength(1))),
     status: v.picklist(Object.values(UserConfig.STATUS)),
-    nbf: v.optional(common.ISODateTime),
-    exp: v.optional(common.ISODateTime),
+    lastLoginAt: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
+    description: v.optional(v.pipe(v.string()), ""),
+    expireMode: v.picklist(Object.values(UserConfig.PHOTOGRAPHER_EXPIRE_MODE)),
+    expireDate: v.object({
+      from: v.union([common.ISODateTime, v.literal("")]),
+      to: v.union([common.ISODateTime, v.literal("")]),
+    }),
   })
 );
 export const PhotographerList = v.array(PhotographerDetail);
