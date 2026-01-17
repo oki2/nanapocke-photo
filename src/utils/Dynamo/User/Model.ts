@@ -31,6 +31,7 @@ export async function create(
   userName: string,
   userRole: string,
   facilityCode: string,
+  expire: Record<string, any>,
   options: Record<string, any>,
   now?: string
 ) {
@@ -49,6 +50,7 @@ export async function create(
         userRole: userRole,
         facilityCode: facilityCode,
         status: UserConfig.STATUS.ACTIVE,
+        expire: expire,
         createdAt: nowISO,
         updatedAt: nowISO,
         ...options,
@@ -120,17 +122,17 @@ export async function photographerList(facilityCode: string): Promise<any> {
     IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk AND #lsi1 = :lsi1",
     ProjectionExpression:
-      "#sk, #userCode, #userName, #description, #lastLoginAt, #expireMode, #expireDate, #status, #createdAt, #updatedAt",
+      "#sk, #userId, #userCode, #userName, #description, #lastLoginAt, #expire, #status, #createdAt, #updatedAt",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#lsi1": "lsi1",
       "#sk": "sk",
+      "#userId": "userId",
       "#userCode": "userCode",
       "#userName": "userName",
       "#description": "description",
       "#lastLoginAt": "lastLoginAt",
-      "#expireMode": "expireMode",
-      "#expireDate": "expireDate",
+      "#expire": "expire",
       "#status": "status",
       "#createdAt": "createdAt",
       "#updatedAt": "updatedAt",
@@ -168,4 +170,34 @@ export async function staffList(facilityCode: string): Promise<any> {
   // コマンド実行
   const result = await docClient().send(command);
   return result.Items;
+}
+
+// ユーザー名の更新
+export async function updateExpire(
+  userId: string,
+  expire: Record<string, any>,
+  updatedBy: string
+): Promise<void> {
+  const nowISO = new Date().toISOString();
+  await docClient().send(
+    new UpdateCommand({
+      TableName: UserConfig.TABLE_NAME,
+      Key: {
+        pk: "USER",
+        sk: userId,
+      },
+      UpdateExpression:
+        "set #expire = :expire, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
+      ExpressionAttributeNames: {
+        "#expire": "expire",
+        "#updatedAt": "updatedAt",
+        "#updatedBy": "updatedBy",
+      },
+      ExpressionAttributeValues: {
+        ":expire": expire,
+        ":updatedAt": nowISO,
+        ":updatedBy": updatedBy,
+      },
+    })
+  );
 }

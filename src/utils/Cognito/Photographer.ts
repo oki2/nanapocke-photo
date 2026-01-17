@@ -8,6 +8,7 @@ import {
   AdminCreateUserCommand,
   AdminSetUserPasswordCommand,
   AdminGetUserCommand,
+  AdminUserGlobalSignOutCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 export async function create(
@@ -95,4 +96,32 @@ export async function create(
     return sub;
   }
   throw new Error("sub を取得できませんでした");
+}
+
+export async function passwordChange(
+  facilityCode: string,
+  userName: string,
+  password: string
+) {
+  const idp = new CognitoIdentityProviderClient({
+    region: AppConfig.MAIN_REGION,
+  });
+
+  // パスワード変更
+  await idp.send(
+    new AdminSetUserPasswordCommand({
+      UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
+      Username: `${facilityCode}@${userName}`,
+      Password: password,
+      Permanent: true,
+    })
+  );
+
+  // パスワード変更した場合は、既存のセッションを全て無効化
+  await idp.send(
+    new AdminUserGlobalSignOutCommand({
+      UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
+      Username: `${facilityCode}@${userName}`,
+    })
+  );
 }

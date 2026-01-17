@@ -127,9 +127,12 @@ export const AlbumCreateBody = v.pipe(
     title: v.pipe(v.string(), v.minLength(1)),
     description: v.optional(v.pipe(v.string(), v.minLength(1))),
     priceTable: PriceTable,
-    salesPeriod: v.optional(SalesPeriod),
-    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
-    copyFromAlbumId: v.optional(common.AlbumId),
+    salesPeriod: v.optional(SalesPeriod, {
+      start: "",
+      end: "",
+    }),
+    coverImageFileName: v.optional(v.string(), ""),
+    copyFromAlbumId: v.optional(v.union([common.AlbumId, v.literal("")]), ""),
   })
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
@@ -288,16 +291,21 @@ export const PhotoListResponse = v.object({
         photoId: common.AlbumId,
         sequenceId: v.number(),
         photoImageUrl: v.pipe(v.string(), v.minLength(1)),
+        size: v.optional(v.string(), ""),
+        printSizes: v.array(v.string()),
         status: v.pipe(v.string(), v.minLength(1)),
-        tags: v.optional(v.array(v.string())),
-        albums: v.optional(v.array(common.AlbumId)),
+        saleStatus: v.picklist(Object.values(PhotoConfig.SALES_STATUS)),
+        tags: v.optional(v.array(v.string()), []),
+        albums: v.optional(v.array(common.AlbumId), []),
         priceTier: common.PhotoPriceTier,
         shootingAt: common.ISODateTime,
+        shootingUserName: common.Name,
         createdAt: common.ISODateTime,
       })
     )
   ),
-  nextCursor: v.optional(v.string()),
+  totalItems: v.number(),
+  nextCursor: v.string(),
 });
 export type PhotoListResponseT = v.InferOutput<typeof PhotoListResponse>;
 
@@ -342,26 +350,33 @@ export const PaymentPathParameters = v.object({
 });
 
 // api.public.photographer.create : request
-export const PhotographerCreateBody = v.pipe(
-  v.object({
-    userCode: common.AccountPhotographerId,
-    password: common.AccountPassword,
-    userName: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string()), ""),
-    expireMode: v.picklist(Object.values(UserConfig.PHOTOGRAPHER_EXPIRE_MODE)),
-    expireDate: v.object({
-      from: v.union([common.ISODateTime, v.literal("")]),
-      to: v.union([common.ISODateTime, v.literal("")]),
-    }),
-  }),
-  v.check((input) => {
-    if (input.expireMode === UserConfig.PHOTOGRAPHER_EXPIRE_MODE.UNLIMITED) {
-      return true;
-    }
+const PhotographerExpireUnlimited = v.object({
+  mode: v.literal(UserConfig.EXPIRE_MODE.UNLIMITED),
+  from: v.literal(""),
+  to: v.literal(""),
+});
 
-    return input.expireDate.from !== "" && input.expireDate.to !== "";
-  }, "expireMode が DATE の場合、expireDate.from と expireDate.to は必須です")
+const PhotographerExpireDate = v.pipe(
+  v.object({
+    mode: v.literal(UserConfig.EXPIRE_MODE.DATE),
+    from: common.ISODateTime,
+    to: common.ISODateTime,
+  }),
+  v.check(({from, to}) => {
+    return new Date(to).getTime() > new Date(from).getTime();
+  }, "to は from より後の日時を指定してください")
 );
+
+export const PhotographerCreateBody = v.object({
+  userCode: common.AccountPhotographerId,
+  password: common.AccountPassword,
+  userName: v.pipe(v.string(), v.minLength(1)),
+  description: v.optional(v.pipe(v.string()), ""),
+  expire: v.variant("mode", [
+    PhotographerExpireUnlimited,
+    PhotographerExpireDate,
+  ]),
+});
 export type PhotographerCreateBodyT = v.InferOutput<
   typeof PhotographerCreateBody
 >;
@@ -381,13 +396,14 @@ export type PhotographerCreateResponseT = v.InferOutput<
 // api.public.photographer.list : response
 const PhotographerDetail = v.pipe(
   v.object({
+    userId: common.UserId,
     userCode: common.AccountPhotographerId,
     userName: v.pipe(v.string(), v.minLength(1)),
     status: v.picklist(Object.values(UserConfig.STATUS)),
     lastLoginAt: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
     description: v.optional(v.pipe(v.string()), ""),
-    expireMode: v.picklist(Object.values(UserConfig.PHOTOGRAPHER_EXPIRE_MODE)),
-    expireDate: v.object({
+    expire: v.object({
+      mode: v.picklist(Object.values(UserConfig.EXPIRE_MODE)),
       from: v.union([common.ISODateTime, v.literal("")]),
       to: v.union([common.ISODateTime, v.literal("")]),
     }),
@@ -395,6 +411,32 @@ const PhotographerDetail = v.pipe(
 );
 export const PhotographerList = v.array(PhotographerDetail);
 export type PhotographerListT = v.InferOutput<typeof PhotographerList>;
+
+// api.public.photographer.edit : request pathParameters
+export const PhotographerPathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    photographerId: common.UserId,
+  })
+);
+
+// api.public.photographer.edit : request body
+export const PhotographerEditBody = v.pipe(
+  v.object({
+    changePassword: v.boolean(),
+    password: v.optional(common.AccountPassword),
+    expire: v.variant("mode", [
+      PhotographerExpireUnlimited,
+      PhotographerExpireDate,
+    ]),
+  }),
+  v.check(({changePassword, password}) => {
+    if (changePassword && !password) {
+      return false;
+    }
+    return true;
+  }, "password を入力してください")
+);
 
 // api.public.cart.add : request
 export const CartAddBody = v.object({

@@ -48,6 +48,7 @@ async function SqsJobPhotoUnzipBeforeSave(data: Record<string, any>) {
   const photoId = await Photo.create(
     facilityCode,
     userId,
+    zipMeta.shootingUserName,
     zipMeta.shootingAt,
     zipMeta.priceTier,
     zipMeta.tags,

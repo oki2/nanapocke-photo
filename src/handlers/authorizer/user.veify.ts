@@ -51,6 +51,22 @@ export const handler = async (event: any = {}): Promise<any> => {
     const userInfo = await User.get(payload.sub);
     console.log("userInfo", userInfo);
 
+    // 非アクティブユーザー　※基本はフォトグラファーのみ判定対象
+    if (userInfo.status != "ACTIVE") {
+      return {isAuthorized: false};
+    }
+
+    // 有効期限が切れている　※基本はフォトグラファーのみ判定対象
+    if (userInfo.expire.mode == "DATE") {
+      const nowDate = new Date(); // 現在日時
+      const fromDate = new Date(userInfo.expire.from); // 利用期間開始日時
+      const toDate = new Date(userInfo.expire.to); // 利用期間終了日時
+      // 利用期間外は許可しない
+      if (nowDate < fromDate || nowDate > toDate) {
+        return {isAuthorized: false};
+      }
+    }
+
     // Facility Code を確認
     if (userInfo.facilityCode != facilityCode) {
       return {isAuthorized: false};

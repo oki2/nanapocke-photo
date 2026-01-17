@@ -18,6 +18,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(PhotoUploadBody, raw);
   console.log("data", data);
 
+  // 日付の変換（JSTの場合はUTCへ）
+  data.shootingAt = new Date(data.shootingAt).toISOString();
+
   // 1. アルバム指定がある場合はチェック
   const albums: string[] = [];
   if (data.albums.length > 0) {
@@ -65,6 +68,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     uploadId = await Photo.createZip(
       authContext.facilityCode,
       authContext.userId,
+      authContext.userName,
       data.shootingAt,
       data.priceTier,
       tags,
@@ -76,6 +80,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     uploadId = await Photo.create(
       authContext.facilityCode,
       authContext.userId,
+      authContext.userName,
       data.shootingAt,
       data.priceTier,
       tags,

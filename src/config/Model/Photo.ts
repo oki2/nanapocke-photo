@@ -18,6 +18,8 @@ export const EDITABILITY = {
   LOCKED: "LOCKED",
 };
 
+export const SALES_STATUS = EDITABILITY;
+
 export const DATE_TYPE = {
   SHOOTING: "SHOOTING",
   UPLOAD: "UPLOAD",

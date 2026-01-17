@@ -203,7 +203,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     );
 
     // === 各種アクション === //
-    // Photographer の作成
+    // フォトグラファー の作成
     this.lambdaFn.photographerCreateFn = new NodejsFunction(
       this,
       "ApiPublicPhotographerCreateFn",
@@ -267,6 +267,41 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               props.NanapockeUserTable.tableArn,
               `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
             ],
+          }),
+        ],
+      }
+    );
+
+    // フォトグラファーの編集
+    this.lambdaFn.photographerEditFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotographerEditFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotographerEdit`,
+        description: `${functionPrefix}-ApiPublicPhotographerEdit`,
+        entry: "src/handlers/api.public.photographer.edit.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "cognito-idp:AdminSetUserPassword",
+              "cognito-idp:AdminUserGlobalSignOut",
+            ],
+            resources: [props.NanapockeAuthPool.userPoolArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+            resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
       }

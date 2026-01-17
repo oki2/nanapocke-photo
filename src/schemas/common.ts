@@ -23,8 +23,7 @@ export const AccountPhotographerId = v.pipe(
 // パスワードの長さ指定
 export const AccountPassword = v.pipe(
   v.string(),
-  v.minLength(8),
-  v.maxLength(64)
+  v.regex(/^[a-zA-Z0-9]{8,64}$/)
 );
 
 // 写真アップロード形式。画像 or zip

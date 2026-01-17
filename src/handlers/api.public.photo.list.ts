@@ -2,7 +2,7 @@ import * as http from "../http";
 
 import {tagSplitter, photoIdSplitter} from "../libs/tool";
 
-import {PhotoConfig} from "../config";
+import {PhotoConfig, UserConfig} from "../config";
 
 import {
   PhotoFilters,
@@ -12,6 +12,7 @@ import {
 import {parseOrThrow} from "../libs/validate";
 
 import * as Photo from "../utils/Dynamo/Photo";
+import {userInfo} from "os";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -29,7 +30,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // === Step.2 絞込み情報作成 =========== //
   const filter: Photo.FilterOptions = {
-    photographer: query.photographer,
+    photographer: query.photographer == "ALL" ? "" : query.photographer,
     editability: query.editability,
     tags: tags, // AND 条件（すべて含む）
     photoIds: photoIds, // OR 条件（すべて含む）
@@ -94,11 +95,22 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       photoId: item.photoId,
       sequenceId: item.sequenceId,
       status: item.status,
+      saleStatus:
+        item.status == PhotoConfig.STATUS.ACTIVE
+          ? PhotoConfig.SALES_STATUS.EDITABLE
+          : PhotoConfig.SALES_STATUS.LOCKED,
       photoImageUrl: `/thumbnail/${item.facilityCode}/photo/${item.createdBy}/${item.photoId}.webp`,
+      size: `${item.width} x ${item.height} px`,
+      printSizes: item.salesSizePrint.map((v: string) => {
+        if (v === PhotoConfig.SALES_SIZE.PRINT_L) return "L";
+        if (v === PhotoConfig.SALES_SIZE.PRINT_2L) return "2L";
+        return null; // 何も該当しない場合
+      }),
       tags: item.tags,
       albums: item.albums,
       priceTier: item.priceTier,
       shootingAt: item.shootingAt,
+      shootingUserName: item.shootingUserName,
       createdAt: item.createdAt,
     });
   }

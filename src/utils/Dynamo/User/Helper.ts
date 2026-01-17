@@ -1,3 +1,4 @@
+import {UserConfig} from "../../../config";
 import * as UserModel from "./Model";
 
 export async function signinNanapockeAuth(
@@ -23,7 +24,7 @@ export async function signinNanapockeAuth(
     console.log(e);
     if (e.name !== "ConditionalCheckFailedException") throw e;
 
-    // アカウント情報が存在しない場合は登録する
+    // アカウント情報が存在しない場合は登録する　有効期限は無期限
     console.log(`account not found : create new account : ${userId}`);
     await UserModel.create(
       userId,
@@ -31,6 +32,7 @@ export async function signinNanapockeAuth(
       userName,
       userRole,
       facilityCode,
+      {mode: UserConfig.EXPIRE_MODE.UNLIMITED, from: "", to: ""},
       {
         lastLoginAt: nowISO,
       },

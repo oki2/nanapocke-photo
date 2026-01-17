@@ -439,7 +439,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
       })
     );
 
-    // ZIPからの写真変換用
+    // ZIPからの写真変換用 ===================================================
     const triggerSqsPhotoConvertQueueFn = new NodejsFunction(
       this,
       "TriggerSqsPhotoConvertQueueFn",

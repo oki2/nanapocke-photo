@@ -32,7 +32,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       description: album.description,
       salesStatus: album.salesStatus,
       priceTable: album.priceTable,
-      salesPeriod: album.salesPeriod,
+      salesPeriod: {
+        start: album.salesPeriod.start
+          ? Album.toJstToday0000(album.salesPeriod.start).toISOString()
+          : "",
+        end: album.salesPeriod.start
+          ? Album.toJstYesterday2359(album.salesPeriod.end).toISOString()
+          : "",
+      },
       coverImageUrl: album.coverImage
         ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.coverImage}`
         : "",

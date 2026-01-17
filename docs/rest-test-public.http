@@ -34,14 +34,14 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "Photo005",
+  "userCode": "Photo002",
   "password": "test1234",
-  "userName": "フォトグラファー5",
-  "description": "説明5",
-  "expireMode": "UNLIMITED",
-  "expireDate": {
-    "from": "",
-    "to": ""
+  "userName": "フォトグラファー2",
+  "description": "説明2",
+  "expire": {
+    "mode": "DATE",
+    "from": "2025-12-16T00:00:00Z",
+    "to": "2026-12-16T00:00:00+09:00"
   }
 }
 
@@ -49,6 +49,25 @@ Authorization: Bearer {{accessToken}}
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photographer/list HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
+
+###
+@photographerId = 47b45a08-70e1-70e5-bc3f-cdce75a5936a
+### フォトグラファー編集
+PATCH https://{{customDomainName}}/api/facility/{{facilityCode}}/photographer/{{photographerId}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "changePassword": false,
+  "password": "test1234",
+  "expire": {
+    "mode": "DATE",
+    "from": "2026-01-01T00:00:00Z",
+    "to": "2026-12-16T00:00:00+09:00"
+  }
+}
+
+
 
 ### アルバム追加
 # @name albumImageUploadUrl
@@ -131,7 +150,7 @@ Authorization: Bearer {{accessToken}}
   "fileType": "ZIP",
   "fileName": "test.zip",
   "priceTier": "STANDARD",
-  "albums": ["a35a8f26-1383-4577-9188-4b3cdba7f5ab"],
+  "albums": ["39e5354b-3007-4b6d-9fb3-e64181bff02a"],
   "shootingAt": "2025-11-16T00:00:00+09:00",
   "tags": "TAG-A,TAG-あいうえお#イベント"
 }
@@ -145,7 +164,7 @@ PUT {{photoZipUploadUrl.response.body.$.url}} HTTP/1.1
 
 ### 写真一覧：全件取得
 #GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=50&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム未設定

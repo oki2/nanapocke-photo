@@ -283,6 +283,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // フォトグラファー 一覧
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/photographer/{photographerId}",
+      methods: [apigwv2.HttpMethod.PATCH],
+      integration: new HttpLambdaIntegration(
+        "PhotographerEditIntegration",
+        props.lambdaFnPublic.photographerEditFn
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // ==========================================================
     // アルバム関連
     // ==========================================================

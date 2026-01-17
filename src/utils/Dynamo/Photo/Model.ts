@@ -111,6 +111,7 @@ export async function getZipMeta(
 export async function create(
   facilityCode: string,
   userId: string,
+  userName: string,
   shootingAt: string,
   priceTier: string,
   tags: string[],
@@ -118,8 +119,6 @@ export async function create(
 ): Promise<string> {
   const nowISO = new Date().toISOString();
   const photoId = crypto.randomUUID();
-
-  const userInfo = await User.get(userId);
 
   const seq = await nextSequence(facilityCode);
   console.log("next sequenceId", seq);
@@ -130,7 +129,7 @@ export async function create(
     facilityCode: facilityCode,
     photoId: photoId,
     shootingAt: shootingAt,
-    shootingUserName: userInfo.name,
+    shootingUserName: userName,
     priceTier: priceTier,
     sequenceId: seq,
     status: PhotoConfig.STATUS.CREATE,
@@ -157,6 +156,7 @@ export async function create(
 export async function createZip(
   facilityCode: string,
   userId: string,
+  userName: string,
   shootingAt: string,
   priceTier: string,
   tags: string[],
@@ -174,6 +174,7 @@ export async function createZip(
         sk: `META#${zipId}`,
         facilityCode: facilityCode,
         shootingAt: shootingAt,
+        shootingUserName: userName,
         priceTier: priceTier,
         status: PhotoConfig.STATUS.CREATE,
         createdAt: nowISO,

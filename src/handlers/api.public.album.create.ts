@@ -21,6 +21,16 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(AlbumCreateBody, raw);
   console.log("data", data);
 
+  // 販売期間が入力されていたら 05:00 - 02:00 に変換
+  if (data.salesPeriod.start && data.salesPeriod.end) {
+    data.salesPeriod.start = Album.toJstToday0500(
+      data.salesPeriod.start
+    ).toISOString();
+    data.salesPeriod.end = Album.toJstTomorrow0200(
+      data.salesPeriod.end
+    ).toISOString();
+  }
+
   // 2. DynamoDB に Album を作成
   const album = await Album.create(
     authContext.facilityCode,

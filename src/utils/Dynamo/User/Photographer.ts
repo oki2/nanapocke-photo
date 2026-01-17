@@ -7,8 +7,7 @@ export async function create(
   userName: string,
   facilityCode: string,
   description: string,
-  expireMode: string,
-  expireDate: Record<string, any>,
+  expire: Record<string, any>,
   createdBy: string
 ): Promise<void> {
   await UserModel.create(
@@ -17,13 +16,20 @@ export async function create(
     userName,
     UserConfig.ROLE.PHOTOGRAPHER,
     facilityCode,
+    expire,
     {
       description: description,
-      expireMode: expireMode,
-      expireDate: expireDate,
       createdBy: createdBy,
     }
   );
+}
+
+export async function edit(
+  userId: string,
+  expire: Record<string, any>,
+  updatedBy: string
+): Promise<void> {
+  await UserModel.updateExpire(userId, expire, updatedBy);
 }
 
 export const isActive = async (userId: string): Promise<any> => {
@@ -40,19 +46,19 @@ export const isActive = async (userId: string): Promise<any> => {
   }
 
   // 無期限なら可
-  if (user.expireMode === UserConfig.PHOTOGRAPHER_EXPIRE_MODE.UNLIMITED) {
+  if (user.expire.mode === UserConfig.EXPIRE_MODE.UNLIMITED) {
     return user;
   }
 
   const nowDate = new Date(); // 現在日時
-  const fromDate = new Date(user.expireMode.from); // 利用期間開始日時
+  const fromDate = new Date(user.expire.from); // 利用期間開始日時
   // 利用期間開始前の場合はfalse
   if (nowDate < fromDate) {
     return undefined;
   }
 
   // 利用期間終了後の場合はfalse
-  const toDate = new Date(user.expireMode.to);
+  const toDate = new Date(user.expire.to);
   if (nowDate > toDate) {
     return undefined;
   }
