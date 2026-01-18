@@ -95,7 +95,7 @@ export function filterSortPagePhotos(
 ): PhotoModel.PageResult<PhotoModel.Photo> {
   const sortField = sort.field;
   const sortOrder = sort.order;
-  const limit = page.limit ?? 50;
+  const limit = page.limit ?? PhotoConfig.FILTER_LIMIT.MAX;
 
   console.log("filter", filter);
 
@@ -166,6 +166,11 @@ export function filterSortPagePhotos(
 
     return true;
   });
+
+  // 1) idOnly の場合は直接返却
+  if (page.idOnly) {
+    return {items: filtered, nextCursor: ""};
+  }
 
   // 2) sort（安定：field → photoId）
   const cmp = compareBy(sortField, sortOrder);

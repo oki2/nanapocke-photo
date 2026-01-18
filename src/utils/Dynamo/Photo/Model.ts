@@ -73,6 +73,7 @@ export type SortOptions = {
 export type PageOptions = {
   limit?: number; // 未指定時 50
   cursor?: string; // 前回レスポンスの nextCursor を渡す
+  idOnly?: boolean;
 };
 
 export type PageResult<T> = {
