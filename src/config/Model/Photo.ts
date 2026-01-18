@@ -40,3 +40,10 @@ export const SALES_SIZE = {
   PRINT_2L: "print2l",
   DONWLOAD: "dl",
 };
+
+export const FILTER_LIMIT = {
+  MIN: 10,
+  MAX: 50,
+};
+
+export const UNSOLD_EXPIRES_IN = 60 * 24 * 60 * 60 * 1000; // 未販売のまま経過日数を過ぎたら削除対象 ミリ秒なので 1000倍する

@@ -67,8 +67,6 @@ Authorization: Bearer {{accessToken}}
   }
 }
 
-
-
 ### アルバム追加
 # @name albumImageUploadUrl
 POST https://{{customDomainName}}/api/facility/{{facilityCode}}/album HTTP/1.1
@@ -78,7 +76,7 @@ Authorization: Bearer {{accessToken}}
 {
   "title": "テストアルバム",
   "description": "アルバムの説明",
-  "copyFromAlbumId": "56f6fa3f-8d14-4d9f-b5ab-309320353964",
+  "copyFromAlbumId": "",
   "coverImageFileName": "test.jpg",
   "salesPeriod": {
     "start": "2025-12-16T00:00:00Z",
@@ -100,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 6c0610c5-6901-4b2a-995a-a6617c78b2ef
+@albumId = 5d05d00f-3558-4fb4-ada4-917861049ac5
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -129,6 +127,7 @@ Authorization: Bearer {{accessToken}}
   "fileType": "IMAGE",
   "fileName": "test.jpg",
   "priceTier": "STANDARD",
+  "albums": ["{{albumId}}"],
   "shootingAt": "2025-11-16T00:00:00+09:00",
   "tags": "TAG-A,TAG-あいうえお#イベント"
 }
@@ -150,7 +149,7 @@ Authorization: Bearer {{accessToken}}
   "fileType": "ZIP",
   "fileName": "test.zip",
   "priceTier": "STANDARD",
-  "albums": ["39e5354b-3007-4b6d-9fb3-e64181bff02a"],
+  "albums": ["{{albumId}}"],
   "shootingAt": "2025-11-16T00:00:00+09:00",
   "tags": "TAG-A,TAG-あいうえお#イベント"
 }
@@ -164,15 +163,19 @@ PUT {{photoZipUploadUrl.response.body.$.url}} HTTP/1.1
 
 ### 写真一覧：全件取得
 #GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=100 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム未設定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=2&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=10&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=10&sortOrder=DESC HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+### 写真一覧：シーケンス番号指定
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=2&sortOrder=DESC&sequenceIdQuery=33,34,35 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値

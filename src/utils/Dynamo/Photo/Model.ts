@@ -1,3 +1,11 @@
+/**
+ * PHOTO#FAC#${facilityCode}#META
+ * lsi1 : 全件：アップロード日ソート
+ * lsi2 : 全件：撮影日ソート
+ * lsi3 : アルバム未設定：アップロード日ソート
+ * lsi4 : アルバム未設定：撮影日ソート
+ */
+
 import {docClient} from "../dynamo";
 import {
   PutCommand,
@@ -44,6 +52,7 @@ export type FilterOptions = {
   tags?: string[]; // AND 条件（すべて含む）
   photoIds?: string[]; // OR 条件（すべて含む）
   priceTier?: string;
+  albumId?: string;
   shootingAt?: DateRange;
   createdAt?: DateRange;
 };
@@ -81,7 +90,7 @@ export async function get(
   const command = new GetCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#PHOTO#META`,
+      pk: `PHOTO#FAC#${facilityCode}#META`,
       sk: photoId,
     },
   });
@@ -123,29 +132,44 @@ export async function create(
   const seq = await nextSequence(facilityCode);
   console.log("next sequenceId", seq);
 
-  const item = {
-    pk: `FAC#${facilityCode}#PHOTO#META`,
-    sk: photoId,
-    facilityCode: facilityCode,
-    photoId: photoId,
-    shootingAt: shootingAt,
-    shootingUserName: userName,
-    priceTier: priceTier,
-    sequenceId: seq,
-    status: PhotoConfig.STATUS.CREATE,
-    createdAt: nowISO,
-    createdBy: userId,
-    updatedAt: nowISO,
-    updatedBy: userId,
-    ...(tags && tags.length > 0 ? {tags} : {}),
-    ...(albums && albums.length > 0 ? {albums} : {}),
-  };
-
-  // コマンド実行
+  // 写真情報を保存
   await docClient().send(
     new PutCommand({
       TableName: PhotoConfig.TABLE_NAME,
-      Item: item,
+      Item: {
+        pk: `PHOTO#FAC#${facilityCode}#META`,
+        sk: photoId,
+        facilityCode: facilityCode,
+        photoId: photoId,
+        shootingAt: shootingAt,
+        shootingUserName: userName,
+        priceTier: priceTier,
+        sequenceId: seq,
+        status: PhotoConfig.STATUS.CREATE,
+        createdAt: nowISO,
+        createdBy: userId,
+        updatedAt: nowISO,
+        updatedBy: userId,
+        ...(tags && tags.length > 0 ? {tags} : {}),
+        ...(albums && albums.length > 0 ? {albums} : {}),
+        gsi1pk: `PHOTO#UNSOLD#EXPIRESAT`,
+        gsi1sk: new Date(
+          Date.now() + PhotoConfig.UNSOLD_EXPIRES_IN
+        ).toISOString(),
+      },
+      ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
+    })
+  );
+
+  // sequenceId 指定時の検索用に、紐付け情報を保存
+  await docClient().send(
+    new PutCommand({
+      TableName: PhotoConfig.TABLE_NAME,
+      Item: {
+        pk: `PHOTO#FAC#${facilityCode}#SEQ2PHOTO`,
+        sk: `SEQ#${seq}`,
+        photoId: photoId,
+      },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
     })
   );
@@ -207,7 +231,7 @@ export async function setPhotoMeta(
   const command = new UpdateCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#PHOTO#META`,
+      pk: `PHOTO#FAC#${facilityCode}#META`,
       sk: photoId,
     },
     UpdateExpression: `SET #lsi1 = :lsi1, #lsi2 = :lsi2, #lsi3 = :lsi3, #lsi4 = :lsi4, #status = :status, #width = :width, #height = :height, #salesSizeDl = :salesSizeDl, #salesSizePrint = :salesSizePrint, #shootingAt = :shootingAt, #updatedAt = :updatedAt`,
@@ -269,13 +293,67 @@ export async function list(facilityCode: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}#PHOTO#META`,
+      ":pk": `PHOTO#FAC#${facilityCode}#META`,
     },
   });
 
   // コマンド実行
   const result = await docClient().send(command);
   return result.Items;
+}
+
+/**
+ * Get photo IDs by sequence IDs.
+ *
+ * @param {string} facilityCode - facility code
+ * @param {string[]} sequenceIds - sequence IDs
+ * @returns {Promise<any[]>} - promise of array of photo IDs
+ */
+export async function getPhotoIdsBySeqs(
+  facilityCode: string,
+  sequenceIds: string[]
+) {
+  if (sequenceIds.length === 0) return [];
+
+  console.log("sequenceIds", sequenceIds);
+
+  const tableName = PhotoConfig.TABLE_NAME;
+  const pk = `PHOTO#FAC#${facilityCode}#SEQ2PHOTO`;
+  const allPhotoIds: string[] = [];
+
+  // BatchGet は 1回100件まで
+  const idChunks = chunk(sequenceIds, 100);
+
+  for (const ids of idChunks) {
+    let requestItems: Record<string, any> = {
+      [tableName]: {
+        Keys: ids.map((seq) => ({pk, sk: `SEQ#${seq}`})),
+        ProjectionExpression: "#photoId",
+        ExpressionAttributeNames: {
+          "#photoId": "photoId",
+        },
+      },
+    };
+
+    console.log("requestItems", requestItems);
+
+    // UnprocessedKeys がなくなるまで繰り返す
+    while (Object.keys(requestItems).length > 0) {
+      const res = await docClient().send(
+        new BatchGetCommand({RequestItems: requestItems})
+      );
+
+      const items = res.Responses?.[tableName] ?? [];
+      for (const item of items) {
+        if (item.photoId) {
+          allPhotoIds.push(item.photoId);
+        }
+      }
+      requestItems = res.UnprocessedKeys ?? {};
+    }
+  }
+
+  return allPhotoIds;
 }
 
 /**
@@ -288,7 +366,7 @@ async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#SEQ`,
+      pk: `SEQ#FAC#${facilityCode}`,
       sk: `PHOTO#COUNTER`,
     },
     // seq を 1 加算（存在しなければ 1 で作られる）
@@ -309,6 +387,19 @@ async function nextSequence(facilityCode: string): Promise<number> {
   return value;
 }
 
+/**
+ * Set albums for a photo.
+ * If addAlbums is not empty, it will add the albums to the photo.
+ * If delAlbums is not empty, it will delete the albums from the photo.
+ * If albumList is empty, it will set the albums to undefined.
+ * @param facilityCode The facility code of the photo.
+ * @param photoId The ID of the photo.
+ * @param addAlbums The albums to add to the photo.
+ * @param delAlbums The albums to delete from the photo.
+ * @param albumList The list of albums to set to the photo.
+ * @param userId The ID of the user who is setting the albums.
+ * @returns The result of the operation.
+ */
 export async function setAlbums(
   facilityCode: string,
   photoId: string,
@@ -321,24 +412,25 @@ export async function setAlbums(
   const TransactItems: any[] = [];
   // アルバム追加
   for (const album of addAlbums) {
+    // TransactItems.push({
+    //   Put: {
+    //     TableName: PhotoConfig.TABLE_NAME,
+    //     Item: {
+    //       pk: `FAC#${facilityCode}#PHOTO#${photoId}`,
+    //       sk: album,
+    //       albumId: album,
+    //       createdAt: nowISO,
+    //       createdBy: userId,
+    //     },
+    //   },
+    // });
     TransactItems.push({
       Put: {
         TableName: PhotoConfig.TABLE_NAME,
         Item: {
-          pk: `FAC#${facilityCode}#PHOTO#${photoId}`,
-          sk: album,
-          albumId: album,
-          createdAt: nowISO,
-          createdBy: userId,
-        },
-      },
-    });
-    TransactItems.push({
-      Put: {
-        TableName: PhotoConfig.TABLE_NAME,
-        Item: {
-          pk: `FAC#${facilityCode}#ALBUM#${album}`,
-          sk: photoId,
+          pk: `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+          sk: `ALBUM#${album}#PHOTO#${photoId}`,
+          lsi1: `PHOTO#${photoId}`,
           photoId: photoId,
           createdAt: nowISO,
           createdBy: userId,
@@ -349,21 +441,21 @@ export async function setAlbums(
 
   // アルバム削除
   for (const album of delAlbums) {
+    // TransactItems.push({
+    //   Delete: {
+    //     TableName: PhotoConfig.TABLE_NAME,
+    //     Key: {
+    //       pk: `FAC#${facilityCode}#PHOTO#${photoId}`,
+    //       sk: album,
+    //     },
+    //   },
+    // });
     TransactItems.push({
       Delete: {
         TableName: PhotoConfig.TABLE_NAME,
         Key: {
-          pk: `FAC#${facilityCode}#PHOTO#${photoId}`,
-          sk: album,
-        },
-      },
-    });
-    TransactItems.push({
-      Delete: {
-        TableName: PhotoConfig.TABLE_NAME,
-        Key: {
-          pk: `FAC#${facilityCode}#ALBUM#${album}`,
-          sk: photoId,
+          pk: `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+          sk: `ALBUM#${album}#PHOTO#${photoId}`,
         },
       },
     });
@@ -410,7 +502,7 @@ export async function setAlbums(
     Update: {
       TableName: PhotoConfig.TABLE_NAME,
       Key: {
-        pk: `FAC#${facilityCode}#PHOTO#META`,
+        pk: `PHOTO#FAC#${facilityCode}#META`,
         sk: photoId,
       },
       UpdateExpression,
@@ -432,14 +524,16 @@ export async function photoIdsByAlbumId(
 ): Promise<any> {
   const command = new QueryCommand({
     TableName: PhotoConfig.TABLE_NAME,
-    KeyConditionExpression: "#pk = :pk",
+    KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk)",
     ProjectionExpression: "#photoId",
     ExpressionAttributeNames: {
       "#pk": "pk",
+      "#sk": "sk",
       "#photoId": "photoId",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}#ALBUM#${albumId}`,
+      ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+      ":sk": `ALBUM#${albumId}#`,
     },
   });
 
@@ -458,7 +552,7 @@ export async function photoListBatchget(
       [PhotoConfig.TABLE_NAME]: {
         Keys: photoIds.map((photoId) => {
           return {
-            pk: `FAC#${facilityCode}#PHOTO#META`,
+            pk: `PHOTO#FAC#${facilityCode}#META`,
             sk: photoId,
           };
         }),
@@ -478,7 +572,7 @@ export async function photoListBatchgetAll(
   if (photoIds.length === 0) return [];
 
   const tableName = PhotoConfig.TABLE_NAME;
-  const pk = `FAC#${facilityCode}#PHOTO#META`;
+  const pk = `PHOTO#FAC#${facilityCode}#META`;
   const allItems: any[] = [];
 
   // BatchGet は 1回100件まで
@@ -512,8 +606,8 @@ export async function getPhotoByAlbumIdAndPhotoId(
   const command = new GetCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#${albumId}`,
-      sk: photoId,
+      pk: `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+      sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
     },
   });
 
@@ -677,4 +771,31 @@ export async function downloadAceptPhoto(
       await sleep(exp + jitter);
     }
   }
+}
+
+export async function setFirstSoldAt(facilityCode: string, photoIds: string[]) {
+  const nowISO = new Date().toISOString();
+
+  for (const photoId of photoIds) {
+    await docClient().send(
+      new UpdateCommand({
+        TableName: PhotoConfig.TABLE_NAME,
+        Key: {
+          pk: `PHOTO#FAC#${facilityCode}#META`,
+          sk: photoId,
+        },
+        UpdateExpression:
+          "SET #firstSoldAt = if_not_exists(#firstSoldAt, :now) REMOVE #gsi1pk, #gsi1sk",
+        ExpressionAttributeNames: {
+          "#firstSoldAt": "firstSoldAt",
+          "#gsi1pk": "gsi1pk",
+          "#gsi1sk": "gsi1sk",
+        },
+        ExpressionAttributeValues: {
+          ":now": nowISO,
+        },
+      })
+    );
+  }
+  // コマンド実行
 }

@@ -77,7 +77,9 @@ async function albumPublished(bucketName: string, keyPath: string) {
   console.log("photos", photos);
 
   // 4. 料金等を計算し、保護者向け情報に変換
+  const photoIds: string[] = [];
   const photosObj = photos.items.map((photo) => {
+    photoIds.push(photo.photoId);
     return {
       photoId: photo.photoId,
       sequenceId: photo.sequenceId,
@@ -137,7 +139,10 @@ async function albumPublished(bucketName: string, keyPath: string) {
     data.userId
   );
 
-  // 7. ナナポケへの通知が必要な場合は通知 ※データをS3Eventトリガー経由で送信
+  // 7 写真を販売実績アリへと変更
+  await Photo.setFirstSoldAt(data.facilityCode, photoIds);
+
+  // 8. ナナポケへの通知が必要な場合は通知 ※データをS3Eventトリガー経由で送信
   if (album.topicsSend) {
     console.log("album.topicsSend", album.topicsSend);
   }

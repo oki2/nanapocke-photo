@@ -69,6 +69,24 @@ export async function getPhotosByAlbumId(
   return photos;
 }
 
+export async function getPhotosBySequenceIds(
+  facilityCode: string,
+  sequenceIds: string[]
+) {
+  // 1. 対象のSequenceIdに属する写真一覧を取得
+  const photoIds = await PhotoModel.getPhotoIdsBySeqs(
+    facilityCode,
+    sequenceIds
+  );
+  console.log("photoIds", photoIds);
+
+  // // 2. バッチゲットで写真一覧を取得
+  const photos = await PhotoModel.photoListBatchgetAll(facilityCode, photoIds);
+  console.log("photos", photos);
+
+  return photos;
+}
+
 export function filterSortPagePhotos(
   photos: PhotoModel.Photo[],
   filter: PhotoModel.FilterOptions,
@@ -83,25 +101,38 @@ export function filterSortPagePhotos(
 
   // 1) filter
   const filtered = photos.filter((photo) => {
-    // PhotoID 指定チェック、もし指定がある場合、いずれも一致しないものは除外
-    if (filter.photoIds && filter.photoIds.length > 0) {
-      const hasAll = filter.photoIds.some(
-        (photoId) => photo.photoId === photoId
-      );
-      if (!hasAll) return false;
+    // PhotoID 指定チェック、もし指定がある場合、いずれも一致しないものは除外 ※ SequenceId 検索に変更したため不要
+    // if (filter.photoIds && filter.photoIds.length > 0) {
+    //   const hasAll = filter.photoIds.some(
+    //     (photoId) => photo.photoId === photoId
+    //   );
+    //   if (!hasAll) return false;
+    // }
+
+    // アルバムチェック ※ SequenceId に属する写真一覧を取得時のみ判定がある
+    if (filter.albumId) {
+      if (filter.albumId === "ALL") {
+      } else if (filter.albumId === "UNSET") {
+        if (photo.albums && photo.albums.length > 0) return false;
+      } else {
+        if (!photo.albums || photo.albums.length === 0) return false;
+        if (!photo.albums.includes(filter.albumId)) return false;
+      }
     }
 
     // 撮影者指定がある場合はチェック
-    if (filter.photographer && photo.createdBy !== filter.photographer)
+    if (filter.photographer && photo.createdBy !== filter.photographer) {
       return false;
+    }
 
     // 編集可能状態チェック
     if (
       filter.editability &&
       filter.editability === PhotoConfig.EDITABILITY.EDITABLE &&
       photo.status !== PhotoConfig.STATUS.ACTIVE
-    )
+    ) {
       return false;
+    }
 
     // 編集不可能状態チェック
     if (
@@ -109,8 +140,9 @@ export function filterSortPagePhotos(
       filter.editability === PhotoConfig.EDITABILITY.LOCKED &&
       photo.status !== PhotoConfig.STATUS.DELETED_LOGICAL &&
       photo.status !== PhotoConfig.STATUS.BULK_DELETED
-    )
+    ) {
       return false;
+    }
 
     // 価格帯チェック
     // if (filter.priceTier && photo.priceTier !== filter.priceTier) return false;

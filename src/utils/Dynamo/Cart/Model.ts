@@ -1,3 +1,11 @@
+/**
+ * CART
+ * lsi1 : カート内のソート用
+ * lsi2 : 販売可能期限 = アルバムの販売期限
+ * lsi3 : FAC#${facilityCode}#PHOTO#${photoId} 形式、写真削除実行時にカートから削除するため
+ * lsi4 : FAC#${facilityCode}#ALBUM#${albumId} 形式、アルバム強制販売終了時にカートから削除するため
+ */
+
 import {docClient} from "../dynamo";
 import {
   PutCommand,
@@ -10,7 +18,6 @@ import {
 import {CartConfig, PhotoConfig} from "../../../config";
 
 import * as Photo from "../Photo";
-import {PriceTable} from "../../../schemas/album";
 
 import {chunk, sleep} from "../../../libs/tool";
 
@@ -44,9 +51,12 @@ export async function add(
     const command = new PutCommand({
       TableName: CartConfig.TABLE_NAME,
       Item: {
-        pk: `FAC#${facilityCode}#CART#USER#${userId}`,
-        sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
+        pk: `CART`,
+        sk: `USER#${userId}#ALBUM#${albumId}#PHOTO#${photoId}`,
         lsi1: `${options.albumSequenceId}#${options.photoSequenceId}`,
+        lsi2: options.purchaseDeadline,
+        lsi3: `FAC#${facilityCode}#PHOTO#${photoId}`,
+        lsi4: `FAC#${facilityCode}#ALBUM#${albumId}`,
         facilityCode: facilityCode,
         albumId: albumId,
         photoId: photoId,
@@ -124,8 +134,8 @@ export async function edit(
   const command = new UpdateCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#CART#USER#${userId}`,
-      sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
+      pk: `CART`,
+      sk: `USER#${userId}#ALBUM#${albumId}#PHOTO#${photoId}`,
     },
     UpdateExpression: UpdateExpression,
     ExpressionAttributeNames: ExpressionAttributeNames,
@@ -164,7 +174,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}#CART#USER#${userId}`,
+      ":pk": `CART#USER#${userId}`,
     },
   });
 
@@ -182,7 +192,7 @@ export async function photoDelete(
   const command = new DeleteCommand({
     TableName: CartConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#CART#USER#${userId}`,
+      pk: `CART#USER#${userId}`,
       sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
     },
   });
@@ -208,7 +218,7 @@ export async function cleare(
         ProjectionExpression: `#pk, #sk`, // 取得コストを抑えるため、キーだけ取る（重要）
         ExpressionAttributeNames: {"#pk": "pk", "#sk": "sk"},
         ExpressionAttributeValues: {
-          ":pk": `FAC#${facilityCode}#CART#USER#${userId}`,
+          ":pk": `CART#USER#${userId}`,
         },
         ExclusiveStartKey: lastKey,
         Limit: 100,

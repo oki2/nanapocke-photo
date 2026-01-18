@@ -11,7 +11,7 @@ export async function get(facilityCode: string, albumId: string): Promise<any> {
   const command = new GetCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
   });
@@ -38,7 +38,7 @@ export async function create(
     new PutCommand({
       TableName: AlbumConfig.TABLE_NAME,
       Item: {
-        pk: `FAC#${facilityCode}#ALBUM#META`,
+        pk: `ALBUM#FAC#${facilityCode}#META`,
         sk: albumId,
         lsi1: nowISO,
         facilityCode: facilityCode,
@@ -90,7 +90,7 @@ export async function list(facilityCode: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}#ALBUM#META`,
+      ":pk": `ALBUM#FAC#${facilityCode}#META`,
     },
   });
 
@@ -114,7 +114,7 @@ export async function update(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
     UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
@@ -156,7 +156,7 @@ export async function setCoverImage(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
     UpdateExpression: `SET #coverImage = :coverImage, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
@@ -197,13 +197,15 @@ export async function photoCount(
   const result = await docClient().send(
     new QueryCommand({
       TableName: AlbumConfig.TABLE_NAME,
-      KeyConditionExpression: "#pk = :pk",
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk)",
       Select: "COUNT",
       ExpressionAttributeNames: {
         "#pk": "pk",
+        "#sk": "sk",
       },
       ExpressionAttributeValues: {
-        ":pk": `FAC#${facilityCode}#ALBUM#${albumId}`,
+        ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+        ":sk": `ALBUM#${albumId}#`,
       },
     })
   );
@@ -258,7 +260,7 @@ export async function actionSalesPublishing(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
     UpdateExpression: UpdateExpression,
@@ -313,7 +315,7 @@ export async function actionSalesPublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
     UpdateExpression: UpdateExpression,
@@ -366,7 +368,7 @@ export async function actionSalesUnpublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#ALBUM#META`,
+      pk: `ALBUM#FAC#${facilityCode}#META`,
       sk: albumId,
     },
     UpdateExpression: UpdateExpression,
@@ -384,7 +386,7 @@ async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}#SEQ`,
+      pk: `SEQ#FAC#${facilityCode}`,
       sk: `ALBUM#COUNTER`,
     },
     // seq を 1 加算（存在しなければ 1 で作られる）

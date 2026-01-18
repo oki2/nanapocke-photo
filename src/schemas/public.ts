@@ -259,7 +259,8 @@ export const PhotoFilters = v.object({
   albumId: v.union([FilterAlbum, common.AlbumId]),
   photographer: v.optional(v.string(), ""),
   tagQuery: v.optional(v.string(), ""),
-  photoIdQuery: v.optional(v.string(), ""),
+  // photoIdQuery: v.optional(v.string(), ""),  // sequenceId に置き換え
+  sequenceIdQuery: v.optional(v.string(), ""),
   dateType: v.optional(v.union([FilterDateType, v.literal("")]), ""),
   dateFrom: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
   dateTo: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
@@ -277,7 +278,15 @@ export const PhotoFilters = v.object({
     v.string(),
     v.regex(/^\d+$/, "数値のみを指定してください"),
     v.transform(Number),
-    v.number()
+    v.number(),
+    v.minValue(
+      PhotoConfig.FILTER_LIMIT.MIN,
+      `${PhotoConfig.FILTER_LIMIT.MIN}以上を指定してください`
+    ),
+    v.maxValue(
+      PhotoConfig.FILTER_LIMIT.MAX,
+      `${PhotoConfig.FILTER_LIMIT.MAX}以下を指定してください`
+    )
   ),
   cursor: v.optional(v.string()),
 });

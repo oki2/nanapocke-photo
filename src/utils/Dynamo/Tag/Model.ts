@@ -20,7 +20,7 @@ export async function historyAdd(
   const requestItems = tags.map((tag) => ({
     PutRequest: {
       Item: {
-        pk: `FAC#${facilityCode}#TAG#HISTORY`,
+        pk: `TAG#FAC#${facilityCode}#HISTORY`,
         sk: tag,
         tag,
         ttl,
@@ -52,7 +52,7 @@ export async function historyList(facilityCode: string): Promise<any> {
       "#tag": "tag",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}#TAG#HISTORY`,
+      ":pk": `TAG#FAC#${facilityCode}#HISTORY`,
     },
     Limit: TagConfig.TAG_LIMIT_PER_LIST,
   });
