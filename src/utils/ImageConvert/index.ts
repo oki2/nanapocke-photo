@@ -12,7 +12,7 @@ export async function PhotoConvertResizeSet(
   keyPath: string,
   facilityCode: string,
   userId: string,
-  photoId: string
+  photoId: string,
 ) {
   // 対象の画像をS3から取得
   const byteAry = await S3FileReadToByteArray(bucketName, keyPath);
@@ -44,8 +44,8 @@ export async function PhotoConvertResizeSet(
   const shootingAt = new Date(
     DateTime.replace(
       /^(\d{4}):(\d{2}):(\d{2}) (\d{2}:\d{2}:\d{2})$/,
-      "$1-$2-$3T$4"
-    )
+      "$1-$2-$3T$4",
+    ),
   );
   // UTCに変換
   shootingAt.setHours(shootingAt.getHours() - 9);
@@ -75,7 +75,7 @@ export async function PhotoConvertResizeSet(
     AppConfig.BUCKET_PHOTO_NAME,
     webpKeyPath,
     webpBf,
-    "image/webp"
+    "image/webp",
   );
 
   // ============================================================
@@ -110,7 +110,7 @@ export async function PhotoConvertResizeSet(
     `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
     finalBuffer,
     "image/jpeg",
-    StorageClass.STANDARD_IA
+    StorageClass.STANDARD_IA,
   );
   salesSizeDl.push(PhotoConfig.SALES_SIZE.DONWLOAD);
 
@@ -143,7 +143,7 @@ export async function PhotoConvertResizeSet(
       `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
       plBf,
       "image/jpeg",
-      StorageClass.STANDARD_IA
+      StorageClass.STANDARD_IA,
     );
     salesSizePrint.push(PhotoConfig.SALES_SIZE.PRINT_L);
   }
@@ -177,7 +177,7 @@ export async function PhotoConvertResizeSet(
       `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
       p2lBf,
       "image/jpeg",
-      StorageClass.STANDARD_IA
+      StorageClass.STANDARD_IA,
     );
     salesSizePrint.push(PhotoConfig.SALES_SIZE.PRINT_2L);
   }
@@ -189,7 +189,7 @@ export async function PhotoConvertResizeSet(
     keyPath,
     AppConfig.BUCKET_PHOTO_NAME,
     `original/${facilityCode}/${userId}/${photoId}`,
-    StorageClass.GLACIER_IR
+    StorageClass.GLACIER_IR,
   );
 
   const shootingAtISO = shootingAt.toISOString();
@@ -199,13 +199,13 @@ export async function PhotoConvertResizeSet(
   await Photo.setPhotoMeta(
     facilityCode,
     photoId,
-    `EDITABLE#${photo.createdAt}#${photoId}`,
-    `EDITABLE#${shootingAtISO}#${photoId}`,
+    `${PhotoConfig.STATUS.ACTIVE}#${photo.createdAt}#${photoId}`,
+    `${PhotoConfig.STATUS.ACTIVE}#${shootingAtISO}#${photoId}`,
     meta.width,
     meta.height,
     salesSizeDl,
     salesSizePrint,
-    shootingAtISO
+    shootingAtISO,
   );
 
   // ============================================================
@@ -217,19 +217,19 @@ export async function PhotoConvertResizeSet(
       photo.albums,
       [],
       photo.albums,
-      photo.createdBy
+      photo.createdBy,
     );
     console.log("tmp", tmp);
   }
 }
 
 async function getDateTimeExif(
-  byteAry: Uint8Array<ArrayBufferLike>
+  byteAry: Uint8Array<ArrayBufferLike>,
 ): Promise<string | undefined> {
   try {
     const buffer = byteAry.buffer.slice(
       byteAry.byteOffset,
-      byteAry.byteOffset + byteAry.byteLength
+      byteAry.byteOffset + byteAry.byteLength,
     );
 
     const tags = ExifReader.load(buffer, {expanded: true});

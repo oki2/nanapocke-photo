@@ -27,7 +27,7 @@ export async function create(
   title: string,
   description: string,
   priceTable: string,
-  salesPeriod: any | undefined
+  salesPeriod: any | undefined,
 ): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
   const albumId = crypto.randomUUID();
@@ -55,7 +55,7 @@ export async function create(
         updatedBy: userId,
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
+    }),
   );
 
   return {
@@ -106,7 +106,7 @@ export async function update(
   title: string,
   description: string,
   priceTable: string,
-  salesPeriod: any | undefined
+  salesPeriod: any | undefined,
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
 
@@ -148,7 +148,7 @@ export async function setCoverImage(
   facilityCode: string,
   albumId: string,
   coverImage: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
 
@@ -189,7 +189,7 @@ export async function setCoverImage(
  */
 export async function photoCount(
   facilityCode: string,
-  albumId: string
+  albumId: string,
 ): Promise<number> {
   const nowISO = new Date().toISOString();
 
@@ -207,7 +207,7 @@ export async function photoCount(
         ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
         ":sk": `ALBUM#${albumId}#`,
       },
-    })
+    }),
   );
   return result.Count ?? 0;
 }
@@ -226,7 +226,7 @@ export async function actionSalesPublishing(
   userId: string,
   topicsSend: boolean,
   topicsAcademicYear: string,
-  topicsClassReceivedList: string[]
+  topicsClassReceivedList: string[],
 ): Promise<void> {
   const nowISO = new Date().toISOString();
 
@@ -285,7 +285,7 @@ export async function actionSalesPublished(
   facilityCode: string,
   albumId: string,
   photoCount: number,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const nowISO = new Date().toISOString();
 
@@ -340,7 +340,7 @@ export async function actionSalesPublished(
 export async function actionSalesUnpublished(
   facilityCode: string,
   albumId: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const nowISO = new Date().toISOString();
 
@@ -405,4 +405,26 @@ async function nextSequence(facilityCode: string): Promise<number> {
   const value = result.Attributes?.sequenceId;
   if (!value) throw new Error("sequenceId not returned");
   return value;
+}
+
+export async function draftList(facilityCode: string): Promise<any> {
+  const command = new QueryCommand({
+    TableName: AlbumConfig.TABLE_NAME,
+    KeyConditionExpression: "#pk = :pk",
+    FilterExpression: "#salesStatus = :salesStatus",
+    ProjectionExpression: "#albumId",
+    ExpressionAttributeNames: {
+      "#pk": "pk",
+      "#salesStatus": "salesStatus",
+      "#albumId": "albumId",
+    },
+    ExpressionAttributeValues: {
+      ":pk": `ALBUM#FAC#${facilityCode}#META`,
+      ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Items;
 }

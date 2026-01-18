@@ -46,7 +46,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
 
     this.cfdVerifyToken = ssm.StringParameter.valueFromLookup(
       this,
-      params.CfdVerifyTokenPath
+      params.CfdVerifyTokenPath,
     );
 
     const functionPrefix = `${props.Config.ProjectName}-${props.Config.Stage}`;
@@ -68,7 +68,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         environment: {
           X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
         },
-      }
+      },
     );
     const AuthorizerPublicVerifyToken = new HttpLambdaAuthorizer(
       "AuthorizerPublicVerifyToken",
@@ -78,7 +78,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         identitySource: ["$request.header.x-origin-verify-token"],
         // 必要に応じてキャッシュを有効化
         resultsCacheTtl: cdk.Duration.seconds(60),
-      }
+      },
     );
 
     // Access Token : Principal（園長）を判定するオーソライザー
@@ -108,7 +108,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
     const AuthorizerPrincipalVeify = new HttpLambdaAuthorizer(
       "AuthorizerPrincipalVeify",
@@ -121,7 +121,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         ],
         // 必要に応じてキャッシュを有効化
         resultsCacheTtl: cdk.Duration.seconds(60),
-      }
+      },
     );
 
     // Access Token : 認証済みユーザーを判定するオーソライザー
@@ -151,7 +151,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
     const AuthorizerUserVeify = new HttpLambdaAuthorizer(
       "AuthorizerUserVeify",
@@ -164,7 +164,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         ],
         // 必要に応じてキャッシュを有効化
         resultsCacheTtl: cdk.Duration.seconds(60),
-      }
+      },
     );
 
     // Access Token : Guardian（保護者）を判定するオーソライザー
@@ -194,7 +194,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
     const AuthorizerGuardianlVeify = new HttpLambdaAuthorizer(
       "AuthorizerGuardianlVeify",
@@ -207,7 +207,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         ],
         // 必要に応じてキャッシュを有効化
         resultsCacheTtl: cdk.Duration.seconds(60),
-      }
+      },
     );
 
     // ==========================================================
@@ -231,7 +231,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "nanapockeAuthFn",
-        props.lambdaFnPublic.nanapockeAuthFn
+        props.lambdaFnPublic.nanapockeAuthFn,
       ),
       authorizer: AuthorizerPublicVerifyToken,
     });
@@ -242,7 +242,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AuthSigninIntegration",
-        props.lambdaFnPublic.authSigninFn
+        props.lambdaFnPublic.authSigninFn,
       ),
       authorizer: AuthorizerPublicVerifyToken,
     });
@@ -253,7 +253,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AuthRefreshIntegration",
-        props.lambdaFnPublic.authRefreshFn
+        props.lambdaFnPublic.authRefreshFn,
       ),
       authorizer: AuthorizerPublicVerifyToken,
     });
@@ -267,7 +267,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "PhotographerCreateIntegration",
-        props.lambdaFnPublic.photographerCreateFn
+        props.lambdaFnPublic.photographerCreateFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -278,7 +278,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PhotographerListIntegration",
-        props.lambdaFnPublic.photographerListFn
+        props.lambdaFnPublic.photographerListFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -289,7 +289,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.PATCH],
       integration: new HttpLambdaIntegration(
         "PhotographerEditIntegration",
-        props.lambdaFnPublic.photographerEditFn
+        props.lambdaFnPublic.photographerEditFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -303,7 +303,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "AlbumCreateIntegration",
-        props.lambdaFnPublic.albumCreateFn
+        props.lambdaFnPublic.albumCreateFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -314,7 +314,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "AlbumListIntegration",
-        props.lambdaFnPublic.albumListFn
+        props.lambdaFnPublic.albumListFn,
       ),
       authorizer: AuthorizerUserVeify,
     });
@@ -325,7 +325,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.PATCH],
       integration: new HttpLambdaIntegration(
         "AlbumUpdateIntegration",
-        props.lambdaFnPublic.albumUpdateFn
+        props.lambdaFnPublic.albumUpdateFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -336,7 +336,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "AlbumSetPhotoIntegration",
-        props.lambdaFnPublic.albumSalseFn
+        props.lambdaFnPublic.albumSalseFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -347,7 +347,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "AlbumPhotoListIntegration",
-        props.lambdaFnPublic.albumPhotoListFn
+        props.lambdaFnPublic.albumPhotoListFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -359,7 +359,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "PhotoUploadIntegration",
-        props.lambdaFnPublic.photoUploadFn
+        props.lambdaFnPublic.photoUploadFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -370,7 +370,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PhotoListIntegration",
-        props.lambdaFnPublic.photoListFn
+        props.lambdaFnPublic.photoListFn,
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // 写真のアルバム一括紐付け
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/photo/join/album",
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: new HttpLambdaIntegration(
+        "PhotoJoinAlbumIntegration",
+        props.lambdaFnPublic.photoJoinAlbumFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -381,7 +392,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "PhotoEditIntegration",
-        props.lambdaFnPublic.photoEditFn
+        props.lambdaFnPublic.photoEditFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -393,7 +404,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "MetaListIntegration",
-        props.lambdaFnPublic.metaListFn
+        props.lambdaFnPublic.metaListFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });
@@ -405,7 +416,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "CartAddIntegration",
-        props.lambdaFnPublic.cartAddFn
+        props.lambdaFnPublic.cartAddFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -416,7 +427,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "CartEditIntegration",
-        props.lambdaFnPublic.cartEditFn
+        props.lambdaFnPublic.cartEditFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -427,7 +438,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "CartListIntegration",
-        props.lambdaFnPublic.cartListFn
+        props.lambdaFnPublic.cartListFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -438,7 +449,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.DELETE],
       integration: new HttpLambdaIntegration(
         "CartPhotoDeleteIntegration",
-        props.lambdaFnPublic.cartPhotoDeleteFn
+        props.lambdaFnPublic.cartPhotoDeleteFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -449,7 +460,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "CartCheckoutIntegration",
-        props.lambdaFnPublic.cartCheckoutFn
+        props.lambdaFnPublic.cartCheckoutFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -461,7 +472,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PaymentListIntegration",
-        props.lambdaFnPublic.paymentListFn
+        props.lambdaFnPublic.paymentListFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -472,7 +483,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.GET],
       integration: new HttpLambdaIntegration(
         "PaymentDetailIntegration",
-        props.lambdaFnPublic.paymentDetailFn
+        props.lambdaFnPublic.paymentDetailFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
@@ -483,7 +494,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "SmbcCallbackIntegration",
-        props.lambdaFnPublic.smbcCallbackFn
+        props.lambdaFnPublic.smbcCallbackFn,
       ),
     });
 
@@ -492,7 +503,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration(
         "SmbcNotificationIntegration",
-        props.lambdaFnPublic.smbcNotificationFn
+        props.lambdaFnPublic.smbcNotificationFn,
       ),
     });
 

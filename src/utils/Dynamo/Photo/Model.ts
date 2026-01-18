@@ -6,7 +6,7 @@
  * lsi4 : アルバム未設定：撮影日ソート
  */
 
-import {docClient} from "../dynamo";
+import {docClient, batchWriteAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
@@ -22,7 +22,13 @@ import {PhotoConfig} from "../../../config";
 
 import * as User from "../User";
 
-import {chunk, sleep} from "../../../libs/tool";
+import {
+  chunk,
+  sleep,
+  decodeCursorToken,
+  encodeCursorToken,
+  makeQueryHash,
+} from "../../../libs/tool";
 
 export type Photo = {
   facilityCode: string;
@@ -48,7 +54,6 @@ export type DateRange = {
 
 export type FilterOptions = {
   photographer?: string;
-  editability?: string;
   tags?: string[]; // AND 条件（すべて含む）
   photoIds?: string[]; // OR 条件（すべて含む）
   priceTier?: string;
@@ -85,7 +90,7 @@ export type CursorPayload = {
 
 export async function get(
   facilityCode: string,
-  photoId: string
+  photoId: string,
 ): Promise<Record<string, any> | undefined> {
   const command = new GetCommand({
     TableName: PhotoConfig.TABLE_NAME,
@@ -102,7 +107,7 @@ export async function get(
 
 export async function getZipMeta(
   facilityCode: string,
-  zipId: string
+  zipId: string,
 ): Promise<Record<string, any> | undefined> {
   const command = new GetCommand({
     TableName: PhotoConfig.TABLE_NAME,
@@ -124,7 +129,7 @@ export async function create(
   shootingAt: string,
   priceTier: string,
   tags: string[],
-  albums: string[]
+  albums: string[],
 ): Promise<string> {
   const nowISO = new Date().toISOString();
   const photoId = crypto.randomUUID();
@@ -150,15 +155,15 @@ export async function create(
         createdBy: userId,
         updatedAt: nowISO,
         updatedBy: userId,
-        ...(tags && tags.length > 0 ? {tags} : {}),
-        ...(albums && albums.length > 0 ? {albums} : {}),
+        tags: tags,
+        albums: albums,
         gsi1pk: `PHOTO#UNSOLD#EXPIRESAT`,
         gsi1sk: new Date(
-          Date.now() + PhotoConfig.UNSOLD_EXPIRES_IN
+          Date.now() + PhotoConfig.UNSOLD_EXPIRES_IN,
         ).toISOString(),
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
+    }),
   );
 
   // sequenceId 指定時の検索用に、紐付け情報を保存
@@ -171,7 +176,7 @@ export async function create(
         photoId: photoId,
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
+    }),
   );
 
   return photoId;
@@ -184,7 +189,7 @@ export async function createZip(
   shootingAt: string,
   priceTier: string,
   tags: string[],
-  albums: string[]
+  albums: string[],
 ): Promise<string> {
   const nowISO = new Date().toISOString();
   const zipId = crypto.randomUUID();
@@ -205,11 +210,11 @@ export async function createZip(
         createdBy: userId,
         updatedAt: nowISO,
         updatedBy: userId,
-        ...(tags && tags.length > 0 ? {tags} : {}),
-        ...(albums && albums.length > 0 ? {albums} : {}),
+        tags: tags,
+        albums: albums,
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
+    }),
   );
 
   return zipId;
@@ -224,7 +229,7 @@ export async function setPhotoMeta(
   height: number,
   salesSizeDl: string[],
   salesSizePrint: string[],
-  shootingAt: string
+  shootingAt: string,
 ): Promise<Record<string, any> | undefined> {
   // コマンド生成
   const nowISO = new Date().toISOString();
@@ -311,7 +316,7 @@ export async function list(facilityCode: string): Promise<any> {
  */
 export async function getPhotoIdsBySeqs(
   facilityCode: string,
-  sequenceIds: string[]
+  sequenceIds: string[],
 ) {
   if (sequenceIds.length === 0) return [];
 
@@ -340,7 +345,7 @@ export async function getPhotoIdsBySeqs(
     // UnprocessedKeys がなくなるまで繰り返す
     while (Object.keys(requestItems).length > 0) {
       const res = await docClient().send(
-        new BatchGetCommand({RequestItems: requestItems})
+        new BatchGetCommand({RequestItems: requestItems}),
       );
 
       const items = res.Responses?.[tableName] ?? [];
@@ -406,7 +411,7 @@ export async function setAlbums(
   addAlbums: string[],
   delAlbums: string[],
   albumList: string[],
-  userId: string
+  userId: string,
 ): Promise<any> {
   const nowISO = new Date().toISOString();
   const TransactItems: any[] = [];
@@ -513,14 +518,14 @@ export async function setAlbums(
 
   // コマンド実行
   const result = await docClient().send(
-    new TransactWriteCommand({TransactItems: TransactItems})
+    new TransactWriteCommand({TransactItems: TransactItems}),
   );
   return result;
 }
 
 export async function photoIdsByAlbumId(
   facilityCode: string,
-  albumId: string
+  albumId: string,
 ): Promise<any> {
   const command = new QueryCommand({
     TableName: PhotoConfig.TABLE_NAME,
@@ -545,7 +550,7 @@ export async function photoIdsByAlbumId(
 
 export async function photoListBatchget(
   facilityCode: string,
-  photoIds: string[]
+  photoIds: string[],
 ): Promise<any> {
   const command = new BatchGetCommand({
     RequestItems: {
@@ -567,7 +572,7 @@ export async function photoListBatchget(
 
 export async function photoListBatchgetAll(
   facilityCode: string,
-  photoIds: string[]
+  photoIds: string[],
 ): Promise<any[]> {
   if (photoIds.length === 0) return [];
 
@@ -588,7 +593,7 @@ export async function photoListBatchgetAll(
     // UnprocessedKeys がなくなるまで繰り返す
     while (Object.keys(requestItems).length > 0) {
       const res = await docClient().send(
-        new BatchGetCommand({RequestItems: requestItems})
+        new BatchGetCommand({RequestItems: requestItems}),
       );
       allItems.push(...(res.Responses?.[tableName] ?? []));
       requestItems = res.UnprocessedKeys ?? {};
@@ -601,7 +606,7 @@ export async function photoListBatchgetAll(
 export async function getPhotoByAlbumIdAndPhotoId(
   facilityCode: string,
   albumId: string,
-  photoId: string
+  photoId: string,
 ) {
   const command = new GetCommand({
     TableName: PhotoConfig.TABLE_NAME,
@@ -616,13 +621,31 @@ export async function getPhotoByAlbumIdAndPhotoId(
   return result.Item;
 }
 
-export async function queryPhotos(
-  keys: any,
-  indexName: string,
-  scanIndexForward: boolean,
-  filter: FilterOptions,
-  page: PageOptions = {}
-): Promise<QueryCommandOutput> {
+export const QueryTypes = {
+  OBJECT: "OBJECT",
+  COUNT: "COUNT",
+  ID_ONLY: "ID_ONLY",
+} as const;
+
+type queryPhotosOptions = {
+  type?: "OBJECT" | "COUNT" | "ID_ONLY";
+  keys: {
+    pkValue: string;
+    skName: string;
+  };
+  indexName: string;
+  scanIndexForward: boolean;
+  filter: FilterOptions;
+  page: PageOptions;
+};
+export async function queryPhotos({
+  type = "OBJECT",
+  keys,
+  indexName,
+  scanIndexForward,
+  filter,
+  page,
+}: queryPhotosOptions): Promise<QueryCommandOutput> {
   // // 排他チェック（仕様通り）
   // if (shootingAt && createdAt) {
   //   throw new Error("shootingAt と createdAt は同時指定できません。");
@@ -633,10 +656,10 @@ export async function queryPhotos(
 
   // ---- KeyConditionExpression ----
   const KeyConditionExpression = "#pk = :pk AND begins_with(#sk, :sk)";
-  ExpressionAttributeNames["#pk"] = keys.pk.name;
-  ExpressionAttributeValues[":pk"] = keys.pk.value;
-  ExpressionAttributeNames["#sk"] = keys.sk.name;
-  ExpressionAttributeValues[":sk"] = keys.sk.value;
+  ExpressionAttributeNames["#pk"] = "pk";
+  ExpressionAttributeValues[":pk"] = keys.pkValue;
+  ExpressionAttributeNames["#sk"] = keys.skName;
+  ExpressionAttributeValues[":sk"] = `${PhotoConfig.STATUS.ACTIVE}#`;
 
   // ---- FilterExpression ----
   const filters: string[] = [];
@@ -657,9 +680,6 @@ export async function queryPhotos(
     ExpressionAttributeNames["#createdBy"] = "createdBy";
     ExpressionAttributeValues[":createdBy"] = filter.photographer;
   }
-
-  // status
-  // lsi1、lsi2 で、ソートと一緒に判定する
 
   // shootingAt / createdAt: Range（attribute は文字列ソート可能な形式を想定）
   let rangeAttr = "";
@@ -689,12 +709,26 @@ export async function queryPhotos(
     KeyConditionExpression,
     ExpressionAttributeNames,
     ExpressionAttributeValues,
-    Limit: page.limit,
-    // ExclusiveStartKey: exclusiveStartKey,
   };
 
   if (filters.length > 0) {
     input.FilterExpression = filters.join(" AND ");
+  }
+
+  // photoId のみ取得
+  switch (type) {
+    case QueryTypes.ID_ONLY:
+      input.ProjectionExpression = "#photoId";
+      ExpressionAttributeNames["#photoId"] = "photoId";
+      break;
+    case QueryTypes.COUNT:
+      input.Select = "COUNT";
+      break;
+    case QueryTypes.OBJECT:
+    default:
+      input.Limit = page.limit ?? PhotoConfig.FILTER_LIMIT.MAX;
+      // input.ExclusiveStartKey: exclusiveStartKey,
+      break;
   }
 
   console.log("input", input);
@@ -710,7 +744,7 @@ export async function downloadAceptPhoto(
   facilityCode: string,
   userId: string,
   photoIds: string[],
-  expiredAt: string
+  expiredAt: string,
 ) {
   const nowISO = new Date().toISOString();
   const ttl = Math.floor(new Date(expiredAt).getTime() / 1000) + 15552000; // 有効期限切れの半年後にレコード消す
@@ -761,7 +795,7 @@ export async function downloadAceptPhoto(
       // リトライ上限超え → 漏れを防ぐため例外
       if (attempt === MAX_RETRIES) {
         throw new Error(
-          `BatchWriteCommand failed after retries. UnprocessedItems=${unprocessed.length} (table=${PhotoConfig.TABLE_NAME})`
+          `BatchWriteCommand failed after retries. UnprocessedItems=${unprocessed.length} (table=${PhotoConfig.TABLE_NAME})`,
         );
       }
 
@@ -794,8 +828,307 @@ export async function setFirstSoldAt(facilityCode: string, photoIds: string[]) {
         ExpressionAttributeValues: {
           ":now": nowISO,
         },
-      })
+      }),
     );
   }
   // コマンド実行
+}
+
+// ========================================================= //
+type SetAlbumsOneParams = {
+  facilityCode: string;
+  photoId: string;
+  addAlbums: string[]; // 追加したい albumId
+  delAlbums: string[]; // 削除したい albumId
+  userId: string;
+};
+
+export async function setAlbumsOnePhotoSafe(p: SetAlbumsOneParams) {
+  const nowISO = new Date().toISOString();
+
+  // 1) JOIN 更新（Put/Delete）: 冪等寄り（同じものが来ても壊れない）
+  const joinPk = `JOIN#ALBUM2PHOTO#FAC#${p.facilityCode}`;
+
+  const reqs: Array<{PutRequest?: any; DeleteRequest?: any}> = [];
+
+  // 追加関連
+  for (const albumId of p.addAlbums) {
+    reqs.push({
+      PutRequest: {
+        Item: {
+          pk: joinPk,
+          sk: `ALBUM#${albumId}#PHOTO#${p.photoId}`,
+          lsi1: `PHOTO#${p.photoId}`,
+          photoId: p.photoId,
+          albumId: albumId,
+          createdAt: nowISO,
+          createdBy: p.userId,
+        },
+      },
+    });
+  }
+
+  // 削除関連
+  for (const albumId of p.delAlbums) {
+    reqs.push({
+      DeleteRequest: {
+        Key: {
+          pk: joinPk,
+          sk: `ALBUM#${albumId}#PHOTO#${p.photoId}`,
+        },
+      },
+    });
+  }
+
+  // JOIN更新が無ければ飛ばす
+  if (reqs.length > 0) {
+    await batchWriteAll(PhotoConfig.TABLE_NAME, reqs, docClient());
+  }
+
+  // 2) JOIN から albumIds 再生成（LSIで photoId をキーにQuery）
+  const joinRes = await docClient().send(
+    new QueryCommand({
+      TableName: PhotoConfig.TABLE_NAME,
+      IndexName: "lsi1_index",
+      KeyConditionExpression: "#pk = :pk AND #lsi1 = :lsi1",
+      ProjectionExpression: "#albumId",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#lsi1": "lsi1",
+        "#albumId": "albumId",
+      },
+      ExpressionAttributeValues: {
+        ":pk": joinPk,
+        ":lsi1": `PHOTO#${p.photoId}`,
+      },
+    }),
+  );
+
+  const albumIds = (joinRes.Items ?? []).map((it: any) => it.albumId);
+  console.log("albumIds", albumIds);
+
+  // 3) META 更新
+  // lsi3/lsi4 に lsi1/lsi2 を入れる必要があるので、
+  // 「Updateだけで同一アイテム内コピーはできない」→ 安全寄りに Get して値を取得
+  const metaKey = {
+    pk: `PHOTO#FAC#${p.facilityCode}#META`,
+    sk: p.photoId,
+  };
+
+  // lsi1/lsi2 は必須想定
+  const metaRes = await docClient().send(
+    new GetCommand({
+      TableName: PhotoConfig.TABLE_NAME,
+      Key: metaKey,
+      ProjectionExpression: "lsi1, lsi2",
+    }),
+  );
+  const meta = metaRes.Item as {lsi1?: string; lsi2?: string} | undefined;
+  if (!meta?.lsi1 || !meta?.lsi2) {
+    throw new Error("photo meta not found or missing lsi1/lsi2");
+  }
+
+  const isUnassigned = albumIds.length === 0;
+
+  // albums は常に配列で持つ（おすすめ：APIレスポンスが安定）
+  if (isUnassigned) {
+    await docClient().send(
+      new UpdateCommand({
+        TableName: PhotoConfig.TABLE_NAME,
+        Key: metaKey,
+        UpdateExpression: "SET #albums = :albums, #lsi3 = :lsi3, #lsi4 = :lsi4",
+        ExpressionAttributeNames: {
+          "#albums": "albums",
+          "#lsi3": "lsi3",
+          "#lsi4": "lsi4",
+        },
+        ExpressionAttributeValues: {
+          ":albums": [],
+          ":lsi3": meta.lsi1,
+          ":lsi4": meta.lsi2,
+        },
+      }),
+    );
+  } else {
+    await docClient().send(
+      new UpdateCommand({
+        TableName: PhotoConfig.TABLE_NAME,
+        Key: metaKey,
+        UpdateExpression: "SET #albums = :albums REMOVE #lsi3, #lsi4",
+        ExpressionAttributeNames: {
+          "#albums": "albums",
+          "#lsi3": "lsi3",
+          "#lsi4": "lsi4",
+        },
+        ExpressionAttributeValues: {
+          ":albums": albumIds,
+        },
+      }),
+    );
+  }
+  return;
+}
+
+// ====================================================
+// ChatGPT で整理したバージョン
+
+type QueryBaseOptions = {
+  keys: {pkValue: string; skName: string};
+  indexName: string;
+  scanIndexForward: boolean;
+  filter: FilterOptions;
+};
+
+type QueryPhotosPageOptions = QueryBaseOptions & {
+  page: PageOptions;
+};
+
+export type QueryPhotosPageResult<TItem> = {
+  items: TItem[];
+  nextCursor?: string; // 次ページがある時だけ返す
+};
+
+function buildPhotoQueryInput(opts: QueryBaseOptions): QueryCommandInput {
+  const ExpressionAttributeNames: Record<string, string> = {};
+  const ExpressionAttributeValues: Record<string, any> = {};
+
+  const KeyConditionExpression = "#pk = :pk AND begins_with(#sk, :sk)";
+  ExpressionAttributeNames["#pk"] = "pk";
+  ExpressionAttributeValues[":pk"] = opts.keys.pkValue;
+  ExpressionAttributeNames["#sk"] = opts.keys.skName;
+  ExpressionAttributeValues[":sk"] = `${PhotoConfig.STATUS.ACTIVE}#`;
+
+  const filters: string[] = [];
+
+  if (opts.filter.tags?.length) {
+    ExpressionAttributeNames["#tags"] = "tags";
+    opts.filter.tags.forEach((t, i) => {
+      const v = `:tag${i}`;
+      ExpressionAttributeValues[v] = t;
+      filters.push(`contains(#tags, ${v})`);
+    });
+  }
+
+  if (opts.filter.photographer) {
+    ExpressionAttributeNames["#createdBy"] = "createdBy";
+    ExpressionAttributeValues[":createdBy"] = opts.filter.photographer;
+    filters.push("#createdBy = :createdBy");
+  }
+
+  let rangeAttr = "";
+  let from = "";
+  let to = "";
+
+  if (opts.filter.createdAt) {
+    rangeAttr = "createdAt";
+    from = opts.filter.createdAt.from ?? "";
+    to = opts.filter.createdAt.to ?? "";
+  } else if (opts.filter.shootingAt) {
+    rangeAttr = "shootingAt";
+    from = opts.filter.shootingAt.from ?? "";
+    to = opts.filter.shootingAt.to ?? "";
+  }
+
+  if (rangeAttr && from && to) {
+    ExpressionAttributeNames["#term"] = rangeAttr;
+    ExpressionAttributeValues[":from"] = from;
+    ExpressionAttributeValues[":to"] = to;
+    filters.push("#term BETWEEN :from AND :to");
+  }
+
+  const input: QueryCommandInput = {
+    TableName: PhotoConfig.TABLE_NAME,
+    IndexName: opts.indexName,
+    ScanIndexForward: opts.scanIndexForward,
+    KeyConditionExpression,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+  };
+
+  if (filters.length) input.FilterExpression = filters.join(" AND ");
+  return input;
+}
+
+export async function countPhotosAll(opts: QueryBaseOptions): Promise<number> {
+  let total = 0;
+  let ExclusiveStartKey: Record<string, any> | undefined;
+
+  do {
+    const input = buildPhotoQueryInput(opts);
+    input.Select = "COUNT";
+    input.ExclusiveStartKey = ExclusiveStartKey;
+
+    const res = await docClient().send(new QueryCommand(input));
+    total += res.Count ?? 0;
+    ExclusiveStartKey = res.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+
+  return total;
+}
+
+export async function listPhotoIdsAll(
+  opts: QueryBaseOptions,
+): Promise<string[]> {
+  const ids: string[] = [];
+  let ExclusiveStartKey: Record<string, any> | undefined;
+
+  do {
+    const input = buildPhotoQueryInput(opts);
+    input.ProjectionExpression = "#photoId";
+    input.ExpressionAttributeNames!["#photoId"] = "photoId";
+    input.ExclusiveStartKey = ExclusiveStartKey;
+
+    const res = await docClient().send(new QueryCommand(input));
+    for (const item of res.Items ?? []) {
+      if (typeof item.photoId === "string") ids.push(item.photoId);
+    }
+    ExclusiveStartKey = res.LastEvaluatedKey;
+  } while (ExclusiveStartKey);
+
+  return ids;
+}
+
+export async function queryPhotosPage<TItem extends Record<string, any>>(
+  opts: QueryPhotosPageOptions,
+): Promise<QueryPhotosPageResult<TItem>> {
+  // この queryHash を cursor に埋める（検索条件が同一か検証する）
+  const qh = makeQueryHash({
+    keys: opts.keys,
+    indexName: opts.indexName,
+    scanIndexForward: opts.scanIndexForward,
+    filter: opts.filter,
+    // limit はページング条件ではあるが「別 limit の cursor を使うのはOK」にしたいなら含めない
+    // 厳密にしたいなら page.limit も入れてください
+  });
+
+  const input: QueryCommandInput = buildPhotoQueryInput(opts);
+
+  // limit
+  input.Limit = opts.page.limit ?? PhotoConfig.FILTER_LIMIT.MAX;
+
+  // cursor -> ExclusiveStartKey
+  if (opts.page.cursor) {
+    const token = decodeCursorToken(opts.page.cursor);
+
+    if (token.qh !== qh) {
+      // 条件が違うのに cursor を流用された
+      throw new Error("Cursor does not match query conditions.");
+    }
+
+    input.ExclusiveStartKey = token.lek as Record<string, any>;
+  }
+
+  const res = await docClient().send(new QueryCommand(input));
+
+  const items = (res.Items ?? []) as TItem[];
+
+  // nextCursor 作成（次ページがある場合のみ）
+  const nextCursor = res.LastEvaluatedKey
+    ? encodeCursorToken({
+        lek: res.LastEvaluatedKey as Record<string, unknown>,
+        qh,
+      })
+    : undefined;
+
+  return {items, nextCursor};
 }

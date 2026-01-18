@@ -23,7 +23,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // console.log("authContext", authContext);
 
   // 1. クエリストリングチェック code を取得 ==============================================
-  // const query = parseOrThrow(PhotoFilters, event.queryStringParameters ?? {});
+  // const query = parseOrThrow(PhotoSelect, event.queryStringParameters ?? {});
   // console.log("query", query);
 
   // 2. formデータを取得、判定 ==============================================================
@@ -44,7 +44,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // SMBCの結果をパース
   const smbcResult: SmbcResultPayload = JSON.parse(
-    Buffer.from(payloadB64Url, "base64url").toString()
+    Buffer.from(payloadB64Url, "base64url").toString(),
   );
   console.log("smbcResult", smbcResult);
 

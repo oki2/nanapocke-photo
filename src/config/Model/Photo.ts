@@ -42,8 +42,19 @@ export const SALES_SIZE = {
 };
 
 export const FILTER_LIMIT = {
-  MIN: 10,
+  MIN: 1,
   MAX: 50,
 };
 
 export const UNSOLD_EXPIRES_IN = 60 * 24 * 60 * 60 * 1000; // 未販売のまま経過日数を過ぎたら削除対象 ミリ秒なので 1000倍する
+
+export const PHOTO_JOIN_SCOPE = {
+  CHECKED: "CHECKED",
+  FILTER: "FILTER",
+} as const;
+
+export const PHOTO_JOIN_ALBUM = {
+  ADD: "ADD",
+  REPLACE: "REPLACE",
+  REMOVE: "REMOVE",
+} as const;

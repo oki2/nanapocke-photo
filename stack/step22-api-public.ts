@@ -99,7 +99,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // フォトグラファーログイン
@@ -146,7 +146,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // Refresh
@@ -199,7 +199,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // === 各種アクション === //
@@ -240,7 +240,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // フォトグラファー一覧取得
@@ -269,7 +269,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // フォトグラファーの編集
@@ -304,7 +304,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.NanapockeUserTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // === アルバム関連 === //
@@ -341,7 +341,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [`${props.bucketUpload.bucketArn}/album-image-upload/*`],
           }),
         ],
-      }
+      },
     );
 
     // アルバム一覧の取得
@@ -370,7 +370,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // アルバム情報の更新
@@ -402,7 +402,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [`${props.bucketUpload.bucketArn}/album-image-upload/*`],
           }),
         ],
-      }
+      },
     );
 
     // アルバムの販売状況の編集
@@ -440,7 +440,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // 指定した販売中アルバムの写真一覧を取得
@@ -472,7 +472,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [`${props.bucketPhoto.bucketArn}/sales/*`],
           }),
         ],
-      }
+      },
     );
 
     // === 写真関連 === //
@@ -517,7 +517,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // 写真一覧の取得
@@ -549,7 +549,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // 写真の情報を編集（アルバムIDの紐付けに利用）
@@ -584,7 +584,43 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
+    );
+
+    // 写真のアルバム一括紐付け
+    this.lambdaFn.photoJoinAlbumFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoJoinAlbumFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoJoinAlbum`,
+        description: `${functionPrefix}-ApiPublicPhotoJoinAlbum`,
+        entry: "src/handlers/api.public.photo.join.album.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 512,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:Query",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+        ],
+      },
     );
 
     // === メタ情報関連 === //
@@ -687,7 +723,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.MainTable.tableArn],
           }),
         ],
-      }
+      },
     );
 
     // カート内の購入枚数の変更
@@ -761,7 +797,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // 購入履歴関連 ================================================================
@@ -791,7 +827,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     // 購入履歴詳細の取得
@@ -823,7 +859,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [`${props.bucketPhoto.bucketArn}/paymentLog/*`],
           }),
         ],
-      }
+      },
     );
 
     // SMBC 関連 ================================================================
@@ -873,7 +909,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     ); // SMBC からの通知
     this.lambdaFn.smbcNotificationFn = new NodejsFunction(
       this,
@@ -934,7 +970,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [props.queueMain.queueArn],
           }),
         ],
-      }
+      },
     );
   }
 }

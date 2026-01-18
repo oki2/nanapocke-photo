@@ -41,7 +41,7 @@ function compareBy(field: PhotoModel.SortField, order: PhotoModel.SortOrder) {
 
 function isAfterCursor(
   photo: PhotoModel.Photo,
-  cursor: PhotoModel.CursorPayload
+  cursor: PhotoModel.CursorPayload,
 ): boolean {
   const t = new Date(photo[cursor.field]).getTime();
 
@@ -56,7 +56,7 @@ function isAfterCursor(
 
 export async function getPhotosByAlbumId(
   facilityCode: string,
-  albumId: string
+  albumId: string,
 ) {
   // 1. 対象のアルバムに属する写真一覧を取得
   const photoIds = await PhotoModel.photoIdsByAlbumId(facilityCode, albumId);
@@ -71,12 +71,12 @@ export async function getPhotosByAlbumId(
 
 export async function getPhotosBySequenceIds(
   facilityCode: string,
-  sequenceIds: string[]
+  sequenceIds: string[],
 ) {
   // 1. 対象のSequenceIdに属する写真一覧を取得
   const photoIds = await PhotoModel.getPhotoIdsBySeqs(
     facilityCode,
-    sequenceIds
+    sequenceIds,
   );
   console.log("photoIds", photoIds);
 
@@ -91,7 +91,7 @@ export function filterSortPagePhotos(
   photos: PhotoModel.Photo[],
   filter: PhotoModel.FilterOptions,
   sort: PhotoModel.SortOptions,
-  page: PhotoModel.PageOptions = {}
+  page: PhotoModel.PageOptions = {},
 ): PhotoModel.PageResult<PhotoModel.Photo> {
   const sortField = sort.field;
   const sortOrder = sort.order;
@@ -125,22 +125,8 @@ export function filterSortPagePhotos(
       return false;
     }
 
-    // 編集可能状態チェック
-    if (
-      filter.editability &&
-      filter.editability === PhotoConfig.EDITABILITY.EDITABLE &&
-      photo.status !== PhotoConfig.STATUS.ACTIVE
-    ) {
-      return false;
-    }
-
-    // 編集不可能状態チェック
-    if (
-      filter.editability &&
-      filter.editability === PhotoConfig.EDITABILITY.LOCKED &&
-      photo.status !== PhotoConfig.STATUS.DELETED_LOGICAL &&
-      photo.status !== PhotoConfig.STATUS.BULK_DELETED
-    ) {
+    // 編集可能状態チェック ACTIVE 以外は除外
+    if (photo.status !== PhotoConfig.STATUS.ACTIVE) {
       return false;
     }
 

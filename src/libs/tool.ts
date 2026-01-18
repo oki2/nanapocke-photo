@@ -1,5 +1,7 @@
 import {UserConfig} from "../config";
 
+import crypto from "crypto";
+
 /**
  * 文字列で取得したタグを、配列に分割する
  * @param {string} tagStr
@@ -20,7 +22,7 @@ export function photoIdSplitter(photoIdStr: string): string[] {
       photoIdStr
         .trim()
         .split(/[ ,#　]+/)
-        .filter(Boolean)
+        .filter(Boolean),
     ),
   ];
 }
@@ -36,7 +38,7 @@ export function albumIdSplitter(albumIdStr: string): string[] {
       albumIdStr
         .trim()
         .split(/[ ,#　]+/)
-        .filter(Boolean)
+        .filter(Boolean),
     ),
   ];
 }
@@ -47,7 +49,7 @@ export function albumIdSplitter(albumIdStr: string): string[] {
  */
 export function getAacademicYearJST(): number {
   const now = new Date(
-    new Date().toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"})
+    new Date().toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"}),
   );
 
   const year = now.getFullYear();
@@ -72,8 +74,8 @@ export function nextUtc17(dateUtc: Date): Date {
       17,
       0,
       0,
-      0
-    )
+      0,
+    ),
   );
 
   // 指定時刻が 17:00 より前 → 当日
@@ -90,8 +92,8 @@ export function nextUtc17(dateUtc: Date): Date {
       17,
       0,
       0,
-      0
-    )
+      0,
+    ),
   );
 }
 
@@ -115,7 +117,7 @@ export function sleep(ms: number) {
 export function thumbnailAllowedPath(
   $facilityCode: string,
   $role: string,
-  $userId: string
+  $userId: string,
 ): string {
   switch ($role) {
     case UserConfig.ROLE.PRINCIPAL:
@@ -127,4 +129,59 @@ export function thumbnailAllowedPath(
     default:
       return "/";
   }
+}
+
+function base64urlEncode(str: string): string {
+  return Buffer.from(str, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function base64urlDecode(b64url: string): string {
+  const pad =
+    b64url.length % 4 === 0 ? "" : "=".repeat(4 - (b64url.length % 4));
+  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  return Buffer.from(b64, "base64").toString("utf8");
+}
+
+function stableJsonStringify(obj: unknown): string {
+  // キー順を安定化（簡易版）
+  const sort = (v: any): any => {
+    if (Array.isArray(v)) return v.map(sort);
+    if (v && typeof v === "object") {
+      return Object.keys(v)
+        .sort()
+        .reduce((acc: any, k) => {
+          acc[k] = sort(v[k]);
+          return acc;
+        }, {});
+    }
+    return v;
+  };
+  return JSON.stringify(sort(obj));
+}
+
+export function makeQueryHash(input: unknown): string {
+  const s = stableJsonStringify(input);
+  return crypto.createHash("sha256").update(s).digest("hex");
+}
+
+type CursorToken = {
+  lek: Record<string, unknown>;
+  qh: string;
+};
+
+export function encodeCursorToken(token: CursorToken): string {
+  return base64urlEncode(JSON.stringify(token));
+}
+
+export function decodeCursorToken(cursor: string): CursorToken {
+  const json = base64urlDecode(cursor);
+  const parsed = JSON.parse(json);
+  if (!parsed || typeof parsed !== "object") throw new Error("Invalid cursor");
+  if (!("lek" in parsed) || !("qh" in parsed))
+    throw new Error("Invalid cursor");
+  return parsed as CursorToken;
 }

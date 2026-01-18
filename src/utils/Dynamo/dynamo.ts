@@ -1,5 +1,5 @@
 import {DynamoDBClient} from "@aws-sdk/client-dynamodb";
-import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb";
+import {DynamoDBDocumentClient, BatchWriteCommand} from "@aws-sdk/lib-dynamodb";
 import {AppConfig} from "../../config";
 
 let _doc: DynamoDBDocumentClient | null = null;
@@ -10,4 +10,30 @@ export function docClient(): DynamoDBDocumentClient {
     _doc = DynamoDBDocumentClient.from(client);
   }
   return _doc;
+}
+
+export async function batchWriteAll(
+  tableName: string,
+  requests: Array<{PutRequest?: any; DeleteRequest?: any}>,
+  docClient: any,
+) {
+  // 25件ずつ
+  for (let i = 0; i < requests.length; i += 25) {
+    let chunk = requests.slice(i, i + 25);
+
+    // UnprocessedItems が無くなるまでリトライ
+    while (chunk.length > 0) {
+      const res = await docClient.send(
+        new BatchWriteCommand({
+          RequestItems: {[tableName]: chunk},
+        }),
+      );
+
+      chunk = res.UnprocessedItems?.[tableName] ?? [];
+      if (chunk.length > 0) {
+        // 軽いバックオフ（安全寄り）
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }
+  }
 }

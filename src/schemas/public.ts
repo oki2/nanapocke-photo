@@ -20,7 +20,7 @@ export const SalesPeriod = v.pipe(
       return true;
     }
     return new Date(end).getTime() > new Date(start).getTime();
-  }, "end は start より後の日時を指定してください")
+  }, "end は start より後の日時を指定してください"),
 );
 export type SalesPeriodT = v.InferOutput<typeof SalesPeriod>;
 
@@ -56,13 +56,13 @@ export const AlbumSalesStart = v.pipe(
     //   classReceivedList: v.array(nanapocke.ClassCode),
     //   academicYear: nanapocke.AcademicYear,
     // }),
-  })
+  }),
 );
 
 export const AlbumSalesStop = v.pipe(
   v.object({
     action: v.literal(AlbumConfig.SALES_ACTION.STOP),
-  })
+  }),
 );
 
 /**
@@ -112,7 +112,7 @@ export const AuthSigninBody = v.pipe(
     facilityCode: nanapocke.FacilityCode,
     userName: common.Name,
     password: v.pipe(v.string(), v.minLength(1)),
-  })
+  }),
 );
 export type AuthSigninBodyT = v.InferOutput<typeof AuthSigninBody>;
 
@@ -133,7 +133,7 @@ export const AlbumCreateBody = v.pipe(
     }),
     coverImageFileName: v.optional(v.string(), ""),
     copyFromAlbumId: v.optional(v.union([common.AlbumId, v.literal("")]), ""),
-  })
+  }),
 );
 export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
 
@@ -143,7 +143,7 @@ export const AlbumCreateResponse = v.pipe(
     albumId: common.AlbumId,
     title: v.pipe(v.string(), v.minLength(1)),
     url: v.optional(common.Url),
-  })
+  }),
 );
 export type AlbumCreateResponseT = v.InferOutput<typeof AlbumCreateResponse>;
 
@@ -172,7 +172,7 @@ export const AlbumPathParameters = v.pipe(
   v.object({
     facilityCode: nanapocke.FacilityCode,
     albumId: common.AlbumId,
-  })
+  }),
 );
 
 // api.public.album.photo.list : response
@@ -196,7 +196,7 @@ export const AlbumEditBody = v.pipe(
     priceTable: PriceTable,
     salesPeriod: SalesPeriod,
     coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
-  })
+  }),
 );
 export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;
 
@@ -216,7 +216,7 @@ export const PhotoUploadBody = v.pipe(
     albums: v.optional(v.array(common.AlbumId), []),
     fileType: common.PhotoUploadFileType,
     fileName: v.pipe(v.string(), v.minLength(1)),
-  })
+  }),
 );
 export type PhotoUploadBodyT = v.InferOutput<typeof PhotoUploadBody>;
 
@@ -224,56 +224,44 @@ export type PhotoUploadBodyT = v.InferOutput<typeof PhotoUploadBody>;
 export const PhotoUploadResponse = v.pipe(
   v.object({
     url: v.pipe(v.string(), v.minLength(1)),
-  })
+  }),
 );
 export type PhotoUploadResponseT = v.InferOutput<typeof PhotoUploadResponse>;
-
-// api.public.photo.edit : pathParameters
-export const PhotoPathParameters = v.pipe(
-  v.object({
-    facilityCode: nanapocke.FacilityCode,
-    photoId: common.PhotoId,
-  })
-);
-
-// api.public.photo.edit : request
-export const PhotoEditBody = v.pipe(
-  v.object({
-    album: v.object({
-      mode: v.picklist(["CHANGE"]),
-      albums: v.array(v.pipe(v.string(), v.minLength(1))),
-    }),
-  })
-);
 
 // api.public.photo.list : request query
 export const FilterAlbum = v.picklist(["ALL", "UNSET"]);
 export const FilterDateType = v.picklist(Object.values(PhotoConfig.DATE_TYPE));
 export const FilterEditability = v.picklist(
-  Object.values(PhotoConfig.EDITABILITY)
+  Object.values(PhotoConfig.EDITABILITY),
 );
 export const FilterPhotoPriceTier = v.picklist(
-  Object.values(PhotoConfig.PRICE_TIER)
+  Object.values(PhotoConfig.PRICE_TIER),
 );
-export const PhotoFilters = v.object({
+
+const PhotoFilter = v.object({
   albumId: v.union([FilterAlbum, common.AlbumId]),
   photographer: v.optional(v.string(), ""),
-  tagQuery: v.optional(v.string(), ""),
+  tags: v.optional(v.string(), ""),
   // photoIdQuery: v.optional(v.string(), ""),  // sequenceId に置き換え
-  sequenceIdQuery: v.optional(v.string(), ""),
+  sequenceIds: v.optional(v.string(), ""),
   dateType: v.optional(v.union([FilterDateType, v.literal("")]), ""),
   dateFrom: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
   dateTo: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
-  // priceTier: FilterPhotoPriceTier,
-  editability: v.optional(FilterEditability, PhotoConfig.EDITABILITY.EDITABLE),
+});
+const PhotoSort = v.object({
   sortKey: v.optional(
     v.picklist(Object.values(PhotoConfig.SORT_KEY)),
-    PhotoConfig.SORT_KEY.UPLOAD
+    PhotoConfig.SORT_KEY.UPLOAD,
   ),
   sortOrder: v.optional(
     v.picklist(Object.values(PhotoConfig.SORT_ORDER)),
-    PhotoConfig.SORT_ORDER.DESC
+    PhotoConfig.SORT_ORDER.DESC,
   ),
+});
+
+export const PhotoSelect = v.object({
+  ...PhotoFilter.entries,
+  ...PhotoSort.entries,
   limit: v.pipe(
     v.string(),
     v.regex(/^\d+$/, "数値のみを指定してください"),
@@ -281,12 +269,12 @@ export const PhotoFilters = v.object({
     v.number(),
     v.minValue(
       PhotoConfig.FILTER_LIMIT.MIN,
-      `${PhotoConfig.FILTER_LIMIT.MIN}以上を指定してください`
+      `${PhotoConfig.FILTER_LIMIT.MIN}以上を指定してください`,
     ),
     v.maxValue(
       PhotoConfig.FILTER_LIMIT.MAX,
-      `${PhotoConfig.FILTER_LIMIT.MAX}以下を指定してください`
-    )
+      `${PhotoConfig.FILTER_LIMIT.MAX}以下を指定してください`,
+    ),
   ),
   cursor: v.optional(v.string()),
 });
@@ -310,13 +298,74 @@ export const PhotoListResponse = v.object({
         shootingAt: common.ISODateTime,
         shootingUserName: common.Name,
         createdAt: common.ISODateTime,
-      })
-    )
+      }),
+    ),
   ),
   totalItems: v.number(),
   nextCursor: v.string(),
 });
 export type PhotoListResponseT = v.InferOutput<typeof PhotoListResponse>;
+
+// api.public.photo.edit : pathParameters
+export const PhotoPathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+    photoId: common.PhotoId,
+  }),
+);
+
+// api.public.photo.edit : request
+export const PhotoEditBody = v.pipe(
+  v.object({
+    album: v.object({
+      mode: v.picklist(["CHANGE"]),
+      albums: v.array(v.pipe(v.string(), v.minLength(1))),
+    }),
+  }),
+);
+
+// api.public.photo.join.album : pathParameters
+export const FacilityCodePathParameters = v.pipe(
+  v.object({
+    facilityCode: nanapocke.FacilityCode,
+  }),
+);
+
+// api.public.photo.join.album : requestBody
+const PhotoJoinScopeModeChecked = v.object({
+  mode: v.literal(PhotoConfig.PHOTO_JOIN_SCOPE.CHECKED),
+  selectedIds: v.array(common.PhotoId),
+});
+const PhotoJoinScopeModeFilter = v.object({
+  mode: v.literal(PhotoConfig.PHOTO_JOIN_SCOPE.FILTER),
+  filters: PhotoFilter,
+});
+const PhotoJoinScopeMode = v.variant("mode", [
+  PhotoJoinScopeModeChecked,
+  PhotoJoinScopeModeFilter,
+]);
+
+const PhotoJoinAlbumModeAdd = v.object({
+  mode: v.picklist([
+    PhotoConfig.PHOTO_JOIN_ALBUM.ADD,
+    PhotoConfig.PHOTO_JOIN_ALBUM.REMOVE,
+  ]),
+  albums: v.array(common.AlbumId),
+});
+const PhotoJoinAlbumModeReplace = v.object({
+  mode: v.literal(PhotoConfig.PHOTO_JOIN_ALBUM.REPLACE),
+  from: common.AlbumId,
+  to: common.AlbumId,
+});
+const PhotoJoinAlbumMode = v.variant("mode", [
+  PhotoJoinAlbumModeAdd,
+  PhotoJoinAlbumModeReplace,
+]);
+
+export const PhotoJoinAlbumBody = v.object({
+  scope: PhotoJoinScopeMode,
+  album: PhotoJoinAlbumMode,
+});
 
 // api.public.meta.list : response
 const MetaAlbum = v.object({
@@ -373,7 +422,7 @@ const PhotographerExpireDate = v.pipe(
   }),
   v.check(({from, to}) => {
     return new Date(to).getTime() > new Date(from).getTime();
-  }, "to は from より後の日時を指定してください")
+  }, "to は from より後の日時を指定してください"),
 );
 
 export const PhotographerCreateBody = v.object({
@@ -395,7 +444,7 @@ export const PhotographerCreateResponse = v.pipe(
   v.object({
     userCode: common.AccountPhotographerId,
     userName: v.pipe(v.string(), v.minLength(1)),
-  })
+  }),
 );
 
 export type PhotographerCreateResponseT = v.InferOutput<
@@ -416,7 +465,7 @@ const PhotographerDetail = v.pipe(
       from: v.union([common.ISODateTime, v.literal("")]),
       to: v.union([common.ISODateTime, v.literal("")]),
     }),
-  })
+  }),
 );
 export const PhotographerList = v.array(PhotographerDetail);
 export type PhotographerListT = v.InferOutput<typeof PhotographerList>;
@@ -426,7 +475,7 @@ export const PhotographerPathParameters = v.pipe(
   v.object({
     facilityCode: nanapocke.FacilityCode,
     photographerId: common.UserId,
-  })
+  }),
 );
 
 // api.public.photographer.edit : request body
@@ -444,7 +493,7 @@ export const PhotographerEditBody = v.pipe(
       return false;
     }
     return true;
-  }, "password を入力してください")
+  }, "password を入力してください"),
 );
 
 // api.public.cart.add : request

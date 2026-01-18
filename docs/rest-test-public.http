@@ -74,7 +74,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバム",
+  "title": "テストアルバム2",
   "description": "アルバムの説明",
   "copyFromAlbumId": "",
   "coverImageFileName": "test.jpg",
@@ -98,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 5d05d00f-3558-4fb4-ada4-917861049ac5
+@albumId = ecb1acde-271a-45c5-b60f-3fa703b78963
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -127,9 +127,8 @@ Authorization: Bearer {{accessToken}}
   "fileType": "IMAGE",
   "fileName": "test.jpg",
   "priceTier": "STANDARD",
-  "albums": ["{{albumId}}"],
-  "shootingAt": "2025-11-16T00:00:00+09:00",
-  "tags": "TAG-A,TAG-あいうえお#イベント"
+  "tags": "TAG-A,TAG-あいうえお#イベント",
+  "shootingAt": "2025-11-16T00:00:00+09:00"
 }
 
 ### 画像ファイルを実際に送信
@@ -163,33 +162,50 @@ PUT {{photoZipUploadUrl.response.body.$.url}} HTTP/1.1
 
 ### 写真一覧：全件取得
 #GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=100 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム未設定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=10&photographer=87e45ab8-1011-7058-4926-d62187f4bfe1 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=10 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=10&sortOrder=DESC HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：シーケンス番号指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=2&sortOrder=DESC&sequenceIdQuery=33,34,35 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=10&sortOrder=DESC&sequenceIds=8,9,10,11 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
 @photoId = 7a1ca146-c497-4f14-8b3c-1eed246db830
 
-# ### アルバムへ写真設定する
-# # @name photoUploadUrl
-# PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo HTTP/1.1
-# content-type: application/json
-# Authorization: Bearer {{accessToken}}
+### 写真のアルバム一括紐付け
+# @name photoUploadUrl
+PUT https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/join/album HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
-# {
-#   "photoId": "{{photoId}}"
-# }
+{
+  "scope": {
+    "mode": "CHECKED",
+    "selectedIds": [
+      "a5fa1090-f538-4823-acb5-7120ceda9b8f",
+      "7c553af5-829d-4c43-8c80-4efd1a37f0df"
+    ],
+    "filters": {
+      "albumId": "ALL",
+      "photographer": "ALL"
+    }
+  },
+  "album": {
+    "mode": "ADD",
+    "albums": [
+      "{{albumId}}"
+    ]
+  }
+}
+
 
 ### 写真編集（アルバムの設定設定）
 ## @name photoUploadUrl
