@@ -283,7 +283,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
-    // フォトグラファー 一覧
+    // フォトグラファー 編集
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/photographer/{photographerId}",
       methods: [apigwv2.HttpMethod.PATCH],

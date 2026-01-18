@@ -162,7 +162,7 @@ PUT {{photoZipUploadUrl.response.body.$.url}} HTTP/1.1
 
 ### 写真一覧：全件取得
 #GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=20 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム未設定
@@ -188,7 +188,7 @@ Authorization: Bearer {{accessToken}}
 
 {
   "scope": {
-    "mode": "CHECKED",
+    "mode": "FILTER",
     "selectedIds": [
       "a5fa1090-f538-4823-acb5-7120ceda9b8f",
       "7c553af5-829d-4c43-8c80-4efd1a37f0df"
