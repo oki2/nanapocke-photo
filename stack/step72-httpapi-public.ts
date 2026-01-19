@@ -387,12 +387,24 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     });
 
     // 写真の情報を編集（アルバムIDの紐付けに利用）
+    // ※削除予定
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/photo/{photoId}",
       methods: [apigwv2.HttpMethod.PUT],
       integration: new HttpLambdaIntegration(
         "PhotoEditIntegration",
         props.lambdaFnPublic.photoEditFn,
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // 写真ダウンロード
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/photo/{photoId}/download",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PhotoDownloadIntegration",
+        props.lambdaFnPublic.photoDownloadFn,
       ),
       authorizer: AuthorizerPrincipalVeify,
     });

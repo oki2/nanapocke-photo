@@ -623,6 +623,38 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       },
     );
 
+    // 写真のダウンロード
+    this.lambdaFn.photoDownloadFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoDownloadFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoDownload`,
+        description: `${functionPrefix}-ApiPublicPhotoDownload`,
+        entry: "src/handlers/api.public.photo.download.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 1024,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketPhoto.bucketArn}/storage/photo/*`],
+          }),
+        ],
+      },
+    );
+
     // === メタ情報関連 === //
     // メタ情報一覧取得
     this.lambdaFn.metaListFn = new NodejsFunction(this, "ApiPublicMetaListFn", {

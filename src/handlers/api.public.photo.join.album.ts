@@ -46,6 +46,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     case PhotoConfig.PHOTO_JOIN_ALBUM.REMOVE:
       delAlbums.push(...data.album.albums);
       break;
+    case PhotoConfig.PHOTO_JOIN_ALBUM.SET:
+      // ※実装は後で
+      break;
   }
 
   // 3. 写真IDを取得

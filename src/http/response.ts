@@ -31,7 +31,7 @@ function json(
   status: number,
   body: unknown,
   headers?: Headers,
-  cookies?: Cookies
+  cookies?: Cookies,
 ): APIGatewayProxyStructuredResultV2 {
   const merged = {...DEFAULT_HEADERS, ...(headers || {})};
   // requestId があればヘッダにも反映（下位で付与可）
@@ -47,6 +47,26 @@ function json(
   };
 }
 
+export function binary(
+  status: number,
+  buffer: Buffer,
+  contentType: string,
+  headers?: Headers,
+  cookies?: Cookies,
+): APIGatewayProxyStructuredResultV2 {
+  return {
+    statusCode: status,
+    headers: {
+      ...headers,
+      "Content-Type": contentType,
+      "Content-Length": buffer.length.toString(),
+    },
+    cookies,
+    isBase64Encoded: true,
+    body: buffer.toString("base64"),
+  };
+}
+
 /** ---- 成功系ヘルパー ---- */
 export const ok = (data: unknown, headers?: Headers, cookies?: Cookies) =>
   json(200, data, headers, cookies);
@@ -57,15 +77,17 @@ export const created = (location: string, data?: unknown, headers?: Headers) =>
 export const seeOther = (
   location: string,
   headers?: Headers,
-  cookies?: Cookies
+  cookies?: Cookies,
 ) => json(303, {ok: true}, {...headers, Location: location}, cookies);
 
 export const noContent = (
-  headers?: Headers
+  headers?: Headers,
 ): APIGatewayProxyStructuredResultV2 => ({
   statusCode: 204,
   headers: {...DEFAULT_HEADERS, ...(headers || {})},
 });
+
+export const imageJpeg = (buffer: Buffer) => binary(200, buffer, "image/jpeg");
 
 /** ---- 旧関数互換（必要なら残す） ---- */
 export const badRequest = (issues: Record<string, string>) =>
@@ -107,7 +129,7 @@ export const serverError = (message = "Internal Server Error") =>
 export function problem(
   status: number,
   p: Omit<ProblemJson, "status">,
-  headers?: Headers
+  headers?: Headers,
 ) {
   return json(status, {...p, status}, headers);
 }
@@ -250,7 +272,7 @@ function mapAwsToHttp(e: AwsSdkLikeError) {
         detail: e.message,
         requestId,
       },
-      entry.headers
+      entry.headers,
     );
   }
 
@@ -292,7 +314,7 @@ export function toApiError(
     requestId?: string;
     instance?: string;
     log?: (msg: string, meta?: any) => void;
-  }
+  },
 ): APIGatewayProxyStructuredResultV2 {
   const log = opts?.log ?? console.error;
   const requestId = opts?.requestId;
@@ -324,7 +346,7 @@ export function toApiError(
 /** ---- ハンドラを包む HOF：毎回try/catch不要 ---- */
 type AnyHandler = (
   event: any,
-  ctx: any
+  ctx: any,
 ) => Promise<APIGatewayProxyStructuredResultV2 | void | undefined>;
 
 export function withHttp(handler: AnyHandler): AnyHandler {

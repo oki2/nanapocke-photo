@@ -385,6 +385,34 @@ const doc = {
       },
     },
 
+    "/api/facility/{facilityCode}/photo/download": {
+      get: {
+        tags: ["Photo"],
+        summary: "写真のダウンロード",
+        parameters: [
+          {
+            name: "facilityCode",
+            in: "path",
+            required: true,
+            schema: toJsonSchemaSafe(SchemaPublic.PhotoPathParameters), // もしくは components 参照
+          },
+        ],
+        responses: {
+          "200": {
+            description: "写真のダウンロード成功",
+            content: {
+              "image/jpeg": {
+                schema: {
+                  type: "string",
+                  format: "binary",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
     "/api/facility/{facilityCode}/meta/list": {
       get: {
         tags: ["Other"],

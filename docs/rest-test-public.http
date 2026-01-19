@@ -178,7 +178,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = 7a1ca146-c497-4f14-8b3c-1eed246db830
+@photoId = a5fa1090-f538-4823-acb5-7120ceda9b8f
 
 ### 写真のアルバム一括紐付け
 # @name photoUploadUrl
@@ -205,6 +205,12 @@ Authorization: Bearer {{accessToken}}
     ]
   }
 }
+
+### 写真のダウンロード
+## @name photoUploadUrl
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/{{photoId}}/download HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
 
 
 ### 写真編集（アルバムの設定設定）

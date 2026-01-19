@@ -57,4 +57,5 @@ export const PHOTO_JOIN_ALBUM = {
   ADD: "ADD",
   REPLACE: "REPLACE",
   REMOVE: "REMOVE",
+  SET: "SET",
 } as const;

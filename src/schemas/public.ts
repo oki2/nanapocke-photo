@@ -349,6 +349,7 @@ const PhotoJoinAlbumModeAdd = v.object({
   mode: v.picklist([
     PhotoConfig.PHOTO_JOIN_ALBUM.ADD,
     PhotoConfig.PHOTO_JOIN_ALBUM.REMOVE,
+    PhotoConfig.PHOTO_JOIN_ALBUM.SET,
   ]),
   albums: v.array(common.AlbumId),
 });
