@@ -206,19 +206,20 @@ export async function PhotoConvertResizeSet(
     salesSizeDl,
     salesSizePrint,
     shootingAtISO,
+    photo.createdBy,
+    photo.createdAt,
   );
 
   // ============================================================
   // 7. アルバム指定がある場合は、写真とアルバムの紐付け情報を登録
   if (photo.albums?.length > 0) {
-    const tmp = await Photo.setAlbums(
-      facilityCode,
-      photoId,
-      photo.albums,
-      [],
-      photo.albums,
-      photo.createdBy,
-    );
+    const tmp = await Photo.setAlbumsOnePhotoSafe({
+      facilityCode: facilityCode,
+      photoId: photoId,
+      addAlbums: photo.albums,
+      delAlbums: [],
+      userId: photo.createdBy,
+    });
     console.log("tmp", tmp);
   }
 }

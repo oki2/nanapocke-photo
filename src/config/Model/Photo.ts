@@ -3,9 +3,13 @@ export const STATUS = {
   CREATE: "CREATE",
   ACTIVE: "ACTIVE",
   DELETED_LOGICAL: "DELETED_LOGICAL",
-  DELETED_PENDING_PURGE: "DELETED_PENDING_PURGE",
-  BULK_DELETED: "BULK_DELETED",
   PURGED: "PURGED",
+};
+
+export const LOGICAL_DELETE_TYPE = {
+  MANUAL: "MANUAL",
+  NOT_SALES: "NOT_SALES",
+  YEAR_PROSESSING: "YEAR_PROSESSING",
 };
 
 export const PRICE_TIER = {
@@ -47,6 +51,8 @@ export const FILTER_LIMIT = {
 };
 
 export const UNSOLD_EXPIRES_IN = 60 * 24 * 60 * 60 * 1000; // 未販売のまま経過日数を過ぎたら削除対象 ミリ秒なので 1000倍する
+
+export const PURGED_IN_DAYS = 70; // 論理削除後、物理削除までの日数
 
 export const PHOTO_JOIN_SCOPE = {
   CHECKED: "CHECKED",

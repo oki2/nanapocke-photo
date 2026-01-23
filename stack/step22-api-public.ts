@@ -332,8 +332,12 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:PutItem",
               "dynamodb:UpdateItem",
               "dynamodb:Query",
+              "dynamodb:BatchWriteItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -443,6 +447,47 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       },
     );
 
+    // アルバムの削除
+    this.lambdaFn.albumDeleteFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumDeleteFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumDelete`,
+        description: `${functionPrefix}-ApiPublicAlbumDelete`,
+        entry: "src/handlers/api.public.album.delete.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 512,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:Query",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:DeleteObject"],
+            resources: [`${props.bucketUpload.bucketArn}/thumbnail/album/*`],
+          }),
+        ],
+      },
+    );
+
     // 指定した販売中アルバムの写真一覧を取得
     this.lambdaFn.albumPhotoListFn = new NodejsFunction(
       this,
@@ -546,6 +591,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               `${props.MainTable.tableArn}/index/lsi2_index`,
               `${props.MainTable.tableArn}/index/lsi3_index`,
               `${props.MainTable.tableArn}/index/lsi4_index`,
+              `${props.MainTable.tableArn}/index/lsi5_index`,
             ],
           }),
         ],
@@ -650,6 +696,52 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:GetObject"],
             resources: [`${props.bucketPhoto.bucketArn}/storage/photo/*`],
+          }),
+        ],
+      },
+    );
+
+    // 写真の手動削除
+    this.lambdaFn.photoDeleteFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoDeleteFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoDelete`,
+        description: `${functionPrefix}-ApiPublicPhotoDelete`,
+        entry: "src/handlers/api.public.photo.delete.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 1024,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:UpdateItem",
+              "dynamodb:Query",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [`${props.bucketPhoto.bucketArn}/assets/*`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [`${props.bucketPhoto.bucketArn}/thumbnail/*`],
           }),
         ],
       },

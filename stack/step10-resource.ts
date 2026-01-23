@@ -3,6 +3,7 @@ import {Construct} from "constructs";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {Bucket, ObjectOwnership} from "aws-cdk-lib/aws-s3";
+import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 import {Queue} from "aws-cdk-lib/aws-sqs";
 
 export interface Props extends cdk.StackProps {
@@ -49,7 +50,7 @@ export class Step10ResourceStack extends cdk.Stack {
             noncurrentVersionExpiration: cdk.Duration.days(1),
           },
         ],
-      }
+      },
     );
 
     // 写真用Bucket
@@ -78,8 +79,18 @@ export class Step10ResourceStack extends cdk.Stack {
         //     noncurrentVersionExpiration: cdk.Duration.days(1),
         //   },
         // ],
-      }
+      },
     );
+
+    // S3に保管するリソースを一括で配置
+    new s3deploy.BucketDeployment(this, "DeployAssetsFiles", {
+      destinationBucket: this.bucketPhoto,
+      destinationKeyPrefix: "assets/", // S3上の配置先 prefix（任意）
+      sources: [
+        s3deploy.Source.asset("src/resource/assets/no-image.zip"), // Zip で固める必要がある no-image.webp という画像削除時の画像を配置する
+      ],
+      // retainOnDelete: false,
+    });
 
     //====================================
     // SQS
@@ -124,10 +135,10 @@ export class Step10ResourceStack extends cdk.Stack {
         encodedKey: ssm.StringParameter.valueForStringParameter(
           this,
           props.Config.CloudFront.PublicKey.Thumbnail.ParameterStoreKeyPath
-            .Public
+            .Public,
         ),
         publicKeyName: `${props.Config.ProjectName}-${props.Config.Stage}-PublicKeyThumbnailUrl`,
-      }
+      },
     );
 
     // KeyGroup ===========================================
@@ -137,7 +148,7 @@ export class Step10ResourceStack extends cdk.Stack {
       {
         items: [this.cfPublicKeyThumbnailUrl],
         keyGroupName: "cfKeyGroupNanaPhoto",
-      }
+      },
     );
   }
 }

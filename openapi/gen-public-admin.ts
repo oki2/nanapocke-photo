@@ -245,6 +245,38 @@ const doc = {
           },
         },
       },
+      delete: {
+        tags: ["Album"],
+        summary: "アルバム削除",
+        parameters: [
+          {
+            name: "facilityCode",
+            in: "path",
+            required: true,
+            schema: toJsonSchemaSafe(SchemaPublic.AlbumPathParameters), // もしくは components 参照
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {$ref: "#/components/schemas/AlbumEditBody"},
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "アルバ削除除成功",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ResultOK",
+                },
+              },
+            },
+          },
+        },
+      },
     },
 
     "/api/facility/{facilityCode}/album/{albumId}/sales": {
@@ -385,7 +417,7 @@ const doc = {
       },
     },
 
-    "/api/facility/{facilityCode}/photo/download": {
+    "/api/facility/{facilityCode}/photo/{photoId}/download": {
       get: {
         tags: ["Photo"],
         summary: "写真のダウンロード",
@@ -405,6 +437,33 @@ const doc = {
                 schema: {
                   type: "string",
                   format: "binary",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    "/api/facility/{facilityCode}/photo/{photoId}": {
+      get: {
+        tags: ["Photo"],
+        summary: "写真の削除",
+        parameters: [
+          {
+            name: "facilityCode",
+            in: "path",
+            required: true,
+            schema: toJsonSchemaSafe(SchemaPublic.PhotoPathParameters), // もしくは components 参照
+          },
+        ],
+        responses: {
+          "200": {
+            description: "写真の削除成功",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ResultOK",
                 },
               },
             },

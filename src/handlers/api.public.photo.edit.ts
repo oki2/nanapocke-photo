@@ -53,14 +53,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
 
   // 6. DynamoDB に写真とアルバムの紐付け情報を登録
-  await Photo.setAlbums(
-    authContext.facilityCode,
-    path.photoId,
-    addAlbums,
-    delAlbums,
-    data.album.albums,
-    authContext.userId
-  );
+  await Photo.setAlbumsOnePhotoSafe({
+    facilityCode: authContext.facilityCode,
+    photoId: path.photoId,
+    addAlbums: addAlbums,
+    delAlbums: delAlbums,
+    userId: authContext.userId,
+  });
 
   // 3. レスポンス
   return http.ok(parseOrThrow(ResultOK, {ok: true}));

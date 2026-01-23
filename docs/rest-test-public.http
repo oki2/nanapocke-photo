@@ -18,7 +18,7 @@ POST https://{{customDomainName}}/api/auth/signin HTTP/1.1
 content-type: application/json
 
 {
-  "userName":"Photo001",
+  "userName":"Photo003",
   "password":"test1234",
   "facilityCode":"{{facilityCode}}"
 }
@@ -34,10 +34,10 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "userCode": "Photo002",
+  "userCode": "Photo003",
   "password": "test1234",
-  "userName": "フォトグラファー2",
-  "description": "説明2",
+  "userName": "フォトグラファー3",
+  "description": "説明3",
   "expire": {
     "mode": "DATE",
     "from": "2025-12-16T00:00:00Z",
@@ -74,8 +74,8 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバム2",
-  "description": "アルバムの説明",
+  "title": "テストアルバム6",
+  "description": "アルバムの説明6",
   "copyFromAlbumId": "",
   "coverImageFileName": "test.jpg",
   "salesPeriod": {
@@ -98,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = ecb1acde-271a-45c5-b60f-3fa703b78963
+@albumId = 77529ce9-6d53-4a60-a04f-0b5770650373
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -116,6 +116,13 @@ Authorization: Bearer {{accessToken}}
     "end": "2026-12-19T00:00:00Z"
   }
 }
+
+### アルバム削除
+# @name albumImageUploadUrl
+DELETE https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
 
 ### 写真追加（画像ファイル版）
 # @name photoUploadUrl
@@ -170,7 +177,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=20&sortOrder=DESC HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：シーケンス番号指定
@@ -178,7 +185,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = a5fa1090-f538-4823-acb5-7120ceda9b8f
+@photoId = 9e705ebd-01e4-4949-8acf-d6a15af22b48
 
 ### 写真のアルバム一括紐付け
 # @name photoUploadUrl
@@ -209,6 +216,12 @@ Authorization: Bearer {{accessToken}}
 ### 写真のダウンロード
 ## @name photoUploadUrl
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/{{photoId}}/download HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 写真の削除
+## @name photoUploadUrl
+DELETE  https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/{{photoId}} HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 

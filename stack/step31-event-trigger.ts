@@ -79,9 +79,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
             actions: [
               "dynamodb:UpdateItem",
               "dynamodb:GetItem",
+              "dynamodb:Query",
               "dynamodb:PutItem",
+              "dynamodb:BatchWriteItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -98,7 +103,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     new Rule(this, "EventPhotoUpload-Rule", {
@@ -172,7 +177,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
             resources: [props.queuePhotoConvert.queueArn],
           }),
         ],
-      }
+      },
     );
 
     new Rule(this, "EventPhotoZipUpload-Rule", {
@@ -265,7 +270,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
             resources: [`${props.bucketPhoto.bucketArn}/thumbnail/*`],
           }),
         ],
-      }
+      },
     );
 
     new Rule(this, "EventAlbumImageUpload-Rule", {
@@ -351,7 +356,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
 
     new Rule(this, "S3ActionRouter-Rule", {
@@ -429,14 +434,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
           //   resources: [`${props.bucketPhoto.bucketArn}/paymentLog/*`],
           // }),
         ],
-      }
+      },
     );
     triggerSqsMainQueueFn.addEventSource(
       new SqsEventSource(props.queueMain, {
         batchSize: 1,
         maxConcurrency: 5,
         reportBatchItemFailures: true,
-      })
+      }),
     );
 
     // ZIPからの写真変換用 ===================================================
@@ -485,8 +490,12 @@ export class Step31EventTriggerStack extends cdk.Stack {
               "dynamodb:GetItem",
               "dynamodb:PutItem",
               "dynamodb:UpdateItem",
+              "dynamodb:BatchWriteItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -503,14 +512,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
             ],
           }),
         ],
-      }
+      },
     );
     triggerSqsPhotoConvertQueueFn.addEventSource(
       new SqsEventSource(props.queuePhotoConvert, {
         batchSize: 1,
         maxConcurrency: 5,
         reportBatchItemFailures: true,
-      })
+      }),
     );
   }
 }

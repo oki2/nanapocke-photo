@@ -1,4 +1,4 @@
-import {AppConfig, TagConfig} from "../config";
+import {AppConfig, TagConfig, UserConfig, PhotoConfig} from "../config";
 import * as http from "../http";
 import {parseOrThrow} from "../libs/validate";
 import {PhotoUploadBody, PhotoUploadResponse} from "../schemas/public";
@@ -20,6 +20,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // 日付の変換（JSTの場合はUTCへ）
   data.shootingAt = new Date(data.shootingAt).toISOString();
+
+  // 保育士、フォトグラファーの場合は販売価格を固定
+  if (authContext.userRole === UserConfig.ROLE.TEACHER) {
+    data.priceTier = PhotoConfig.PRICE_TIER.STANDARD;
+  } else if (authContext.userRole === UserConfig.ROLE.PHOTOGRAPHER) {
+    data.priceTier = PhotoConfig.PRICE_TIER.PREMIUM;
+  }
 
   // 1. アルバム指定がある場合はチェック
   const albums: string[] = [];
@@ -72,7 +79,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       data.shootingAt,
       data.priceTier,
       tags,
-      albums
+      albums,
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_ZIP_UPLOAD;
   } else {
@@ -84,7 +91,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       data.shootingAt,
       data.priceTier,
       tags,
-      albums
+      albums,
     );
     prefix = AppConfig.S3.PREFIX.PHOTO_UPLOAD;
   }
@@ -93,13 +100,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const preSignedUrl = await S3PutObjectSignedUrl(
     AppConfig.BUCKET_UPLOAD_NAME,
     `${prefix}/${authContext.facilityCode}/${authContext.userId}/${uploadId}/${data.fileName}`,
-    60 // 即時アップされる想定なので、有効期限を短く1分とする
+    60, // 即時アップされる想定なので、有効期限を短く1分とする
   );
 
   // 5. レスポンス
   return http.ok(
     parseOrThrow(PhotoUploadResponse, {
       url: preSignedUrl,
-    })
+    }),
   );
 });

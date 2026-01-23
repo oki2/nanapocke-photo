@@ -24,10 +24,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 販売期間が入力されていたら 05:00 - 02:00 に変換
   if (data.salesPeriod.start && data.salesPeriod.end) {
     data.salesPeriod.start = Album.toJstToday0500(
-      data.salesPeriod.start
+      data.salesPeriod.start,
     ).toISOString();
     data.salesPeriod.end = Album.toJstTomorrow0200(
-      data.salesPeriod.end
+      data.salesPeriod.end,
     ).toISOString();
   }
 
@@ -38,7 +38,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.title,
     data.description ?? "",
     data.priceTable,
-    data.salesPeriod
+    data.salesPeriod,
   );
 
   const result: AlbumCreateResponseT = {
@@ -51,19 +51,18 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     // コピー元のアルバムに属する写真一覧を取得
     const photoIds = await Photo.photoIdsByAlbumId(
       authContext.facilityCode,
-      data.copyFromAlbumId
+      data.copyFromAlbumId,
     );
 
     // DynamoDB に写真とアルバムの紐付け情報を登録
     for (const photoId of photoIds) {
-      await Photo.setAlbums(
-        authContext.facilityCode,
-        photoId,
-        [album.albumId],
-        [],
-        [album.albumId],
-        authContext.userId
-      );
+      await Photo.setAlbumsOnePhotoSafe({
+        facilityCode: authContext.facilityCode,
+        photoId: photoId,
+        addAlbums: [album.albumId],
+        delAlbums: [],
+        userId: authContext.userId,
+      });
     }
   }
 
@@ -72,7 +71,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     result.url = await S3PutObjectSignedUrl(
       AppConfig.BUCKET_UPLOAD_NAME,
       `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${album.albumId}/${authContext.userId}/${data.coverImageFileName}`,
-      60 // 即時アップされる想定なので、有効期限を短く1分とする
+      60, // 即時アップされる想定なので、有効期限を短く1分とする
     );
   }
 

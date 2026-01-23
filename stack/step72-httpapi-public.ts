@@ -81,6 +81,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       },
     );
 
+    // ==========================================================
     // Access Token : Principal（園長）を判定するオーソライザー
     const AuthorizerPrincipalVeifyFn = new NodejsFunction(
       this,
@@ -124,6 +125,51 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       },
     );
 
+    // ==========================================================
+    // Access Token : Staff（園長、保育士、フォトグラファー）を判定するオーソライザー
+    const AuthorizerStaffVeifyFn = new NodejsFunction(
+      this,
+      "AuthorizerStaffVeifyFn",
+      {
+        functionName: `${functionPrefix}-AuthorizerStaffVeify`,
+        description: `${functionPrefix}-AuthorizerStaffVeify`,
+        entry: "src/handlers/authorizer/staff.veify.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      },
+    );
+    const AuthorizerStaffVeify = new HttpLambdaAuthorizer(
+      "AuthorizerStaffVeify",
+      AuthorizerStaffVeifyFn,
+      {
+        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        identitySource: [
+          "$request.header.Authorization",
+          "$request.header.x-origin-verify-token",
+        ],
+        // 必要に応じてキャッシュを有効化
+        resultsCacheTtl: cdk.Duration.seconds(60),
+      },
+    );
+
+    // ==========================================================
     // Access Token : 認証済みユーザーを判定するオーソライザー
     const AuthorizerUserVeifyFn = new NodejsFunction(
       this,
@@ -167,6 +213,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       },
     );
 
+    // ==========================================================
     // Access Token : Guardian（保護者）を判定するオーソライザー
     const AuthorizerGuardianlVeifyFn = new NodejsFunction(
       this,
@@ -330,6 +377,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // アルバム削除
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/album/{albumId}",
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration(
+        "AlbumDeleteIntegration",
+        props.lambdaFnPublic.albumDeleteFn,
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // アルバムの販売設定変更
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/album/{albumId}/sales",
@@ -361,7 +419,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "PhotoUploadIntegration",
         props.lambdaFnPublic.photoUploadFn,
       ),
-      authorizer: AuthorizerPrincipalVeify,
+      authorizer: AuthorizerStaffVeify,
     });
 
     // 写真一覧
@@ -372,7 +430,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "PhotoListIntegration",
         props.lambdaFnPublic.photoListFn,
       ),
-      authorizer: AuthorizerPrincipalVeify,
+      authorizer: AuthorizerStaffVeify,
     });
 
     // 写真のアルバム一括紐付け
@@ -398,6 +456,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // 写真削除
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/photo/{photoId}",
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration(
+        "PhotoDeleteIntegration",
+        props.lambdaFnPublic.photoDeleteFn,
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // 写真ダウンロード
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/photo/{photoId}/download",
@@ -418,7 +487,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "MetaListIntegration",
         props.lambdaFnPublic.metaListFn,
       ),
-      authorizer: AuthorizerPrincipalVeify,
+      authorizer: AuthorizerStaffVeify,
     });
 
     // === カート関連 === //

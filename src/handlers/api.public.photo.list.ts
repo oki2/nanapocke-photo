@@ -18,6 +18,18 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
 
+  // 保育士、フォトグラファーの場合は自身の写真を返して終了
+  if (
+    authContext.role === UserConfig.ROLE.TEACHER ||
+    authContext.role === UserConfig.ROLE.PHOTOGRAPHER
+  ) {
+    const data = await Photo.myList(
+      authContext.facilityCode,
+      authContext.userId,
+    );
+    return http.ok(parseOrThrow(PhotoListResponse, data));
+  }
+
   // === Step.1 クエリストリングチェック code を取得 =========== //
   const query = parseOrThrow(PhotoSelect, event.queryStringParameters ?? {});
   console.log("query", query);
@@ -76,7 +88,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   const result: PhotoListResponseT = {
     photos: [],
-    totalItems: 1,
+    totalItems: 0,
     nextCursor: "",
   };
 

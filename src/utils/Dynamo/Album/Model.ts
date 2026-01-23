@@ -1,11 +1,14 @@
-import {docClient} from "../dynamo";
+import {docClient, batchWriteAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
   GetCommand,
   UpdateCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {AlbumConfig} from "../../../config";
+import {AlbumConfig, PhotoConfig} from "../../../config";
+
+import * as Photo from "../Photo";
 
 export async function get(facilityCode: string, albumId: string): Promise<any> {
   const command = new GetCommand({
@@ -427,4 +430,50 @@ export async function draftList(facilityCode: string): Promise<any> {
   // コマンド実行
   const result = await docClient().send(command);
   return result.Items;
+}
+
+export async function purge(
+  facilityCode: string,
+  albumId: string,
+): Promise<any> {
+  // アルバム削除
+  const delRes = await docClient().send(
+    new DeleteCommand({
+      TableName: AlbumConfig.TABLE_NAME,
+      Key: {
+        pk: `ALBUM#FAC#${facilityCode}#META`,
+        sk: albumId,
+      },
+      ReturnValues: "ALL_OLD",
+    }),
+  );
+
+  // 2. アルバムの紐付け情報を取得
+  const delList = await docClient().send(
+    new QueryCommand({
+      TableName: PhotoConfig.TABLE_NAME,
+      KeyConditionExpression: "#pk = :pk",
+      ProjectionExpression: "#photoId",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#photoId": "photoId",
+      },
+      ExpressionAttributeValues: {
+        ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+      },
+    }),
+  );
+
+  console.log("delList", delList);
+
+  // 3. アルバムの紐付けを削除
+  for (const item of delList.Items ?? []) {
+    await Photo.setAlbumsOnePhotoSafe({
+      facilityCode: facilityCode,
+      photoId: item.photoId,
+      addAlbums: [],
+      delAlbums: [albumId],
+      userId: "",
+    });
+  }
 }
