@@ -195,38 +195,6 @@ export async function setCoverImage(
 }
 
 /**
- * アルバム内の写真枚数を取得
- *
- * @param {string} facilityCode - Facility code.
- * @param {string} albumId - Album ID.
- * @returns {Promise<number>} - Promise of count of photos.
- */
-export async function photoCount(
-  facilityCode: string,
-  albumId: string,
-): Promise<number> {
-  const nowISO = new Date().toISOString();
-
-  // コマンド実行
-  const result = await docClient().send(
-    new QueryCommand({
-      TableName: AlbumConfig.TABLE_NAME,
-      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk)",
-      Select: "COUNT",
-      ExpressionAttributeNames: {
-        "#pk": "pk",
-        "#sk": "sk",
-      },
-      ExpressionAttributeValues: {
-        ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
-        ":sk": `ALBUM#${albumId}#`,
-      },
-    }),
-  );
-  return result.Count ?? 0;
-}
-
-/**
  * アルバムを公開準備にする
  *
  * @param {string} facilityCode - Facility code.

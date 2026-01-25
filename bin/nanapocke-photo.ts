@@ -39,6 +39,8 @@ export const REGION = {
   TOKYO: "ap-northeast-1",
 };
 
+const STACK_NAME_PREFIX = `${PROJECT_NAME}-${stage}-`;
+
 const Config = {
   Stage: stage,
   ProjectName: PROJECT_NAME,
@@ -107,14 +109,18 @@ const Config = {
   },
 };
 
-const stackStep10 = new Step10ResourceStack(app, "Step10ResourceStack", {
-  env: {account: account, region: REGION.TOKYO},
-  Config,
-});
+const stackStep10 = new Step10ResourceStack(
+  app,
+  STACK_NAME_PREFIX + "Step10ResourceStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    Config,
+  },
+);
 
 const stackStep11 = new Step11CognitoProviderStack(
   app,
-  "Step11CognitoProviderStack",
+  STACK_NAME_PREFIX + "Step11CognitoProviderStack",
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
@@ -123,51 +129,63 @@ const stackStep11 = new Step11CognitoProviderStack(
 
 const stackStep12 = new Step12CognitoNanapockeStack(
   app,
-  "Step12CognitoNanapockeStack",
+  STACK_NAME_PREFIX + "Step12CognitoNanapockeStack",
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
   },
 );
 
-const stackStep15 = new Step15DynamodbStack(app, "Step15DynamodbStack", {
-  env: {account: account, region: REGION.TOKYO},
-  Config,
-});
+const stackStep15 = new Step15DynamodbStack(
+  app,
+  STACK_NAME_PREFIX + "Step15DynamodbStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    Config,
+  },
+);
 
-const stackStep21 = new Step21ApiAdminStack(app, "Step21ApiAdminStack", {
-  env: {account: account, region: REGION.TOKYO},
-  Config,
-  ProviderAuthPool: stackStep11.ProviderAuthPool,
-  ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
-  MainTable: stackStep15.MainTable,
-  AuthFlowTable: stackStep15.AuthFlowTable,
-});
+const stackStep21 = new Step21ApiAdminStack(
+  app,
+  STACK_NAME_PREFIX + "Step21ApiAdminStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    Config,
+    ProviderAuthPool: stackStep11.ProviderAuthPool,
+    ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
+    MainTable: stackStep15.MainTable,
+    AuthFlowTable: stackStep15.AuthFlowTable,
+  },
+);
 
-const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
-  env: {account: account, region: REGION.TOKYO},
-  Config,
-  NanapockeAuthPool: stackStep12.NanapockeAuthPool,
-  NanapockeAuthPoolClient: stackStep12.NanapockeAuthPoolClient,
-  // ProviderAuthPool: stackStep11.ProviderAuthPool,
-  // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
-  // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
-  // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
-  MainTable: stackStep15.MainTable,
-  PhotoCatalogTable: stackStep15.PhotoCatalogTable,
-  AlbumCatalogTable: stackStep15.AlbumCatalogTable,
-  RelationTable: stackStep15.RelationTable,
-  CommerceTable: stackStep15.CommerceTable,
-  NanapockeUserTable: stackStep15.NanapockeUserTable,
-  bucketUpload: stackStep10.bucketUpload,
-  bucketPhoto: stackStep10.bucketPhoto,
-  queueMain: stackStep10.queueMain,
-  cfPublicKeyThumbnailUrl: stackStep10.cfPublicKeyThumbnailUrl,
-});
+const stackStep22 = new Step22ApiPublicleStack(
+  app,
+  STACK_NAME_PREFIX + "Step22ApiPublicleStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    Config,
+    NanapockeAuthPool: stackStep12.NanapockeAuthPool,
+    NanapockeAuthPoolClient: stackStep12.NanapockeAuthPoolClient,
+    // ProviderAuthPool: stackStep11.ProviderAuthPool,
+    // ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
+    // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
+    // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
+    MainTable: stackStep15.MainTable,
+    PhotoCatalogTable: stackStep15.PhotoCatalogTable,
+    AlbumCatalogTable: stackStep15.AlbumCatalogTable,
+    RelationTable: stackStep15.RelationTable,
+    CommerceTable: stackStep15.CommerceTable,
+    NanapockeUserTable: stackStep15.NanapockeUserTable,
+    bucketUpload: stackStep10.bucketUpload,
+    bucketPhoto: stackStep10.bucketPhoto,
+    queueMain: stackStep10.queueMain,
+    cfPublicKeyThumbnailUrl: stackStep10.cfPublicKeyThumbnailUrl,
+  },
+);
 
 const stackStep31 = new Step31EventTriggerStack(
   app,
-  "Step31EventTriggerStack",
+  STACK_NAME_PREFIX + "Step31EventTriggerStack",
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
@@ -179,6 +197,7 @@ const stackStep31 = new Step31EventTriggerStack(
     PhotoCatalogTable: stackStep15.PhotoCatalogTable,
     AlbumCatalogTable: stackStep15.AlbumCatalogTable,
     RelationTable: stackStep15.RelationTable,
+    CommerceTable: stackStep15.CommerceTable,
     // NanapockeUserTable: stackStep15.NanapockeUserTable,
     bucketUpload: stackStep10.bucketUpload,
     bucketPhoto: stackStep10.bucketPhoto,
@@ -189,7 +208,7 @@ const stackStep31 = new Step31EventTriggerStack(
 
 const stackStep71 = new Step71HttpApiAdminStack(
   app,
-  "Step71HttpApiAdminStack",
+  STACK_NAME_PREFIX + "Step71HttpApiAdminStack",
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
@@ -203,7 +222,7 @@ const stackStep71 = new Step71HttpApiAdminStack(
 
 const stackStep72 = new Step72HttpApiPublicStack(
   app,
-  "Step72HttpApiPublicStack",
+  STACK_NAME_PREFIX + "Step72HttpApiPublicStack",
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
@@ -215,23 +234,31 @@ const stackStep72 = new Step72HttpApiPublicStack(
   },
 );
 
-const stackStep81 = new Step81CertificateStack(app, "Step81CertificateStack", {
-  env: {account: account, region: REGION.VIRGINIA},
-  Config,
-});
+const stackStep81 = new Step81CertificateStack(
+  app,
+  STACK_NAME_PREFIX + "Step81CertificateStack",
+  {
+    env: {account: account, region: REGION.VIRGINIA},
+    Config,
+  },
+);
 
-const stackStep82 = new Step82CloudfrontStack(app, "Step82CloudfrontStack", {
-  env: {account: account, region: REGION.TOKYO},
-  crossRegionReferences: true, // 他リージョンのリソース参照を許可 : VIRGINIA の Certificate を取得するため
-  Config,
-  cfdAdminVerifyToken: stackStep71.cfdVerifyToken,
-  cfdPublicVerifyToken: stackStep72.cfdVerifyToken,
-  httpApiAdmin: stackStep71.httpApi,
-  httpApiPublic: stackStep72.httpApi,
-  publicCertificateArn: stackStep81.publicCertificateArn,
-  bucketPhoto: stackStep10.bucketPhoto,
-  cfKeyGroupNanaPhoto: stackStep10.cfKeyGroupNanaPhoto,
-});
+const stackStep82 = new Step82CloudfrontStack(
+  app,
+  STACK_NAME_PREFIX + "Step82CloudfrontStack",
+  {
+    env: {account: account, region: REGION.TOKYO},
+    crossRegionReferences: true, // 他リージョンのリソース参照を許可 : VIRGINIA の Certificate を取得するため
+    Config,
+    cfdAdminVerifyToken: stackStep71.cfdVerifyToken,
+    cfdPublicVerifyToken: stackStep72.cfdVerifyToken,
+    httpApiAdmin: stackStep71.httpApi,
+    httpApiPublic: stackStep72.httpApi,
+    publicCertificateArn: stackStep81.publicCertificateArn,
+    bucketPhoto: stackStep10.bucketPhoto,
+    cfKeyGroupNanaPhoto: stackStep10.cfKeyGroupNanaPhoto,
+  },
+);
 
 // =======================
 // 実行の主従関係設定

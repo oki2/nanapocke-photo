@@ -17,6 +17,7 @@ export interface Props extends cdk.StackProps {
   readonly PhotoCatalogTable: Table;
   readonly AlbumCatalogTable: Table;
   readonly RelationTable: Table;
+  readonly CommerceTable: Table;
   // readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
@@ -320,14 +321,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
     });
 
     // ==============================================================
-    // 汎用トリガー
-    const triggerS3ActionRouterFn = new NodejsFunction(
+    // アルバム販売開始時のアクション
+    const s3ActionAlbumPublishedFn = new NodejsFunction(
       this,
-      "TriggerS3ActionRouterFn",
+      "S3ActionAlbumPublishedFn",
       {
-        functionName: `${functionPrefix}-TriggerS3ActionRouter`,
-        description: `${functionPrefix}-TriggerS3ActionRouter`,
-        entry: "src/handlers/trigger/s3.action.router.ts",
+        functionName: `${functionPrefix}-S3ActionAlbumPublished`,
+        description: `${functionPrefix}-S3ActionAlbumPublished`,
+        entry: "src/handlers/trigger/s3.action.album.published.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
@@ -336,6 +337,102 @@ export class Step31EventTriggerStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
+          BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:BatchGetItem"],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.RelationTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:GetObject"],
+            resources: [
+              `${props.bucketUpload.bucketArn}/action/albumPublished/*`,
+              // `${props.bucketUpload.bucketArn}/order/*`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:PutObject"],
+            resources: [
+              `${props.bucketPhoto.bucketArn}/sales/*`,
+              // `${props.bucketPhoto.bucketArn}/paymentLog/*`,
+            ],
+          }),
+        ],
+      },
+    );
+
+    new Rule(this, "S3ActionRouter-Rule", {
+      ruleName: `${functionPrefix}-S3ActionRouter-Rule`,
+      eventPattern: {
+        source: ["aws.s3"],
+        detailType: ["Object Created"],
+        detail: {
+          object: {
+            key: [{prefix: "action/albumPublished/"}],
+          },
+          bucket: {
+            name: [props.bucketUpload.bucketName],
+          },
+        },
+        resources: [props.bucketUpload.bucketArn],
+      },
+      targets: [
+        new targetLambda(s3ActionAlbumPublishedFn, {
+          event: RuleTargetInput.fromObject({
+            id: EventField.eventId,
+            account: EventField.account,
+            time: EventField.time,
+            region: EventField.region,
+            "detail-type": EventField.detailType,
+            detail: {
+              bucketName: EventField.fromPath("$.detail.bucket.name"),
+              keyPath: EventField.fromPath("$.detail.object.key"),
+              size: EventField.fromPath("$.detail.object.size"),
+            },
+          }),
+        }),
+      ],
+    });
+
+    // ==============================================================
+    // 写真購入完了時のアクション（DL用写真の準備等）
+    const s3ActionPaymentCompleteFn = new NodejsFunction(
+      this,
+      "S3ActionPaymentCompleteFn",
+      {
+        functionName: `${functionPrefix}-S3ActionPaymentComplete`,
+        description: `${functionPrefix}-S3ActionPaymentComplete`,
+        entry: "src/handlers/trigger/s3.action.payment.complete.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        timeout: cdk.Duration.seconds(60),
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
@@ -350,7 +447,17 @@ export class Step31EventTriggerStack extends cdk.Stack {
               "dynamodb:BatchGetItem",
               "dynamodb:BatchWriteItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [props.CommerceTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.RelationTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -372,14 +479,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
       },
     );
 
-    new Rule(this, "S3ActionRouter-Rule", {
-      ruleName: `${functionPrefix}-S3ActionRouter-Rule`,
+    new Rule(this, "S3ActionPaymentComplete-Rule", {
+      ruleName: `${functionPrefix}-S3ActionPaymentComplete-Rule`,
       eventPattern: {
         source: ["aws.s3"],
         detailType: ["Object Created"],
         detail: {
           object: {
-            key: [{prefix: "action/"}],
+            key: [{prefix: "action/paymentComplete/"}],
           },
           bucket: {
             name: [props.bucketUpload.bucketName],
@@ -388,7 +495,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
         resources: [props.bucketUpload.bucketArn],
       },
       targets: [
-        new targetLambda(triggerS3ActionRouterFn, {
+        new targetLambda(s3ActionPaymentCompleteFn, {
           event: RuleTargetInput.fromObject({
             id: EventField.eventId,
             account: EventField.account,
@@ -404,6 +511,105 @@ export class Step31EventTriggerStack extends cdk.Stack {
         }),
       ],
     });
+
+    // ==============================================================
+    // 汎用トリガー
+    // const triggerS3ActionRouterFn = new NodejsFunction(
+    //   this,
+    //   "TriggerS3ActionRouterFn",
+    //   {
+    //     functionName: `${functionPrefix}-TriggerS3ActionRouter`,
+    //     description: `${functionPrefix}-TriggerS3ActionRouter`,
+    //     entry: "src/handlers/trigger/s3.action.router.ts",
+    //     handler: "handler",
+    //     runtime: lambda.Runtime.NODEJS_22_X,
+    //     architecture: lambda.Architecture.ARM_64,
+    //     memorySize: 256,
+    //     timeout: cdk.Duration.seconds(60),
+    //     environment: {
+    //       ...defaultEnvironment,
+    //       TABLE_NAME_MAIN: props.MainTable.tableName,
+    //       TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+    //       TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+    //       TABLE_NAME_RELATION: props.RelationTable.tableName,
+    //       BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+    //       BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+    //     },
+    //     initialPolicy: [
+    //       new cdk.aws_iam.PolicyStatement({
+    //         effect: cdk.aws_iam.Effect.ALLOW,
+    //         actions: [
+    //           "dynamodb:UpdateItem",
+    //           "dynamodb:GetItem",
+    //           "dynamodb:PutItem",
+    //           "dynamodb:Query",
+    //           "dynamodb:BatchGetItem",
+    //           "dynamodb:BatchWriteItem",
+    //         ],
+    //         resources: [props.PhotoCatalogTable.tableArn],
+    //       }),
+    //       new cdk.aws_iam.PolicyStatement({
+    //         effect: cdk.aws_iam.Effect.ALLOW,
+    //         actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
+    //         resources: [props.AlbumCatalogTable.tableArn],
+    //       }),
+    //       new cdk.aws_iam.PolicyStatement({
+    //         effect: cdk.aws_iam.Effect.ALLOW,
+    //         actions: ["dynamodb:Query"],
+    //         resources: [props.RelationTable.tableArn],
+    //       }),
+    //       new cdk.aws_iam.PolicyStatement({
+    //         effect: cdk.aws_iam.Effect.ALLOW,
+    //         actions: ["s3:GetObject"],
+    //         resources: [
+    //           `${props.bucketUpload.bucketArn}/action/*`,
+    //           `${props.bucketUpload.bucketArn}/order/*`,
+    //         ],
+    //       }),
+    //       new cdk.aws_iam.PolicyStatement({
+    //         effect: cdk.aws_iam.Effect.ALLOW,
+    //         actions: ["s3:PutObject"],
+    //         resources: [
+    //           `${props.bucketPhoto.bucketArn}/sales/*`,
+    //           `${props.bucketPhoto.bucketArn}/paymentLog/*`,
+    //         ],
+    //       }),
+    //     ],
+    //   },
+    // );
+
+    // new Rule(this, "S3ActionRouter-Rule", {
+    //   ruleName: `${functionPrefix}-S3ActionRouter-Rule`,
+    //   eventPattern: {
+    //     source: ["aws.s3"],
+    //     detailType: ["Object Created"],
+    //     detail: {
+    //       object: {
+    //         key: [{prefix: "action/"}],
+    //       },
+    //       bucket: {
+    //         name: [props.bucketUpload.bucketName],
+    //       },
+    //     },
+    //     resources: [props.bucketUpload.bucketArn],
+    //   },
+    //   targets: [
+    //     new targetLambda(triggerS3ActionRouterFn, {
+    //       event: RuleTargetInput.fromObject({
+    //         id: EventField.eventId,
+    //         account: EventField.account,
+    //         time: EventField.time,
+    //         region: EventField.region,
+    //         "detail-type": EventField.detailType,
+    //         detail: {
+    //           bucketName: EventField.fromPath("$.detail.bucket.name"),
+    //           keyPath: EventField.fromPath("$.detail.object.key"),
+    //           size: EventField.fromPath("$.detail.object.size"),
+    //         },
+    //       }),
+    //     }),
+    //   ],
+    // });
 
     // =====================================================================================
     // SQS トリガー

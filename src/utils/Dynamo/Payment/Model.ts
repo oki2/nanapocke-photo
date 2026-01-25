@@ -13,6 +13,9 @@ type PaymentCreateResult = {
   orderId: string;
 };
 
+const getPk = () => `PAYMENT#META`;
+const getSk = (orderId: string) => orderId;
+
 export async function create(
   facilityCode: string,
   userId: string,
@@ -22,7 +25,7 @@ export async function create(
   tierPremium: Record<string, any>,
   subTotal: number,
   shippingFee: number,
-  grandTotal: number
+  grandTotal: number,
 ): Promise<PaymentCreateResult> {
   const nowISO = new Date().toISOString();
   const seq = await nextSequence();
@@ -36,8 +39,8 @@ export async function create(
     new PutCommand({
       TableName: PaymentConfig.TABLE_NAME,
       Item: {
-        pk: `PAYMENT#META`,
-        sk: orderId,
+        pk: getPk(),
+        sk: getSk(orderId),
         orderId: orderId,
         countPrint: countPrint,
         countDl: countDl,
@@ -56,7 +59,7 @@ export async function create(
         updatedBy: userId,
       },
       ConditionExpression: "attribute_not_exists(pk)", // 重複登録抑制
-    })
+    }),
   );
 
   return {orderId: orderId};
@@ -66,8 +69,8 @@ export async function get(orderId: string): Promise<any> {
   const command = new GetCommand({
     TableName: PaymentConfig.TABLE_NAME,
     Key: {
-      pk: `PAYMENT#META`,
-      sk: orderId,
+      pk: getPk(),
+      sk: getSk(orderId),
     },
   });
 
@@ -94,13 +97,13 @@ export async function setCompleted(
   orderId: string,
   smbcProcessDate: string,
   userId: string,
-  updatedBy: string
+  updatedBy: string,
 ): Promise<void> {
   const command = new UpdateCommand({
     TableName: PaymentConfig.TABLE_NAME,
     Key: {
-      pk: `PAYMENT#META`,
-      sk: orderId,
+      pk: getPk(),
+      sk: getSk(orderId),
     },
     UpdateExpression:
       "SET #paymentStatus = :paymentStatus, #lsi1 = :lsi1, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",

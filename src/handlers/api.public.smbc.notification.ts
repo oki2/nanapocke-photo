@@ -3,8 +3,6 @@ import * as http from "../http";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Cart from "../utils/Dynamo/Cart";
-import * as Album from "../utils/Dynamo/Album";
-import * as Photo from "../utils/Dynamo/Photo";
 import * as Payment from "../utils/Dynamo/Payment";
 
 import type {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
@@ -14,7 +12,6 @@ import * as S3 from "../utils/S3";
 
 import * as SQS from "../utils/SQS";
 
-import * as crypto from "crypto";
 import {Buffer} from "buffer";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
@@ -73,7 +70,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 6. SMBCに結果確認の問い合わせ
   const smbcResult = await SMBC.searchTradeMulti(
     postObj.OrderID,
-    postObj.PayType
+    postObj.PayType,
   );
   console.log("smbcResult", smbcResult);
   if (!smbcResult) {
@@ -120,7 +117,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     postObj.OrderID,
     smbcResult.ProcessDate,
     payment.userId,
-    SMBC.CALLBACK_USER_ID
+    SMBC.CALLBACK_USER_ID,
   );
 
   // 印刷がある場合はSQS経由で実行

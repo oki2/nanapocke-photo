@@ -24,7 +24,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("cart", cart);
 
   // 2. 印刷有無の判定
-  const byTier = await Cart.summarizeItemsByPriceTier(cart);
+  const byTier = Cart.summarizeItemsByPriceTier(cart);
   console.log("byTier", byTier);
   const summary = Cart.sumAllTiers(byTier);
   console.log("summary", summary);
@@ -49,7 +49,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const shippingFee =
     Math.ceil(
       (summary.print2LQuantityTotal + summary.printLQuantityTotal) /
-        PaymentConfig.POSTAGE_MAIL_LIMIT
+        PaymentConfig.POSTAGE_MAIL_LIMIT,
     ) * PaymentConfig.SHIPPING_POSTAGE_MAIL_FEE;
 
   // 3. アルバム、写真の販売可否チェック
@@ -64,7 +64,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     byTier[`${PhotoConfig.PRICE_TIER.PREMIUM}`],
     subTotalPrice,
     shippingFee,
-    subTotalPrice + shippingFee
+    subTotalPrice + shippingFee,
   );
   console.log("orderId", orderId);
 

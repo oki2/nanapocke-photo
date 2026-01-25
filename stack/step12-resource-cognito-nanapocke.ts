@@ -29,10 +29,6 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
       // },
     };
 
-    const logGroup = new logs.LogGroup(this, "MyFunctionLogGroup", {
-      retention: logs.RetentionDays.ONE_WEEK, // ※後で変更 ログの保存期間
-    });
-
     // ==================================================//
     // Nanapockeのユーザープール
     // ==================================================//
@@ -50,9 +46,9 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         architecture: lambda.Architecture.ARM_64,
         memorySize: 256,
         timeout: cdk.Duration.seconds(10),
-        logGroup: logGroup,
+        logRetention: RetentionDays.ONE_MONTH,
         environment: {},
-      }
+      },
     );
 
     // 認証チャレンジの作成
@@ -68,8 +64,8 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         architecture: lambda.Architecture.ARM_64,
         memorySize: 256,
         timeout: cdk.Duration.seconds(10),
-        logGroup: logGroup,
-      }
+        logRetention: RetentionDays.ONE_MONTH,
+      },
     );
 
     // 認証チャレンジの検証
@@ -85,13 +81,13 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         architecture: lambda.Architecture.ARM_64,
         memorySize: 256,
         timeout: cdk.Duration.seconds(10),
-        logGroup: logGroup,
+        logRetention: RetentionDays.ONE_MONTH,
         environment: {
           // 外部IdP検証用の設定を入れる（例：JWKS URLやAPIエンドポイント）
           EXTERNAL_ISSUER: "https://idp.example.com/",
           EXTERNAL_AUD: "your-audience",
         },
-      }
+      },
     );
 
     // ユーザープール作成
@@ -130,7 +126,7 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
           createAuthChallenge: nanapockeCreateFn,
           verifyAuthChallengeResponse: nanapockeVerifyFn,
         },
-      }
+      },
     );
 
     // ユーザープールのグループ作成 ========
@@ -173,7 +169,7 @@ export class Step12CognitoNanapockeStack extends cdk.Stack {
         accessTokenValidity: cdk.Duration.minutes(30),
         refreshTokenValidity: cdk.Duration.days(30),
         preventUserExistenceErrors: true,
-      }
+      },
     );
   }
 }

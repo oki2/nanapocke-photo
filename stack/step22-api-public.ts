@@ -433,17 +433,19 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: [
-              "dynamodb:GetItem",
-              "dynamodb:Query",
-              "dynamodb:UpdateItem",
-            ],
+            actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
             resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.RelationTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -511,14 +513,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:GetItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.AlbumCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -854,13 +856,26 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         ...defaultEnvironment,
-        TABLE_NAME_MAIN: props.MainTable.tableName,
+        // TABLE_NAME_MAIN: props.MainTable.tableName,
+        TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+        TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+        TABLE_NAME_RELATION: props.RelationTable.tableName,
+        TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ["dynamodb:GetItem", "dynamodb:PutItem"],
-          resources: [props.MainTable.tableArn],
+          actions: ["dynamodb:GetItem"],
+          resources: [
+            props.PhotoCatalogTable.tableArn,
+            props.AlbumCatalogTable.tableArn,
+            props.RelationTable.tableArn,
+          ],
+        }),
+        new cdk.aws_iam.PolicyStatement({
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ["dynamodb:PutItem"],
+          resources: [props.CommerceTable.tableArn],
         }),
       ],
     });
@@ -876,15 +891,15 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         ...defaultEnvironment,
-        TABLE_NAME_MAIN: props.MainTable.tableName,
+        TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
           actions: ["dynamodb:Query"],
           resources: [
-            props.MainTable.tableArn,
-            `${props.MainTable.tableArn}/index/lsi1_index`,
+            props.CommerceTable.tableArn,
+            // `${props.CommerceTable.tableArn}/index/lsi1_index`,
           ],
         }),
       ],
@@ -904,13 +919,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          // TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:DeleteItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.CommerceTable.tableArn],
           }),
         ],
       },
@@ -927,15 +943,15 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         ...defaultEnvironment,
-        TABLE_NAME_MAIN: props.MainTable.tableName,
+        TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
           actions: ["dynamodb:Query", "dynamodb:UpdateItem"],
           resources: [
-            props.MainTable.tableArn,
-            `${props.MainTable.tableArn}/index/lsi1_index`,
+            props.CommerceTable.tableArn,
+            // `${props.MainTable.tableArn}/index/lsi1_index`,
           ],
         }),
       ],
@@ -955,13 +971,26 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          // TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
           SSM_SMBC_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/smbc/setting`,
           SMBC_API_GET_LINKPLUS: props.Config.External.Smbc.ApiUrl.getLinkplus,
         },
         initialPolicy: [
+          // new cdk.aws_iam.PolicyStatement({
+          //   effect: cdk.aws_iam.Effect.ALLOW,
+          //   actions: [
+          //     "dynamodb:Query",
+          //     "dynamodb:PutItem",
+          //     "dynamodb:UpdateItem",
+          //   ],
+          //   resources: [
+          //     props.MainTable.tableArn,
+          //     `${props.MainTable.tableArn}/index/lsi1_index`,
+          //   ],
+          // }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
@@ -970,8 +999,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:UpdateItem",
             ],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.CommerceTable.tableArn,
+              // `${props.MainTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -1114,7 +1143,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          // TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
           ORDER_ID_PREFIX: props.Config.Setting.Payment.OrderIdPrefix,
@@ -1128,13 +1158,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
               "dynamodb:GetItem",
-              "dynamodb:PutItem",
+              // "dynamodb:PutItem",
               "dynamodb:UpdateItem",
               "dynamodb:Query",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
+              props.CommerceTable.tableArn,
               // `${props.MainTable.tableArn}/index/lsi1_index`,
             ],
           }),

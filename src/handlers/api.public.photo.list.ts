@@ -1,6 +1,6 @@
 import * as http from "../http";
 
-import {tagSplitter, photoIdSplitter} from "../libs/tool";
+import {tagSplitter, sequenceIdSplitter} from "../libs/tool";
 
 import {PhotoConfig, UserConfig} from "../config";
 
@@ -100,7 +100,7 @@ async function runByPrincipal(
   // Step.1 検索条件の整理 =========== //
   const tags = tagSplitter(query.tags); // タグの分解
   // const photoIds = photoIdSplitter(query.photoIdQuery); // 写真IDの分解
-  const sequenceIds = photoIdSplitter(query.sequenceIds); // 写真通し番号の分解
+  const sequenceIds = sequenceIdSplitter(query.sequenceIds); // 写真通し番号の分解
   if (sequenceIds.length > PhotoConfig.FILTER_LIMIT.MAX) {
     return http.badRequest({
       detail: `指定可能な写真IDの数は${PhotoConfig.FILTER_LIMIT.MAX}件までです。`,
@@ -147,7 +147,7 @@ async function runByPrincipal(
 
 async function getPhotosByFilter(p: {
   facilityCode: string;
-  sequenceIds: string[];
+  sequenceIds: number[];
   albumId: string;
   filter: Photo.FilterOptions;
   sort: Photo.SortOptions;

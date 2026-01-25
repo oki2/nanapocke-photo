@@ -15,11 +15,12 @@ import {
   UpdateCommand,
   BatchWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import {CartConfig, PhotoConfig} from "../../../config";
+import {CartConfig} from "../../../config";
 
 import * as Photo from "../Photo";
 
 import {chunk, sleep} from "../../../libs/tool";
+import {get} from "http";
 
 type AddOptions = {
   albumSequenceId: number;
@@ -33,6 +34,12 @@ type AddOptions = {
   print2LOption: Record<string, any>;
   shootingBy: string;
 };
+
+const getPk = (userId: string) => `CART#USER#${userId}`;
+const getSk = (albumId: string, photoId: string) =>
+  `ALBUM#${albumId}#PHOTO#${photoId}`;
+const getLsi1 = (albumSequenceId: number, photoSequenceId: number) =>
+  `${String(photoSequenceId).padStart(10, "0")}#${String(albumSequenceId).padStart(10, "0")}`; // 10桁ゼロ埋め、同じ写真がわかりやすくなるように、写真ID#アルバムIDの順でソート
 
 export async function add(
   facilityCode: string,
@@ -51,12 +58,12 @@ export async function add(
     const command = new PutCommand({
       TableName: CartConfig.TABLE_NAME,
       Item: {
-        pk: `CART#USER#${userId}`,
-        sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
-        lsi1: `${options.albumSequenceId}#${options.photoSequenceId}`,
-        lsi2: options.purchaseDeadline,
-        lsi3: `FAC#${facilityCode}#PHOTO#${photoId}`,
-        lsi4: `FAC#${facilityCode}#ALBUM#${albumId}`,
+        pk: getPk(userId),
+        sk: getSk(albumId, photoId),
+        lsi1: getLsi1(options.albumSequenceId, options.photoSequenceId),
+        // lsi2: options.purchaseDeadline,
+        // lsi3: `FAC#${facilityCode}#PHOTO#${photoId}`,
+        // lsi4: `FAC#${facilityCode}#ALBUM#${albumId}`,
         facilityCode: facilityCode,
         albumId: albumId,
         photoId: photoId,
@@ -132,10 +139,10 @@ export async function edit(
   }
 
   const command = new UpdateCommand({
-    TableName: PhotoConfig.TABLE_NAME,
+    TableName: CartConfig.TABLE_NAME,
     Key: {
-      pk: `CART#USER#${userId}`,
-      sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
+      pk: getPk(userId),
+      sk: getSk(albumId, photoId),
     },
     UpdateExpression: UpdateExpression,
     ExpressionAttributeNames: ExpressionAttributeNames,
@@ -149,7 +156,7 @@ export async function edit(
 export async function list(facilityCode: string, userId: string): Promise<any> {
   const command = new QueryCommand({
     TableName: CartConfig.TABLE_NAME,
-    IndexName: "lsi1_index",
+    // IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
       "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #shootingBy, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
@@ -174,7 +181,7 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `CART#USER#${userId}`,
+      ":pk": getPk(userId),
     },
   });
 
@@ -192,8 +199,8 @@ export async function photoDelete(
   const command = new DeleteCommand({
     TableName: CartConfig.TABLE_NAME,
     Key: {
-      pk: `CART#USER#${userId}`,
-      sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
+      pk: getPk(userId),
+      sk: getSk(albumId, photoId),
     },
   });
   // コマンド実行
@@ -221,7 +228,7 @@ export async function cleare(
         ProjectionExpression: `#pk, #sk`, // 取得コストを抑えるため、キーだけ取る（重要）
         ExpressionAttributeNames: {"#pk": "pk", "#sk": "sk"},
         ExpressionAttributeValues: {
-          ":pk": `CART#USER#${userId}`,
+          ":pk": getPk(userId),
         },
         ExclusiveStartKey: lastKey,
         Limit: 100,

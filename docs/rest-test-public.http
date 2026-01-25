@@ -98,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 72561515-d953-482c-8401-6879f922d573
+@albumId = 19e2e4b0-6eaa-4a84-bf96-bddab8ffa2cb
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -176,15 +176,15 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=10&sortOrder=DESC HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：シーケンス番号指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2&sortOrder=DESC&sequenceIds=4,7,5,6 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2&sortOrder=DESC&sequenceIds=1,7,5,6 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = 107f4ef2-fb3d-4913-af65-e5824bab5776
+@photoId = ad903aa7-5088-40ec-bb82-93fd7351a599
 
 ### 写真のアルバム一括紐付け
 # @name photoUploadUrl
@@ -197,7 +197,7 @@ Authorization: Bearer {{accessToken}}
     "mode": "CHECKED",
     "selectedIds": [
       "{{photoId}}",
-      "a5fa1090-f538-4823-acb5-7120ceda9b8f",
+      "43f86296-c14e-4b37-bcf1-4a9afc86ab9f",
       "7c553af5-829d-4c43-8c80-4efd1a37f0df"
     ],
     "filters": {
@@ -206,7 +206,7 @@ Authorization: Bearer {{accessToken}}
     }
   },
   "album": {
-    "mode": "REMOVE",
+    "mode": "ADD",
     "albums": [
       "{{albumId}}"
     ]
@@ -287,27 +287,7 @@ Authorization: Bearer {{accessToken}}
 [
   {
     "albumId": "{{albumId}}",
-    "photoId": "7a1ca146-c497-4f14-8b3c-1eed246db830",
-    "print": [
-      {
-        "size": "printl",
-        "quantity": 1
-      },
-      {
-        "size": "print2l",
-        "quantity": 2
-      }
-    ],
-    "download": [
-      {
-        "size": "dl",
-        "selected": true
-      }
-    ]
-  },
-  {
-    "albumId": "{{albumId}}",
-    "photoId": "1533c165-96e0-4986-b60e-a0ec44aa05a0",
+    "photoId": "{{photoId}}",
     "print": [
       {
         "size": "printl",

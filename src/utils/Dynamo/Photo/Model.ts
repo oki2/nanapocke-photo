@@ -121,7 +121,7 @@ export const getGsiMySk = (uploadAt: string) => uploadAt;
 
 const getSeq2PhotoPk = (facilityCode: string) =>
   `SEQ2PHOTO#FAC#${facilityCode}`;
-const getSeq2PhotoSk = (seq: string) => `SEQ#${seq}`;
+const getSeq2PhotoSk = (seq: number) => `SEQ#${seq}`;
 
 const getDlAcceptPk = (facilityCode: string, userId: string) =>
   `FAC#${facilityCode}#USER#${userId}#DONWLOADACCEPT`;
@@ -199,7 +199,7 @@ export async function create(
 export async function setPhotoMeta(p: {
   facilityCode: string;
   photoId: string;
-  sequenceId: string;
+  sequenceId: number;
   width: number;
   height: number;
   salesSizeDl: string[];
@@ -403,7 +403,7 @@ export async function myList(
  */
 export async function getPhotoIdsBySeqs(
   facilityCode: string,
-  sequenceIds: string[],
+  sequenceIds: number[],
 ) {
   if (sequenceIds.length === 0) return [];
 
@@ -477,7 +477,7 @@ async function nextSequence(facilityCode: string): Promise<string> {
   const result = await docClient().send(command);
   const value = result.Attributes?.sequenceId;
   if (!value) throw new Error("sequenceId not returned");
-  return String(value);
+  return value;
 }
 
 export async function photoListBatchget(
@@ -685,33 +685,34 @@ export async function downloadAceptPhoto(
   );
 }
 
-export async function setFirstSoldAt(facilityCode: string, photoIds: string[]) {
-  const nowISO = new Date().toISOString();
-
-  for (const photoId of photoIds) {
-    await docClient().send(
-      new UpdateCommand({
-        TableName: PhotoConfig.TABLE_NAME,
-        Key: {
-          pk: `PHOTO#FAC#${facilityCode}#META`,
-          sk: photoId,
-        },
-        UpdateExpression:
-          "SET #firstSoldAt = if_not_exists(#firstSoldAt, :now) REMOVE #GsiDeletePk, #GsiDeleteSk, #ttl",
-        ExpressionAttributeNames: {
-          "#firstSoldAt": "firstSoldAt",
-          "#GsiDeletePk": "GsiDeletePk",
-          "#GsiDeleteSk": "GsiDeleteSk",
-          "#ttl": "ttl",
-        },
-        ExpressionAttributeValues: {
-          ":now": nowISO,
-        },
-      }),
-    );
-  }
-  // コマンド実行
-}
+// 保護者購入時に保護者ディレクトリ配下へ写真コピーする方式に変更した為不要
+// ※後ほど削除
+// export async function setFirstSoldAt(facilityCode: string, photoIds: string[]) {
+//   const nowISO = new Date().toISOString();
+//   for (const photoId of photoIds) {
+//     await docClient().send(
+//       new UpdateCommand({
+//         TableName: PhotoConfig.TABLE_NAME,
+//         Key: {
+//           pk: `PHOTO#FAC#${facilityCode}#META`,
+//           sk: photoId,
+//         },
+//         UpdateExpression:
+//           "SET #firstSoldAt = if_not_exists(#firstSoldAt, :now) REMOVE #GsiDeletePk, #GsiDeleteSk, #ttl",
+//         ExpressionAttributeNames: {
+//           "#firstSoldAt": "firstSoldAt",
+//           "#GsiDeletePk": "GsiDeletePk",
+//           "#GsiDeleteSk": "GsiDeleteSk",
+//           "#ttl": "ttl",
+//         },
+//         ExpressionAttributeValues: {
+//           ":now": nowISO,
+//         },
+//       }),
+//     );
+//   }
+//   // コマンド実行
+// }
 
 // ========================================================= //
 

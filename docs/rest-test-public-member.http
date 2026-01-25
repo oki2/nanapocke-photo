@@ -1,0 +1,174 @@
+@domainName = 7efu6sfwnc.execute-api.ap-northeast-1.amazonaws.com
+@customDomainName = nanaphoto.sandbox.uxbrew.jp
+@accessToken = {{login.response.body.$.accessToken}}
+# @accessToken = eyJraWQiOiI5RHpLaWV1NEhuY0JqS0pxU25NRnIycmZcL0h0SURPQWU5ckF3Z0hTMmh0ST0iLCJhbGciOiJSUzI1NiJ9.eyJvcmlnaW5fanRpIjoiN2Y2OGYyOGYtNjJhZS00NDAwLWJhOGQtZGZkNDUyNzliNWMwIiwic3ViIjoiMDdmNDNhNTgtMzAxMS03MDY0LWNiNTQtYWY4NzQ1OGVhZmUzIiwiYXVkIjoiMzVpZWQ4NG9na2FoNm9sZzM3Z3IzYnMzdmwiLCJldmVudF9pZCI6ImY0MGU4ZTU4LTY2NWEtNGQ2Mi1iODQ3LTcwOTFlZjc1ZDYyZCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU1NjkyODQ3LCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuYXAtbm9ydGhlYXN0LTEuYW1hem9uYXdzLmNvbVwvYXAtbm9ydGhlYXN0LTFfUkx0WnBKMDZoIiwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTc1NTY5NjQ0NywiaWF0IjoxNzU1NjkyODQ3LCJqdGkiOiJkOTRlMWY3Yi0yZGQ2LTQ0YzAtYWY0Zi1iMTMzOWYwMjEyY2MifQ.Sna24kZWNNRKLLRWJACjWX3nHJDkqckXy1rOUy08TF6-xPM5P58sl9odTP1zLZJypz6zN6djT2N2jkQ1iJssHDN0qWvASPnflnlh5wj2ZxgYgqUHP5Xg7DwCzLPha54oFX2eU7jChdb1cf3eFf-RdTp8yapg1Xm8bBqjI1dhpUAo_WQV4U3OAPGSMDTLIlCjZBZnAP31hwRufuD0NEaSpj3W-KVVCqo6idPNnYhRhhtBOMWIIO9wBL1nDitRuX-joUoMfuGMty5z1t0eOQC0fICoT5eSuqk52d_3rXtpqmOYQbxKt1YBLTGFM7rnD_sW766kKWMXMomMwO6Y8VTx2g
+@facilityCode = 00001
+
+### Nanapocke 認証受け口 : 保護者
+# @no-redirect
+GET https://{{customDomainName}}/auth/nanapocke?code=Gtest01 HTTP/1.1
+
+### リフレッシュトークンでログイン
+# @name login
+POST https://{{customDomainName}}/api/auth/refresh HTTP/1.1
+content-type: application/json
+
+### アルバム一覧取得
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/list HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 設定
+@albumId = 19e2e4b0-6eaa-4a84-bf96-bddab8ffa2cb
+
+### 写真一覧：保護者向け
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+
+### 設定
+@photoId = bbb
+
+### カートに写真追加
+POST https://{{customDomainName}}/api/my/cart HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "albumId": "{{albumId}}",
+  "photoId": "{{photoId}}"
+}
+
+### カート内写真一覧：保護者指定
+GET https://{{customDomainName}}/api/my/cart/list HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+### カート内写真削除：保護者指定
+DELETE https://{{customDomainName}}/api/my/cart/item/{{albumId}}/{{photoId}} HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
+### カート内写真枚数変更：保護者指定
+PUT https://{{customDomainName}}/api/my/cart HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+[
+  {
+    "albumId": "{{albumId}}",
+    "photoId": "7a1ca146-c497-4f14-8b3c-1eed246db830",
+    "print": [
+      {
+        "size": "printl",
+        "quantity": 1
+      },
+      {
+        "size": "print2l",
+        "quantity": 2
+      }
+    ],
+    "download": [
+      {
+        "size": "dl",
+        "selected": true
+      }
+    ]
+  },
+  {
+    "albumId": "{{albumId}}",
+    "photoId": "1533c165-96e0-4986-b60e-a0ec44aa05a0",
+    "print": [
+      {
+        "size": "printl",
+        "quantity": 1
+      },
+      {
+        "size": "print2l",
+        "quantity": 2
+      }
+    ],
+    "download": [
+      {
+        "size": "dl",
+        "selected": true
+      }
+    ]
+  }
+]
+
+### カート内写真からチェックアウト情報を作成：保護者専用
+POST https://{{customDomainName}}/api/my/cart/checkout HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "type": "shipping",
+  "address": {
+    "name": "山田たろう",
+    "postalCode": "1234567",
+    "line": "東京都どっか",
+    "phone": "01234567890"
+  }
+}
+
+### 決済履歴一覧を取得：保護者専用
+GET https://{{customDomainName}}/api/my/payment/list HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 決済履歴詳細を取得：保護者専用
+GET https://{{customDomainName}}/api/my/payment/{{OrderID}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+
+
+
+
+
+
+
+
+
+### SMBC callback テスト
+POST https://{{customDomainName}}/api/payments/smbc/callback?hoge=fuge HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+result=eyJ0cmFuc2FjdGlvbnJlc3VsdCI6eyJBY2Nlc3NJRCI6bnVsbCwiQWNjZXNzUGFzcyI6bnVsbCwiT3JkZXJJRCI6IlhYWFgtMjYwMTAxLTAwMzMtMDAwMDAwMDAxMCIsIlJlc3VsdCI6IlBBWVNUQVJUIiwiUHJvY2Vzc2RhdGUiOiIyMDI2LzAxLzAxIDAwOjMzOjE3IiwiRXJyQ29kZSI6bnVsbCwiRXJySW5mbyI6bnVsbCwiUGF5bWV0aG9kIjpudWxsfX0%3D.5a120c23c579009f742e4bc71d6371c6b3ea1b5905957fa0d5d2b2f68bd1ae5d
+
+### SMBC Setting
+@ShopID = tshop00009520
+@ShopPass = 85td5ygq
+@OrderID = DNP2-260107-1330-0000000021
+@PayType = 45
+
+### SMBC notification テスト
+POST https://{{customDomainName}}/api/payments/smbc/notification HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
+
+
+### SMBC notification テスト 開発環境一次受け
+POST https://work.uxbrew.jp/photo2/smbc/notification/ HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
+
+
+### SMBC SearchTradeMulti
+GET https://pt01.smbc-gp.co.jp/payment/SearchTradeMulti.idPass?ShopID={{ShopID}}&ShopPass={{ShopPass}}&OrderID={{OrderID}}&PayType={{PayType}} HTTP/1.1
+
+
+
+### test
+POST https://stg.nanapocke.com/manage/api/v1/topics HTTP/1.1
+content-type: application/json
+Authorization: Bearer Dc9b7LWpmu-uwa8cEee6OI_pKceEt7zAvb2YJZW8BHSyMrAiM-Y
+
+{}
+
+### 
+POST https://dev-kids.uxbrew.jp/api/payment/smbc/notification/ HTTP/1.1
+content-type: application/x-www-form-urlencoded
+
+ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=

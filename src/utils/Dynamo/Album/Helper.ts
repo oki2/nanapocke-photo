@@ -1,8 +1,10 @@
 import {AlbumConfig} from "../../../config";
 import * as AlbumModel from "./Model";
 
+import * as Relation from "../Relation";
+
 export async function mutableStatusList(
-  facilityCode: string
+  facilityCode: string,
 ): Promise<{adds: string[]; dels: string[]}> {
   const addList = [];
   const delList = [];
@@ -128,4 +130,18 @@ export function toJstYesterday2359(input: Date | string): Date {
   const jst0200Utc = Date.UTC(year, month, day - 1, 23, 59, 59) - JST_OFFSET_MS;
 
   return new Date(jst0200Utc);
+}
+
+/**
+ * アルバム内の写真枚数を取得
+ *
+ * @param {string} facilityCode - Facility code.
+ * @param {string} albumId - Album ID.
+ * @returns {Promise<number>} - Promise of count of photos.
+ */
+export async function photoCount(
+  facilityCode: string,
+  albumId: string,
+): Promise<number> {
+  return await Relation.photoCount(facilityCode, albumId);
 }

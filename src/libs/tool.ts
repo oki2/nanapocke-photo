@@ -16,15 +16,10 @@ export function tagSplitter(tagStr: string): string[] {
  * @param {string} photoIdStr
  * @returns {string[]} PhotoId の配列
  */
-export function photoIdSplitter(photoIdStr: string): string[] {
-  return [
-    ...new Set(
-      photoIdStr
-        .trim()
-        .split(/[ ,#　]+/)
-        .filter(Boolean),
-    ),
-  ];
+export function photoIdSplitter(str: string): string[] {
+  const s = str.trim();
+  if (!s) return [];
+  return [...new Set(s.split(/[ ,#　]+/).filter(Boolean))];
 }
 
 /**
@@ -32,13 +27,21 @@ export function photoIdSplitter(photoIdStr: string): string[] {
  * @param {string} albumIdStr
  * @returns {string[]} AlbumId の配列
  */
-export function albumIdSplitter(albumIdStr: string): string[] {
+export function albumIdSplitter(str: string): string[] {
+  const s = str.trim();
+  if (!s) return [];
+  return [...new Set(s.split(/[ ,#　]+/).filter(Boolean))];
+}
+
+export function sequenceIdSplitter(str: string): number[] {
+  const s = str.trim();
+  if (!s) return [];
   return [
     ...new Set(
-      albumIdStr
-        .trim()
+      s
         .split(/[ ,#　]+/)
-        .filter(Boolean),
+        .map(Number)
+        .filter(Number.isFinite),
     ),
   ];
 }

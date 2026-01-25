@@ -174,3 +174,26 @@ export async function getPhotoByAlbumIdAndPhotoId(
   const result = await docClient().send(command);
   return result.Item;
 }
+
+export async function photoCount(
+  facilityCode: string,
+  albumId: string,
+): Promise<number> {
+  // コマンド実行
+  const result = await docClient().send(
+    new QueryCommand({
+      TableName: RelationConfig.TABLE_NAME,
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk)",
+      Select: "COUNT",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+      },
+      ExpressionAttributeValues: {
+        ":pk": getPk(facilityCode),
+        ":sk": `ALBUM#${albumId}#`,
+      },
+    }),
+  );
+  return result.Count ?? 0;
+}

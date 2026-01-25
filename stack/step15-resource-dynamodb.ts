@@ -282,6 +282,14 @@ export class Step15DynamodbStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY, // NOT recommended for production code
       billingMode: BillingMode.PAY_PER_REQUEST, // PAY_PER_REQUEST 従量課金
     });
+    // LSI1 - アルバムの並び順、アップロード日降順ソート
+    this.CommerceTable.addLocalSecondaryIndex({
+      indexName: "lsi1_index",
+      sortKey: {
+        name: "lsi1",
+        type: AttributeType.STRING,
+      },
+    });
     // GSI - スパースGSI - 保護者決済完了時に自身のデータ取得用
     this.CommerceTable.addGlobalSecondaryIndex({
       indexName: "GsiPaidUser_Index",

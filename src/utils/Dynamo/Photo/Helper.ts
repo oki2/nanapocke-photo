@@ -73,7 +73,7 @@ export async function getPhotosByAlbumId(
 
 export async function getPhotosBySequenceIds(
   facilityCode: string,
-  sequenceIds: string[],
+  sequenceIds: number[],
 ) {
   // 1. 対象のSequenceIdに属する写真一覧を取得
   const photoIds = await PhotoModel.getPhotoIdsBySeqs(
@@ -353,7 +353,7 @@ export async function getAlbumPhoto(
 
 export async function getPhotosBySequenceIdsAndFilter(
   facilityCode: string,
-  sequenceIds: string[],
+  sequenceIds: number[],
   albumId: string,
   filter: PhotoModel.FilterOptions,
   sort: PhotoModel.SortOptions,

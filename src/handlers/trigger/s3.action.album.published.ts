@@ -29,7 +29,7 @@ interface Detail {
 
 export const handler: EventBridgeHandler<string, Detail, any> = async (
   event,
-  context
+  context,
 ) => {
   console.log("event", event);
   const {bucketName, keyPath} = event.detail;
@@ -38,22 +38,9 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   const [prefix, actionName, fileName] = keyPath.split("/");
   console.log("keyPath", keyPath);
 
-  switch (actionName) {
-    case TRIGGER_ACTION.ALBUM_PUBLISHED:
-      // 写真の情報を取得
-      await albumPublished(bucketName, keyPath);
-      break;
-    case TRIGGER_ACTION.PAYMENT_COMPLETE:
-      // 支払い完了処理
-      await paymentComplete(bucketName, keyPath);
-      break;
-  }
-};
-
-async function albumPublished(bucketName: string, keyPath: string) {
   // S3からデータ取得
   const data: AlbumPublishedT = JSON.parse(
-    await S3.S3FileReadToString(bucketName, keyPath)
+    await S3.S3FileReadToString(bucketName, keyPath),
   );
 
   // 1. アルバム情報を取得
@@ -62,17 +49,17 @@ async function albumPublished(bucketName: string, keyPath: string) {
   // 2. 対象のアルバムに属する写真一覧を取得
   const photoList = await Photo.getPhotosByAlbumId(
     data.facilityCode,
-    data.albumId
+    data.albumId,
   );
 
   // 3. 写真Meta情報を取得（絞込み & 並べ替えも同時に）
   const photos = Photo.filterSortPagePhotos(
     photoList,
-    {editability: PhotoConfig.EDITABILITY.EDITABLE},
+    {},
     {field: "shootingAt", order: "asc"},
     {
       limit: AlbumConfig.MAX_PHOTO_COUNT,
-    }
+    },
   );
   console.log("photos", photos);
 
@@ -128,7 +115,7 @@ async function albumPublished(bucketName: string, keyPath: string) {
   await S3.S3FilePut(
     AppConfig.BUCKET_PHOTO_NAME,
     `sales/${data.facilityCode}/${data.albumId}.json`,
-    JSON.stringify(dataObj)
+    JSON.stringify(dataObj),
   );
 
   // 6. アルバム情報を更新（販売中に変更）
@@ -136,84 +123,14 @@ async function albumPublished(bucketName: string, keyPath: string) {
     data.facilityCode,
     data.albumId,
     photosObj.length,
-    data.userId
+    data.userId,
   );
 
-  // 7 写真を販売実績アリへと変更
-  await Photo.setFirstSoldAt(data.facilityCode, photoIds);
+  // // 7 写真を販売実績アリへと変更
+  // await Photo.setFirstSoldAt(data.facilityCode, photoIds);
 
-  // 8. ナナポケへの通知が必要な場合は通知 ※データをS3Eventトリガー経由で送信
+  // 7. ナナポケへの通知が必要な場合は通知 ※データをS3Eventトリガー経由で送信
   if (album.topicsSend) {
     console.log("album.topicsSend", album.topicsSend);
   }
-}
-
-/**
- * 決済完了後に実行される処理
- * DL用のレコード登録、印刷送信等を実行
- *
- * @param {string} bucketName - S3 bucket name
- * @param {string} keyPath - S3 key path
- */
-async function paymentComplete(bucketName: string, keyPath: string) {
-  // S3からデータ取得
-  const orderData = JSON.parse(
-    await S3.S3FileReadToString(bucketName, keyPath)
-  );
-  console.log("orderData", orderData);
-
-  // 注文情報を取得
-  const payment = await Payment.get(orderData.orderId);
-
-  // しまうま用の注文番号を生成
-  const pOrderId =
-    orderData.orderId[0] + orderData.orderId[3] + orderData.orderId.slice(19);
-  const printDataAry = [];
-
-  // 印刷がある場合は送付先情報を取得
-  let address: ShippingAddressT | null = null;
-  if (orderData.countPrint > 0) {
-    address = await S3.getUserInfo(orderData.orderId);
-  }
-  // 現在日時（日本時間）のyyyyMMdd を取得
-  const now = new Date();
-  const jstTime = now.getTime() + 9 * 60 * 60 * 1000;
-  const jstDate = new Date(jstTime);
-  const yyyy = jstDate.getUTCFullYear();
-  const mm = String(jstDate.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(jstDate.getUTCDate()).padStart(2, "0");
-  const orderYmd = `${yyyy}${mm}${dd}`;
-
-  // DL用
-  const dlData = orderData.cart
-    .filter((cart: any) => {
-      return cart.downloadOption.selected;
-    })
-    .map((cart: any) => {
-      return cart.photoId;
-    });
-  console.log("dlData", dlData);
-
-  // DL購入が存在する場合は、DL用のレコードを登録
-  if (dlData.length > 0) {
-    const exp = Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
-    await Photo.downloadAceptPhoto(
-      payment.facilityCode,
-      payment.userId,
-      dlData,
-      exp
-    );
-  }
-
-  // 決済ログをS3のストレージ領域へコピー
-  await S3.S3FileCopy(
-    bucketName,
-    keyPath,
-    AppConfig.BUCKET_PHOTO_NAME,
-    `paymentLog/${payment.userId}/${orderData.orderId}/order.json`
-  );
-
-  // 印刷購入が存在する場合は、印刷用のレコードを登録
-
-  console.log("orderData", orderData);
-}
+};
