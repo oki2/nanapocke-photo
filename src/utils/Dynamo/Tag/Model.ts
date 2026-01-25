@@ -1,4 +1,4 @@
-import {docClient} from "../dynamo";
+import {docClient, batchWriteAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
@@ -11,7 +11,7 @@ import {TagConfig} from "../../../config";
 export async function historyAdd(
   facilityCode: string,
   userId: string,
-  tags: string[]
+  tags: string[],
 ): Promise<void> {
   const nowISO = new Date().toISOString();
   const ttl = Math.floor(Date.now() / 1000) + TagConfig.HISTORY_EXPIRATION;
@@ -30,14 +30,8 @@ export async function historyAdd(
       },
     },
   }));
-  const command = new BatchWriteCommand({
-    RequestItems: {
-      [TagConfig.TABLE_NAME]: requestItems,
-    },
-  });
 
-  // コマンド実行
-  await docClient().send(command);
+  await batchWriteAll(TagConfig.TABLE_NAME, requestItems, docClient());
 }
 
 export async function historyList(facilityCode: string): Promise<any> {

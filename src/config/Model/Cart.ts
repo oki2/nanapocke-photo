@@ -1,1 +1,1 @@
-export const TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
+export const TABLE_NAME = process.env.TABLE_NAME_COMMERCE || "";

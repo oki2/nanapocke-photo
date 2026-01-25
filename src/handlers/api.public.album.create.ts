@@ -12,6 +12,7 @@ import {
 
 import * as Album from "../utils/Dynamo/Album";
 import * as Photo from "../utils/Dynamo/Photo";
+import * as Relation from "../utils/Dynamo/Relation";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -49,14 +50,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 3. コピーの場合
   if (data.copyFromAlbumId) {
     // コピー元のアルバムに属する写真一覧を取得
-    const photoIds = await Photo.photoIdsByAlbumId(
+    const photoIds = await Relation.getPhotoIdsByAlbumId(
       authContext.facilityCode,
       data.copyFromAlbumId,
     );
 
     // DynamoDB に写真とアルバムの紐付け情報を登録
     for (const photoId of photoIds) {
-      await Photo.setAlbumsOnePhotoSafe({
+      await Relation.setRelationPhotoAlbums({
         facilityCode: authContext.facilityCode,
         photoId: photoId,
         addAlbums: [album.albumId],

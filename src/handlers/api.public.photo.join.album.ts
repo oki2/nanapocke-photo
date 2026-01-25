@@ -9,6 +9,7 @@ import {parseOrThrow} from "../libs/validate";
 
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
+import * as Relation from "../utils/Dynamo/Relation";
 
 import {tagSplitter, photoIdSplitter} from "../libs/tool";
 
@@ -94,7 +95,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // 6. DynamoDB に写真とアルバムの紐付け情報を登録
   for (const photoId of photoIds) {
-    await Photo.setAlbumsOnePhotoSafe({
+    await Relation.setRelationPhotoAlbums({
       facilityCode: authContext.facilityCode,
       photoId: photoId,
       addAlbums: addAlbums,
@@ -180,10 +181,10 @@ async function getAllPhoto(
   // 1. 写真の全PhotoIDを取得
   return await Photo.listPhotoIdsAll({
     keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: "lsi1",
+      pkName: "GsiUploadPK",
+      pkValue: Photo.getGsiUploadPk(facilityCode),
     },
-    indexName: "lsi1_index",
+    indexName: "GsiUpload_Index",
     scanIndexForward: false,
     filter: filter,
   });
@@ -198,10 +199,10 @@ async function getUnsetPhoto(
   // 1. 写真の全PhotoIDを取得
   return await Photo.listPhotoIdsAll({
     keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: "lsi3",
+      pkName: "GsiUnsetUploadPK",
+      pkValue: Photo.getGsiUnsetUploadPk(facilityCode),
     },
-    indexName: "lsi3_index",
+    indexName: "GsiUnsetUpload_Index",
     scanIndexForward: false,
     filter: filter,
   });

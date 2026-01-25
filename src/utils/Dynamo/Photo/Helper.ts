@@ -1,5 +1,7 @@
 import {PhotoConfig} from "../../../config";
 import * as PhotoModel from "./Model";
+import * as Relation from "../Relation";
+
 function encodeCursor(payload: PhotoModel.CursorPayload): string {
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
@@ -59,7 +61,7 @@ export async function getPhotosByAlbumId(
   albumId: string,
 ) {
   // 1. 対象のアルバムに属する写真一覧を取得
-  const photoIds = await PhotoModel.photoIdsByAlbumId(facilityCode, albumId);
+  const photoIds = await Relation.getPhotoIdsByAlbumId(facilityCode, albumId);
   console.log("photoIds", photoIds);
 
   // // 2. バッチゲットで写真一覧を取得
@@ -206,4 +208,176 @@ export function filterSortPagePhotos(
   }
 
   return {items, nextCursor};
+}
+
+export async function getAllPhoto(
+  facilityCode: string,
+  filter: PhotoModel.FilterOptions,
+  sort: PhotoModel.SortOptions,
+  limit: number,
+  cursor: string,
+) {
+  // 1. Index の判定
+  const indexName =
+    sort.field === "shootingAt" ? "GsiShooting_Index" : "GsiUpload_Index"; //
+  const scanIndexForward = sort.order === "asc";
+  const keys =
+    sort.field === "shootingAt"
+      ? {
+          pkName: "GsiShootingPK",
+          pkValue: PhotoModel.getGsiShootingPk(facilityCode),
+        }
+      : {
+          pkName: "GsiUploadPK",
+          pkValue: PhotoModel.getGsiUploadPk(facilityCode),
+        };
+
+  // 2. 写真の全件を取得
+  const count = await PhotoModel.countPhotosAll({
+    keys: keys,
+    indexName: indexName,
+    scanIndexForward: scanIndexForward,
+    filter: filter,
+  });
+  console.log("count", count);
+
+  // 3. 写真一覧を取得
+  const res = await PhotoModel.queryPhotosPage({
+    keys: keys,
+    indexName: indexName,
+    scanIndexForward: scanIndexForward,
+    filter: filter,
+    page: {
+      limit: limit,
+      cursor: cursor,
+    },
+  });
+  console.log("res", res);
+
+  return {
+    totalItems: count,
+    photos: res.items,
+    nextCursor: res.nextCursor ?? "",
+  };
+}
+
+export async function getUnsetPhoto(
+  facilityCode: string,
+  filter: PhotoModel.FilterOptions,
+  sort: PhotoModel.SortOptions,
+  limit: number,
+  cursor: string,
+) {
+  console.log("getUnsetPhoto");
+  // 1. Index の判定
+  const indexName =
+    sort.field === "shootingAt"
+      ? "GsiUnsetShooting_Index"
+      : "GsiUnsetUpload_Index"; //
+  const scanIndexForward = sort.order === "asc";
+  const keys =
+    sort.field === "shootingAt"
+      ? {
+          pkName: "GsiUnsetShootingPK",
+          pkValue: PhotoModel.getGsiUnsetShootingPk(facilityCode),
+        }
+      : {
+          pkName: "GsiUnsetUploadPK",
+          pkValue: PhotoModel.getGsiUnsetUploadPk(facilityCode),
+        };
+
+  // 2. 写真の全件を取得
+  const count = await PhotoModel.countPhotosAll({
+    keys: keys,
+    indexName: indexName,
+    scanIndexForward: scanIndexForward,
+    filter: filter,
+  });
+  console.log("count", count);
+
+  // 3. 写真一覧を取得
+  const res = await PhotoModel.queryPhotosPage({
+    keys: keys,
+    indexName: indexName,
+    scanIndexForward: scanIndexForward,
+    filter: filter,
+    page: {
+      limit: limit,
+      cursor: cursor,
+    },
+  });
+  console.log("res", res);
+
+  return {
+    totalItems: count,
+    photos: res.items,
+    nextCursor: res.nextCursor ?? "",
+  };
+}
+
+/**
+ * Get all photos in DynamoDB.
+ * @param {string} facilityCode - facility code
+ * @param {Photo.FilterOptions} filter - filter options
+ * @param {Photo.SortOptions} sort - sort options
+ * @param {number} limit - limit of photos
+ * @param {string} cursor - cursor of photos
+ * @return {Promise<Photo.ListResponseT[]>} promise of array of photos
+ */
+
+export async function getAlbumPhoto(
+  facilityCode: string,
+  albumId: string,
+  filter: PhotoModel.FilterOptions,
+  sort: PhotoModel.SortOptions,
+  limit: number,
+  cursor: string,
+) {
+  // 1. 対象のアルバムに属する写真一覧を取得
+  const photos = await getPhotosByAlbumId(facilityCode, albumId);
+  console.log("photos", photos);
+
+  // 2. 写真Meta情報を取得（絞込み & 並べ替えも同時に）
+  const res = filterSortPagePhotos(photos, filter, sort, {
+    limit: limit,
+    cursor: cursor,
+  });
+  console.log("res", res);
+
+  return {
+    totalItems: photos.length,
+    photos: res.items,
+    nextCursor: res.nextCursor ?? "",
+  };
+}
+
+export async function getPhotosBySequenceIdsAndFilter(
+  facilityCode: string,
+  sequenceIds: string[],
+  albumId: string,
+  filter: PhotoModel.FilterOptions,
+  sort: PhotoModel.SortOptions,
+  limit: number,
+  cursor: string,
+) {
+  // 1. sequenceIds から写真一覧を取得
+  const photos = await getPhotosBySequenceIds(facilityCode, sequenceIds);
+
+  // 2. 写真Meta情報を取得（絞込み & 並べ替えも同時に）
+  const res = filterSortPagePhotos(
+    photos,
+    {...filter, albumId: albumId},
+    sort,
+    {
+      limit: limit,
+      cursor: cursor,
+    },
+  );
+  console.log("res", res);
+
+  return {
+    totalItems: photos.length ?? 0,
+    photos: res.items,
+    nextCursor: res.nextCursor ?? "",
+  };
 }

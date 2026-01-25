@@ -1,4 +1,4 @@
-export const TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
+export const TABLE_NAME = process.env.TABLE_NAME_COMMERCE || "";
 export const ORDER_ID_PREFIX = process.env.ORDER_ID_PREFIX || "XXXX";
 export const STATUS = {
   CREATED: "CREATED", // 決済履歴作成済み（未決済）

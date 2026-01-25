@@ -6,6 +6,7 @@ import {PhotoConfig, UserConfig} from "../config";
 
 import {
   PhotoSelect,
+  PhotoSelectT,
   PhotoListResponse,
   PhotoListResponseT,
 } from "../schemas/public";
@@ -18,30 +19,88 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
   console.log("authContext", authContext);
 
-  // 保育士、フォトグラファーの場合は自身の写真を返して終了
-  if (
-    authContext.role === UserConfig.ROLE.TEACHER ||
-    authContext.role === UserConfig.ROLE.PHOTOGRAPHER
-  ) {
-    const data = await Photo.myList(
-      authContext.facilityCode,
-      authContext.userId,
-    );
-    return http.ok(parseOrThrow(PhotoListResponse, data));
-  }
-
-  // === Step.1 クエリストリングチェック code を取得 =========== //
+  // 1. クエリストリングチェック =========== //
   const query = parseOrThrow(PhotoSelect, event.queryStringParameters ?? {});
   console.log("query", query);
 
-  // タグの分解
-  const tags = tagSplitter(query.tags);
+  // 2. 権限により写真一覧取得方法の分岐
+  let data: any;
+  if (
+    // 保育士、フォトグラファーの場合
+    authContext.role === UserConfig.ROLE.TEACHER ||
+    authContext.role === UserConfig.ROLE.PHOTOGRAPHER
+  ) {
+    data = await runByStudio(
+      authContext.facilityCode,
+      authContext.userId,
+      query,
+    );
+  } else if (authContext.role === UserConfig.ROLE.PRINCIPAL) {
+    // 園長の場合
+    data = await runByPrincipal(
+      query,
+      authContext.facilityCode,
+      authContext.userId,
+    );
+  }
 
-  // // 写真IDの分解
-  // const photoIds = photoIdSplitter(query.photoIdQuery);
+  console.log("data", data);
 
-  // 写真通し番号の分解
-  const sequenceIds = photoIdSplitter(query.sequenceIds);
+  const result: PhotoListResponseT = {
+    photos: [],
+    totalItems: 0,
+    nextCursor: "",
+  };
+
+  for (const item of data.photos) {
+    result.photos.push({
+      facilityCode: item.facilityCode,
+      photoId: item.photoId,
+      sequenceId: Number(item.sequenceId),
+      status: item.status,
+      saleStatus:
+        item.status == PhotoConfig.STATUS.ACTIVE
+          ? PhotoConfig.SALES_STATUS.EDITABLE
+          : PhotoConfig.SALES_STATUS.LOCKED,
+      photoImageUrl: `/thumbnail/${item.facilityCode}/photo/${item.createdBy}/${item.photoId}.webp`,
+      size: `${item.width} x ${item.height} px`,
+      printSizes: item.salesSizePrint.map((v: string) => {
+        if (v === PhotoConfig.SALES_SIZE.PRINT_L) return "L";
+        if (v === PhotoConfig.SALES_SIZE.PRINT_2L) return "2L";
+        return null; // 何も該当しない場合
+      }),
+      tags: item.tags,
+      albums: item.albums,
+      priceTier: item.priceTier,
+      shootingAt: item.shootingAt,
+      shootingUserName: item.shootingUserName,
+      createdAt: item.createdAt,
+    });
+  }
+  result.totalItems = data.totalItems;
+  result.nextCursor = data.nextCursor ?? "";
+
+  return http.ok(parseOrThrow(PhotoListResponse, result));
+});
+
+async function runByStudio(
+  facilityCode: string,
+  userId: string,
+  query: any = {},
+) {
+  // 保育士、フォトグラファーの場合は自身の写真を返して終了
+  return await Photo.myList(facilityCode, userId, 2, query.cursor ?? "");
+}
+
+async function runByPrincipal(
+  query: PhotoSelectT,
+  facilityCode: string,
+  userId: string,
+) {
+  // Step.1 検索条件の整理 =========== //
+  const tags = tagSplitter(query.tags); // タグの分解
+  // const photoIds = photoIdSplitter(query.photoIdQuery); // 写真IDの分解
+  const sequenceIds = photoIdSplitter(query.sequenceIds); // 写真通し番号の分解
   if (sequenceIds.length > PhotoConfig.FILTER_LIMIT.MAX) {
     return http.badRequest({
       detail: `指定可能な写真IDの数は${PhotoConfig.FILTER_LIMIT.MAX}件までです。`,
@@ -73,55 +132,18 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   };
 
   // === Step.4 データの取得 =========== //
-  const data =
+  return (
     (await getPhotosByFilter({
-      facilityCode: authContext.facilityCode,
+      facilityCode: facilityCode,
       sequenceIds: sequenceIds,
       albumId: query.albumId,
       filter: filter,
       sort: sort,
       limit: query.limit,
       cursor: query.cursor ?? "",
-    })) ?? [];
-
-  console.log("data", data);
-
-  const result: PhotoListResponseT = {
-    photos: [],
-    totalItems: 0,
-    nextCursor: "",
-  };
-
-  for (const item of data.photos) {
-    result.photos.push({
-      facilityCode: item.facilityCode,
-      photoId: item.photoId,
-      sequenceId: item.sequenceId,
-      status: item.status,
-      saleStatus:
-        item.status == PhotoConfig.STATUS.ACTIVE
-          ? PhotoConfig.SALES_STATUS.EDITABLE
-          : PhotoConfig.SALES_STATUS.LOCKED,
-      photoImageUrl: `/thumbnail/${item.facilityCode}/photo/${item.createdBy}/${item.photoId}.webp`,
-      size: `${item.width} x ${item.height} px`,
-      printSizes: item.salesSizePrint.map((v: string) => {
-        if (v === PhotoConfig.SALES_SIZE.PRINT_L) return "L";
-        if (v === PhotoConfig.SALES_SIZE.PRINT_2L) return "2L";
-        return null; // 何も該当しない場合
-      }),
-      tags: item.tags,
-      albums: item.albums,
-      priceTier: item.priceTier,
-      shootingAt: item.shootingAt,
-      shootingUserName: item.shootingUserName,
-      createdAt: item.createdAt,
-    });
-  }
-  result.totalItems = data.totalItems;
-  result.nextCursor = data.nextCursor ?? "";
-
-  return http.ok(parseOrThrow(PhotoListResponse, result));
-});
+    })) ?? []
+  );
+}
 
 async function getPhotosByFilter(p: {
   facilityCode: string;
@@ -136,7 +158,7 @@ async function getPhotosByFilter(p: {
 
   // sequenceIds がある場合はそれを優先
   if (p.sequenceIds.length > 0) {
-    return await getPhotosBySequenceIdsAndFilter(
+    return await Photo.getPhotosBySequenceIdsAndFilter(
       p.facilityCode,
       p.sequenceIds,
       p.albumId,
@@ -149,7 +171,7 @@ async function getPhotosByFilter(p: {
     // sequenceIds がない場合
     switch (p.albumId) {
       case "ALL":
-        return await getAllPhoto(
+        return await Photo.getAllPhoto(
           p.facilityCode,
           p.filter,
           p.sort,
@@ -157,7 +179,7 @@ async function getPhotosByFilter(p: {
           p.cursor ?? "",
         );
       case "UNSET":
-        return await getUnsetPhoto(
+        return await Photo.getUnsetPhoto(
           p.facilityCode,
           p.filter,
           p.sort,
@@ -165,7 +187,7 @@ async function getPhotosByFilter(p: {
           p.cursor ?? "",
         );
       default:
-        return await getAlbumPhoto(
+        return await Photo.getAlbumPhoto(
           p.facilityCode,
           p.albumId,
           p.filter,
@@ -175,161 +197,4 @@ async function getPhotosByFilter(p: {
         );
     }
   }
-}
-
-async function getPhotosBySequenceIdsAndFilter(
-  facilityCode: string,
-  sequenceIds: string[],
-  albumId: string,
-  filter: Photo.FilterOptions,
-  sort: Photo.SortOptions,
-  limit: number,
-  cursor: string,
-) {
-  // 1. sequenceIds から写真一覧を取得
-  const photos = await Photo.getPhotosBySequenceIds(facilityCode, sequenceIds);
-
-  // 2. 写真Meta情報を取得（絞込み & 並べ替えも同時に）
-  const res = Photo.filterSortPagePhotos(
-    photos,
-    {...filter, albumId: albumId},
-    sort,
-    {
-      limit: limit,
-      cursor: cursor,
-    },
-  );
-  console.log("res", res);
-
-  return {totalItems: photos.length, photos: res.items, nextCursor: ""};
-}
-
-/**
- * Get all photos in DynamoDB.
- * @param {string} facilityCode - facility code
- * @param {Photo.FilterOptions} filter - filter options
- * @param {Photo.SortOptions} sort - sort options
- * @param {number} limit - limit of photos
- * @param {string} cursor - cursor of photos
- * @return {Promise<Photo.ListResponseT[]>} promise of array of photos
- */
-async function getAllPhoto(
-  facilityCode: string,
-  filter: Photo.FilterOptions,
-  sort: Photo.SortOptions,
-  limit: number,
-  cursor: string,
-) {
-  // 1. Index の判定
-  const indexFielsd = sort.field === "shootingAt" ? "lsi2" : "lsi1"; //
-  const indexName = `${indexFielsd}_index`; //
-  const scanIndexForward = sort.order === "asc";
-
-  // 2. 写真の全件を取得
-  const count = await Photo.countPhotosAll({
-    keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: indexFielsd,
-    },
-    indexName: indexName,
-    scanIndexForward: scanIndexForward,
-    filter: filter,
-  });
-  console.log("count", count);
-
-  // 3. 写真一覧を取得
-  const res = await Photo.queryPhotosPage({
-    keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: indexFielsd,
-    },
-    indexName: indexName,
-    scanIndexForward: scanIndexForward,
-    filter: filter,
-    page: {
-      limit: limit,
-      cursor: cursor,
-    },
-  });
-  console.log("res", res);
-
-  return {
-    totalItems: count,
-    photos: res.items,
-    nextCursor: res.nextCursor ?? "",
-  };
-}
-
-async function getUnsetPhoto(
-  facilityCode: string,
-  filter: Photo.FilterOptions,
-  sort: Photo.SortOptions,
-  limit: number,
-  cursor: string,
-) {
-  console.log("getUnsetPhoto");
-  // 1. Index の判定
-  const indexFielsd = sort.field === "shootingAt" ? "lsi4" : "lsi3"; //
-  const indexName = `${indexFielsd}_index`; //
-  const scanIndexForward = sort.order === "asc";
-
-  // 2. 写真の全件を取得
-  const count = await Photo.countPhotosAll({
-    keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: indexFielsd,
-    },
-    indexName: indexName,
-    scanIndexForward: scanIndexForward,
-    filter: filter,
-  });
-  console.log("count", count);
-
-  // 3. 写真一覧を取得
-  const res = await Photo.queryPhotosPage({
-    keys: {
-      pkValue: `PHOTO#FAC#${facilityCode}#META`,
-      skName: indexFielsd,
-    },
-    indexName: indexName,
-    scanIndexForward: scanIndexForward,
-    filter: filter,
-    page: {
-      limit: limit,
-      cursor: cursor,
-    },
-  });
-  console.log("res", res);
-
-  return {
-    totalItems: count,
-    photos: res.items,
-    nextCursor: res.nextCursor ?? "",
-  };
-}
-
-async function getAlbumPhoto(
-  facilityCode: string,
-  albumId: string,
-  filter: Photo.FilterOptions,
-  sort: Photo.SortOptions,
-  limit: number,
-  cursor: string,
-) {
-  // 1. 対象のアルバムに属する写真一覧を取得
-  const photos = await Photo.getPhotosByAlbumId(facilityCode, albumId);
-  console.log("photos", photos);
-
-  // 2. 写真Meta情報を取得（絞込み & 並べ替えも同時に）
-  const res = Photo.filterSortPagePhotos(photos, filter, sort, {
-    limit: limit,
-    cursor: cursor,
-  });
-  console.log("res", res);
-
-  return {
-    totalItems: photos.length,
-    photos: res.items,
-    nextCursor: res.nextCursor ?? "",
-  };
 }

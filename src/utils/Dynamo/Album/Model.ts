@@ -1,3 +1,13 @@
+/**
+ * PK : FAC#${facilityCode}
+ * SK : META#${albumId}
+ * gsi1 : 全件：アップロード日ソート
+ * gsi2 : 全件：撮影日ソート
+ * gsi3 : アルバム未設定：アップロード日ソート
+ * gsi4 : アルバム未設定：撮影日ソート
+ * gsi5 : 自身がアップした写真：アップロード日ソート
+ */
+
 import {docClient, batchWriteAll} from "../dynamo";
 import {
   PutCommand,
@@ -9,13 +19,14 @@ import {
 import {AlbumConfig, PhotoConfig} from "../../../config";
 
 import * as Photo from "../Photo";
+import * as Relation from "../Relation";
 
 export async function get(facilityCode: string, albumId: string): Promise<any> {
   const command = new GetCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
   });
 
@@ -41,8 +52,8 @@ export async function create(
     new PutCommand({
       TableName: AlbumConfig.TABLE_NAME,
       Item: {
-        pk: `ALBUM#FAC#${facilityCode}#META`,
-        sk: albumId,
+        pk: `FAC#${facilityCode}`,
+        sk: `META#${albumId}`,
         lsi1: nowISO,
         facilityCode: facilityCode,
         albumId: albumId,
@@ -93,7 +104,7 @@ export async function list(facilityCode: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `ALBUM#FAC#${facilityCode}#META`,
+      ":pk": `FAC#${facilityCode}`,
     },
   });
 
@@ -117,8 +128,8 @@ export async function update(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
     UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
@@ -159,8 +170,8 @@ export async function setCoverImage(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
     UpdateExpression: `SET #coverImage = :coverImage, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
@@ -263,8 +274,8 @@ export async function actionSalesPublishing(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -318,8 +329,8 @@ export async function actionSalesPublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -371,8 +382,8 @@ export async function actionSalesUnpublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `ALBUM#FAC#${facilityCode}#META`,
-      sk: albumId,
+      pk: `FAC#${facilityCode}`,
+      sk: `META#${albumId}`,
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -389,7 +400,7 @@ async function nextSequence(facilityCode: string): Promise<number> {
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `SEQ#FAC#${facilityCode}`,
+      pk: `FAC#${facilityCode}#SEQ`,
       sk: `ALBUM#COUNTER`,
     },
     // seq を 1 加算（存在しなければ 1 で作られる）
@@ -422,7 +433,7 @@ export async function draftList(facilityCode: string): Promise<any> {
       "#albumId": "albumId",
     },
     ExpressionAttributeValues: {
-      ":pk": `ALBUM#FAC#${facilityCode}#META`,
+      ":pk": `FAC#${facilityCode}`,
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
     },
   });
@@ -441,7 +452,7 @@ export async function purge(
     new DeleteCommand({
       TableName: AlbumConfig.TABLE_NAME,
       Key: {
-        pk: `ALBUM#FAC#${facilityCode}#META`,
+        pk: `FAC#${facilityCode}`,
         sk: albumId,
       },
       ReturnValues: "ALL_OLD",
@@ -468,7 +479,7 @@ export async function purge(
 
   // 3. アルバムの紐付けを削除
   for (const item of delList.Items ?? []) {
-    await Photo.setAlbumsOnePhotoSafe({
+    await Relation.setRelationPhotoAlbums({
       facilityCode: facilityCode,
       photoId: item.photoId,
       addAlbums: [],

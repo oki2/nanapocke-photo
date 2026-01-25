@@ -2,6 +2,7 @@ import {StorageClass} from "@aws-sdk/client-s3";
 import {AppConfig, PhotoConfig} from "../../config";
 import {S3FileReadToByteArray, S3FilePut, S3FileCopy} from "../../utils/S3";
 import * as Photo from "../../utils/Dynamo/Photo";
+import * as Relation from "../../utils/Dynamo/Relation";
 
 import sharp from "sharp";
 import ExifReader from "exifreader";
@@ -196,24 +197,23 @@ export async function PhotoConvertResizeSet(
 
   // ============================================================
   // 6. 画像変換完了したら、DynamoDBにデータ保存
-  await Photo.setPhotoMeta(
-    facilityCode,
-    photoId,
-    `${PhotoConfig.STATUS.ACTIVE}#${photo.createdAt}#${photoId}`,
-    `${PhotoConfig.STATUS.ACTIVE}#${shootingAtISO}#${photoId}`,
-    meta.width,
-    meta.height,
-    salesSizeDl,
-    salesSizePrint,
-    shootingAtISO,
-    photo.createdBy,
-    photo.createdAt,
-  );
+  await Photo.setPhotoMeta({
+    facilityCode: facilityCode,
+    photoId: photoId,
+    sequenceId: photo.sequenceId,
+    width: meta.width,
+    height: meta.height,
+    salesSizeDl: salesSizeDl,
+    salesSizePrint: salesSizePrint,
+    shootingAt: shootingAtISO,
+    createdBy: photo.createdBy,
+    createdAt: photo.createdAt,
+  });
 
   // ============================================================
   // 7. アルバム指定がある場合は、写真とアルバムの紐付け情報を登録
   if (photo.albums?.length > 0) {
-    const tmp = await Photo.setAlbumsOnePhotoSafe({
+    const tmp = await Relation.setRelationPhotoAlbums({
       facilityCode: facilityCode,
       photoId: photoId,
       addAlbums: photo.albums,

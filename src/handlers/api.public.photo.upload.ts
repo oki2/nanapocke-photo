@@ -6,6 +6,7 @@ import {PhotoUploadBody, PhotoUploadResponse} from "../schemas/public";
 import {S3PutObjectSignedUrl} from "../utils/S3";
 
 import * as Photo from "../utils/Dynamo/Photo";
+import * as PhotoZip from "../utils/Dynamo/PhotoZip";
 import * as Album from "../utils/Dynamo/Album";
 import * as Tag from "../utils/Dynamo/Tag";
 import {tagSplitter} from "../libs/tool";
@@ -72,7 +73,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     }
 
     // ZIPアップロード の場合
-    uploadId = await Photo.createZip(
+    uploadId = await PhotoZip.createZip(
       authContext.facilityCode,
       authContext.userId,
       authContext.userName,

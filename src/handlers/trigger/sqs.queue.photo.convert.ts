@@ -4,6 +4,7 @@ import {AppConfig, PhotoConfig} from "../../config";
 import {PhotoConvertResizeSet} from "../../utils/ImageConvert";
 
 import * as Photo from "../../utils/Dynamo/Photo";
+import * as PhotoZip from "../../utils/Dynamo/PhotoZip";
 
 type PayloadT = {
   job: string;
@@ -39,7 +40,7 @@ async function SqsJobPhotoUnzipBeforeSave(data: Record<string, any>) {
   const [prefix, facilityCode, userId, zipId, fileName] = keyPath.split("/");
 
   // zip のMETA を取得
-  const zipMeta = await Photo.getZipMeta(facilityCode, zipId);
+  const zipMeta = await PhotoZip.getZipMeta(facilityCode, zipId);
   if (!zipMeta) {
     return;
   }
@@ -52,7 +53,7 @@ async function SqsJobPhotoUnzipBeforeSave(data: Record<string, any>) {
     zipMeta.shootingAt,
     zipMeta.priceTier,
     zipMeta.tags,
-    zipMeta.albums
+    zipMeta.albums,
   );
 
   try {
@@ -62,7 +63,7 @@ async function SqsJobPhotoUnzipBeforeSave(data: Record<string, any>) {
       keyPath,
       facilityCode,
       userId,
-      photoId
+      photoId,
     );
   } catch (err) {
     console.error(err);

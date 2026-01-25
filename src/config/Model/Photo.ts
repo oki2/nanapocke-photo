@@ -1,4 +1,5 @@
-export const TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
+export const TABLE_NAME = process.env.TABLE_NAME_PHOTO_CATALOG || "";
+export const DL_ACCEPT_TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
 export const STATUS = {
   CREATE: "CREATE",
   ACTIVE: "ACTIVE",

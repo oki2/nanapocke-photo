@@ -98,7 +98,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 77529ce9-6d53-4a60-a04f-0b5770650373
+@albumId = 72561515-d953-482c-8401-6879f922d573
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -107,8 +107,8 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバムd",
-  "description": "アルバムdの説明",
+  "title": "テストアルバム1",
+  "description": "アルバム1の説明",
   "priceTable": "BASIC",
   "coverImageFileName": "test.jpg",
   "salesPeriod": {
@@ -168,8 +168,7 @@ PUT {{photoZipUploadUrl.response.body.$.url}} HTTP/1.1
 < /home/tomo/work/00_sampledata/photo-zip1.zip
 
 ### 写真一覧：全件取得
-#GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}} HTTP/1.1
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=20 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=10 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム未設定
@@ -177,15 +176,15 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumI
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：アルバム指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=20&sortOrder=DESC HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId={{albumId}}&limit=2&sortOrder=DESC HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 写真一覧：シーケンス番号指定
-GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=UNSET&limit=10&sortOrder=DESC&sequenceIds=8,9,10,11 HTTP/1.1
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2&sortOrder=DESC&sequenceIds=4,7,5,6 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = 9e705ebd-01e4-4949-8acf-d6a15af22b48
+@photoId = 107f4ef2-fb3d-4913-af65-e5824bab5776
 
 ### 写真のアルバム一括紐付け
 # @name photoUploadUrl
@@ -195,8 +194,9 @@ Authorization: Bearer {{accessToken}}
 
 {
   "scope": {
-    "mode": "FILTER",
+    "mode": "CHECKED",
     "selectedIds": [
+      "{{photoId}}",
       "a5fa1090-f538-4823-acb5-7120ceda9b8f",
       "7c553af5-829d-4c43-8c80-4efd1a37f0df"
     ],
@@ -206,7 +206,7 @@ Authorization: Bearer {{accessToken}}
     }
   },
   "album": {
-    "mode": "ADD",
+    "mode": "REMOVE",
     "albums": [
       "{{albumId}}"
     ]

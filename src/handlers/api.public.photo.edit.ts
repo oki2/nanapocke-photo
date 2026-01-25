@@ -5,6 +5,7 @@ import {parseOrThrow} from "../libs/validate";
 
 import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
+import * as Relation from "../utils/Dynamo/Relation";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -53,7 +54,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
 
   // 6. DynamoDB に写真とアルバムの紐付け情報を登録
-  await Photo.setAlbumsOnePhotoSafe({
+  await Relation.setRelationPhotoAlbums({
     facilityCode: authContext.facilityCode,
     photoId: path.photoId,
     addAlbums: addAlbums,

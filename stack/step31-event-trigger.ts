@@ -14,6 +14,9 @@ import {SqsEventSource} from "aws-cdk-lib/aws-lambda-event-sources";
 export interface Props extends cdk.StackProps {
   readonly Config: any;
   readonly MainTable: Table;
+  readonly PhotoCatalogTable: Table;
+  readonly AlbumCatalogTable: Table;
+  readonly RelationTable: Table;
   // readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
@@ -70,6 +73,9 @@ export class Step31EventTriggerStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
@@ -78,14 +84,21 @@ export class Step31EventTriggerStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
               "dynamodb:UpdateItem",
+              "dynamodb:PutItem",
               "dynamodb:GetItem",
+            ],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
               "dynamodb:Query",
               "dynamodb:PutItem",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -249,7 +262,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
         },
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
@@ -257,7 +270,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:UpdateItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.AlbumCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -480,6 +493,9 @@ export class Step31EventTriggerStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
@@ -488,13 +504,34 @@ export class Step31EventTriggerStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
               "dynamodb:GetItem",
-              "dynamodb:PutItem",
-              "dynamodb:UpdateItem",
-              "dynamodb:BatchWriteItem",
+              // "dynamodb:PutItem",
+              // "dynamodb:UpdateItem",
+              // "dynamodb:BatchWriteItem",
             ],
             resources: [
               props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              // `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:UpdateItem",
+              "dynamodb:PutItem",
+              "dynamodb:GetItem",
+            ],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:Query",
+              "dynamodb:PutItem",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({

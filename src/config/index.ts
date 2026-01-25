@@ -13,8 +13,10 @@ export * as CartConfig from "./Model/Cart";
 export * as FacilityConfig from "./Model/Facility";
 export * as PaymentConfig from "./Model/Payment";
 export * as PhotoConfig from "./Model/Photo";
+export * as PhotoZipConfig from "./Model/PhotoZip";
 export * as UserConfig from "./Model/User";
 export * as TagConfig from "./Model/Tag";
+export * as RelationConfig from "./Model/Relation";
 
 export * as PriceConfig from "./Price";
 

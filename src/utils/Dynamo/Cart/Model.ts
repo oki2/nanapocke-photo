@@ -6,7 +6,7 @@
  * lsi4 : FAC#${facilityCode}#ALBUM#${albumId} 形式、アルバム強制販売終了時にカートから削除するため
  */
 
-import {docClient} from "../dynamo";
+import {docClient, batchWriteAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
@@ -39,7 +39,7 @@ export async function add(
   userId: string,
   albumId: string,
   photoId: string,
-  options: AddOptions
+  options: AddOptions,
 ): Promise<void> {
   const nowISO = new Date().toISOString();
   const ttl = Math.floor(new Date(options.purchaseDeadline).getTime() / 1000);
@@ -51,8 +51,8 @@ export async function add(
     const command = new PutCommand({
       TableName: CartConfig.TABLE_NAME,
       Item: {
-        pk: `CART`,
-        sk: `USER#${userId}#ALBUM#${albumId}#PHOTO#${photoId}`,
+        pk: `CART#USER#${userId}`,
+        sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
         lsi1: `${options.albumSequenceId}#${options.photoSequenceId}`,
         lsi2: options.purchaseDeadline,
         lsi3: `FAC#${facilityCode}#PHOTO#${photoId}`,
@@ -95,7 +95,7 @@ export async function edit(
   photoId: string,
   dl: boolean | undefined,
   printl: number | undefined,
-  print2l: number | undefined
+  print2l: number | undefined,
 ): Promise<any> {
   const nowISO = new Date().toISOString();
 
@@ -134,8 +134,8 @@ export async function edit(
   const command = new UpdateCommand({
     TableName: PhotoConfig.TABLE_NAME,
     Key: {
-      pk: `CART`,
-      sk: `USER#${userId}#ALBUM#${albumId}#PHOTO#${photoId}`,
+      pk: `CART#USER#${userId}`,
+      sk: `ALBUM#${albumId}#PHOTO#${photoId}`,
     },
     UpdateExpression: UpdateExpression,
     ExpressionAttributeNames: ExpressionAttributeNames,
@@ -187,7 +187,7 @@ export async function photoDelete(
   facilityCode: string,
   userId: string,
   albumId: string,
-  photoId: string
+  photoId: string,
 ): Promise<void> {
   const command = new DeleteCommand({
     TableName: CartConfig.TABLE_NAME,
@@ -204,12 +204,15 @@ export async function cleare(
   facilityCode: string,
   userId: string,
   maxRetries: number = 5, // リトライ回数
-  maxConcurrency: number = 2 // 並列同時実行数
-): Promise<{deleted: number}> {
+  maxConcurrency: number = 2, // 並列同時実行数
+): Promise<void> {
   console.log("cleare", facilityCode, userId);
   // 1. Queryで対象のキー(PK+SK)を全件収集
   const keys: Record<string, any>[] = [];
   let lastKey: Record<string, any> | undefined = undefined;
+
+  const reqs: Array<{PutRequest?: any; DeleteRequest?: any}> = [];
+
   do {
     const q = await docClient().send(
       new QueryCommand({
@@ -222,70 +225,26 @@ export async function cleare(
         },
         ExclusiveStartKey: lastKey,
         Limit: 100,
-      })
+      }),
     );
     console.log("q", q);
 
     for (const item of q.Items ?? []) {
       // item から PK+SK を抜いて Key を作る
-      keys.push({pk: item.pk, sk: item.sk});
+      reqs.push({
+        DeleteRequest: {
+          Key: {
+            pk: item.pk,
+            sk: item.sk,
+          },
+        },
+      });
     }
     lastKey = q.LastEvaluatedKey as any;
   } while (lastKey);
 
-  if (keys.length === 0) return {deleted: 0};
-
-  // 2) 25件ずつ BatchWrite(Delete)
-  const batches = chunk(keys, 25);
-  console.log("batches", batches.length);
-
-  // 並列実行（やりすぎるとスロットリングしやすいので控えめ推奨）
-  let deletedCount = 0;
-  let idx = 0;
-
-  const worker = async () => {
-    while (true) {
-      const myIndex = idx++;
-      const batch = batches[myIndex];
-      if (!batch) break;
-
-      let requestItems = {
-        [CartConfig.TABLE_NAME]: batch.map((k) => ({DeleteRequest: {Key: k}})),
-      } as Record<string, any>;
-
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        const res = await docClient().send(
-          new BatchWriteCommand({
-            RequestItems: requestItems,
-          })
-        );
-
-        const unprocessed = res.UnprocessedItems?.[CartConfig.TABLE_NAME] ?? [];
-        if (unprocessed.length === 0) break;
-
-        // 未処理が残ったら、それだけを再送
-        requestItems = {[CartConfig.TABLE_NAME]: unprocessed};
-
-        // 指数バックオフ + ジッター
-        const backoff =
-          Math.min(2000, 50 * 2 ** attempt) + Math.floor(Math.random() * 50);
-        await sleep(backoff);
-
-        if (attempt === maxRetries) {
-          throw new Error(
-            `BatchWrite unprocessed items remain after retries: ${unprocessed.length}`
-          );
-        }
-      }
-
-      deletedCount += batch.length;
-    }
-  };
-
-  const workers = Array.from({length: Math.max(1, maxConcurrency)}, () =>
-    worker()
-  );
-  await Promise.all(workers);
-
-  return {deleted: deletedCount};
+  // batchWriteで複数消込
+  if (reqs.length > 0) {
+    await batchWriteAll(CartConfig.TABLE_NAME, reqs, docClient());
+  }
 }

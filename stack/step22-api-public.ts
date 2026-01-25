@@ -7,12 +7,17 @@ import {Bucket} from "aws-cdk-lib/aws-s3";
 import {Table} from "aws-cdk-lib/aws-dynamodb";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import {Queue} from "aws-cdk-lib/aws-sqs";
+import {TABLE_NAME} from "../src/config/Model/User";
 
 export interface Props extends cdk.StackProps {
   readonly Config: any;
   readonly NanapockeAuthPool: UserPool;
   readonly NanapockeAuthPoolClient: UserPoolClient;
   readonly MainTable: Table;
+  readonly PhotoCatalogTable: Table;
+  readonly AlbumCatalogTable: Table;
+  readonly RelationTable: Table;
+  readonly CommerceTable: Table;
   readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
@@ -322,21 +327,25 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
               "dynamodb:PutItem",
-              "dynamodb:UpdateItem",
               "dynamodb:Query",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -362,15 +371,15 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query"],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.AlbumCatalogTable.tableArn,
+              `${props.AlbumCatalogTable.tableArn}/index/lsi1_index`,
             ],
           }),
         ],
@@ -391,14 +400,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:UpdateItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.AlbumCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -423,7 +432,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
@@ -434,7 +443,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:Query",
               "dynamodb:UpdateItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [props.AlbumCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -461,7 +470,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 512,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
@@ -475,7 +484,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
+              props.AlbumCatalogTable.tableArn,
               `${props.MainTable.tableArn}/index/lsi1_index`,
             ],
           }),
@@ -536,6 +545,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
@@ -543,13 +554,22 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
               "dynamodb:PutItem",
-              "dynamodb:UpdateItem",
               "dynamodb:Query",
               "dynamodb:BatchWriteItem",
             ],
+            resources: [props.MainTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:PutItem", "dynamodb:UpdateItem"],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.AlbumCatalogTable.tableArn,
+              `${props.AlbumCatalogTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -580,18 +600,30 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          // TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query", "dynamodb:BatchGetItem"],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
-              `${props.MainTable.tableArn}/index/lsi2_index`,
-              `${props.MainTable.tableArn}/index/lsi3_index`,
-              `${props.MainTable.tableArn}/index/lsi4_index`,
-              `${props.MainTable.tableArn}/index/lsi5_index`,
+              props.PhotoCatalogTable.tableArn,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiSeq_Index`,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiUpload_Index`,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiShooting_Index`,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiUnsetUpload_Index`,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiUnsetShooting_Index`,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiMy_Index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [
+              props.RelationTable.tableArn,
+              // `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
         ],
@@ -648,21 +680,36 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
+              "dynamodb:UpdateItem",
+              "dynamodb:PutItem",
               "dynamodb:GetItem",
+            ],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
               "dynamodb:Query",
               "dynamodb:PutItem",
-              "dynamodb:UpdateItem",
               "dynamodb:DeleteItem",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
         ],
@@ -683,14 +730,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 1024,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:GetItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.PhotoCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -716,21 +763,37 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
-              "dynamodb:GetItem",
               "dynamodb:UpdateItem",
+              "dynamodb:PutItem",
+              "dynamodb:GetItem",
+            ],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
               "dynamodb:Query",
+              "dynamodb:PutItem",
               "dynamodb:DeleteItem",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
@@ -761,6 +824,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         ...defaultEnvironment,
         TABLE_NAME_MAIN: props.MainTable.tableName,
         TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
@@ -769,6 +833,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           resources: [
             props.MainTable.tableArn,
             `${props.MainTable.tableArn}/index/lsi1_index`,
+            props.AlbumCatalogTable.tableArn,
+            `${props.AlbumCatalogTable.tableArn}/index/lsi1_index`,
             props.NanapockeUserTable.tableArn,
             `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
           ],

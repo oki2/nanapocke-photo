@@ -278,6 +278,7 @@ export const PhotoSelect = v.object({
   ),
   cursor: v.optional(v.string()),
 });
+export type PhotoSelectT = v.InferOutput<typeof PhotoSelect>;
 
 // api.public.photo.list : response
 export const PhotoListResponse = v.object({

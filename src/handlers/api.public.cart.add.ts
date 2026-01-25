@@ -6,6 +6,7 @@ import {parseOrThrow} from "../libs/validate";
 import * as Cart from "../utils/Dynamo/Cart";
 import * as Album from "../utils/Dynamo/Album";
 import * as Photo from "../utils/Dynamo/Photo";
+import * as Relation from "../utils/Dynamo/Relation";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -17,10 +18,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("data", data);
 
   // 1. 対象の写真が対象のアルバムに設定されているかチェック
-  const photoAlbum = await Photo.getPhotoByAlbumIdAndPhotoId(
+  const photoAlbum = await Relation.getPhotoByAlbumIdAndPhotoId(
     authContext.facilityCode,
     data.albumId,
-    data.photoId
+    data.photoId,
   );
   console.log("photoAlbum", photoAlbum);
   if (!photoAlbum) {
@@ -120,7 +121,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       printLOption: printLOption,
       print2LOption: print2LOption,
       shootingBy: photo.createdBy,
-    }
+    },
   );
 
   return http.ok(parseOrThrow(ResultOK, {ok: true}));

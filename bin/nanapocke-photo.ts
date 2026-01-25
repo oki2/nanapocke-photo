@@ -118,7 +118,7 @@ const stackStep11 = new Step11CognitoProviderStack(
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
-  }
+  },
 );
 
 const stackStep12 = new Step12CognitoNanapockeStack(
@@ -127,7 +127,7 @@ const stackStep12 = new Step12CognitoNanapockeStack(
   {
     env: {account: account, region: REGION.TOKYO},
     Config,
-  }
+  },
 );
 
 const stackStep15 = new Step15DynamodbStack(app, "Step15DynamodbStack", {
@@ -154,6 +154,10 @@ const stackStep22 = new Step22ApiPublicleStack(app, "Step22ApiPublicleStack", {
   // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
   // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
   MainTable: stackStep15.MainTable,
+  PhotoCatalogTable: stackStep15.PhotoCatalogTable,
+  AlbumCatalogTable: stackStep15.AlbumCatalogTable,
+  RelationTable: stackStep15.RelationTable,
+  CommerceTable: stackStep15.CommerceTable,
   NanapockeUserTable: stackStep15.NanapockeUserTable,
   bucketUpload: stackStep10.bucketUpload,
   bucketPhoto: stackStep10.bucketPhoto,
@@ -172,12 +176,15 @@ const stackStep31 = new Step31EventTriggerStack(
     // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
     // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
     MainTable: stackStep15.MainTable,
+    PhotoCatalogTable: stackStep15.PhotoCatalogTable,
+    AlbumCatalogTable: stackStep15.AlbumCatalogTable,
+    RelationTable: stackStep15.RelationTable,
     // NanapockeUserTable: stackStep15.NanapockeUserTable,
     bucketUpload: stackStep10.bucketUpload,
     bucketPhoto: stackStep10.bucketPhoto,
     queueMain: stackStep10.queueMain,
     queuePhotoConvert: stackStep10.queuePhotoConvert,
-  }
+  },
 );
 
 const stackStep71 = new Step71HttpApiAdminStack(
@@ -191,7 +198,7 @@ const stackStep71 = new Step71HttpApiAdminStack(
     ProviderAuthPoolClient: stackStep11.ProviderAuthPoolClient,
     MainTable: stackStep15.MainTable,
     AuthFlowTable: stackStep15.AuthFlowTable,
-  }
+  },
 );
 
 const stackStep72 = new Step72HttpApiPublicStack(
@@ -205,7 +212,7 @@ const stackStep72 = new Step72HttpApiPublicStack(
     NanapockeAuthPoolClient: stackStep12.NanapockeAuthPoolClient,
     // MainTable: stackStep12.MainTable,
     NanapockeUserTable: stackStep15.NanapockeUserTable,
-  }
+  },
 );
 
 const stackStep81 = new Step81CertificateStack(app, "Step81CertificateStack", {
