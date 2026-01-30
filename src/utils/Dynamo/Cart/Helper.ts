@@ -39,7 +39,7 @@ const emptySummary = (): Summary => ({
 export function summarizeItemsByPriceTier(items: Item[]): SummaryByTier {
   // PRICE_TIER から全 Tier を初期化
   const acc = Object.fromEntries(
-    ALL_PRICE_TIERS.map((tier) => [tier, emptySummary()])
+    ALL_PRICE_TIERS.map((tier) => [tier, emptySummary()]),
   ) as SummaryByTier;
 
   for (const item of items) {
@@ -89,7 +89,7 @@ export function sumAllTiers(summaryByTier: SummaryByTier): Summary {
       printLTotalPrice: 0,
       print2LQuantityTotal: 0,
       print2LTotalPrice: 0,
-    }
+    },
   );
 }
 
@@ -97,10 +97,14 @@ export function sumAllTiers(summaryByTier: SummaryByTier): Summary {
 type SalesSize = "printl" | "print2l" | "dl";
 
 type SourceItem = {
+  facilityCode: string;
   albumId: string;
+  albumSequenceId: number;
   albumTitle: string;
   photoId: string;
+  photoSequenceId: number;
   priceTier: string; // common.PhotoPriceTier に合う前提
+  shootingBy: string;
   downloadOption?: {
     purchasable?: boolean;
     selected?: boolean;
@@ -133,24 +137,26 @@ type OrderDownloadLine = {
 
 type OrderItemBase = {
   albumId: string;
+  albumSequenceId: number;
   albumName: string;
-  imageId: string;
-  imageSrc: string;
+  photoId: string;
+  photoSequenceId: number;
+  imageUrl: string;
   priceTier: string;
   print: OrderPrintLine[];
   download: OrderDownloadLine[];
   itemTotal: number;
 };
 
-type ResolveImageSrc = (src: SourceItem) => string;
+type ResolveImageUrl = (src: SourceItem) => string;
 type ResolveDownloadUrl = (src: SourceItem) => string | undefined;
 
 export function toOrderItems(
   sources: SourceItem[],
   deps: {
-    resolveImageSrc: ResolveImageSrc;
+    resolveImageUrl: ResolveImageUrl;
     resolveDownloadUrl?: ResolveDownloadUrl; // 履歴のみ必要なら渡す
-  }
+  },
 ): OrderItemBase[] {
   return sources.map((src) => {
     // ---- print lines ----
@@ -207,9 +213,11 @@ export function toOrderItems(
 
     return {
       albumId: src.albumId,
+      albumSequenceId: src.albumSequenceId,
       albumName: src.albumTitle,
-      imageId: src.photoId,
-      imageSrc: deps.resolveImageSrc(src),
+      photoId: src.photoId,
+      photoSequenceId: src.photoSequenceId,
+      imageUrl: deps.resolveImageUrl(src),
       priceTier: src.priceTier,
       print,
       download,

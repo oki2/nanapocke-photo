@@ -51,6 +51,8 @@ export const FILTER_LIMIT = {
   MAX: 50,
 };
 
+export const PHOTO_LIMIT_STUDIO = 30;
+
 export const UNSOLD_EXPIRES_IN = 60 * 24 * 60 * 60 * 1000; // 未販売のまま経過日数を過ぎたら削除対象 ミリ秒なので 1000倍する
 
 export const PURGED_IN_DAYS = 70; // 論理削除後、物理削除までの日数

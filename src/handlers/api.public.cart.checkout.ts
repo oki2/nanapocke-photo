@@ -31,7 +31,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // デジタルのみ指定なのに、印刷が存在する場合はエラーとする
   if (
-    data.type === "digital" &&
+    data.type === PaymentConfig.ORDER_TYPE.DIGITAL &&
     summary.printLQuantityTotal + summary.print2LQuantityTotal > 0
   ) {
     return http.badRequest({
@@ -84,7 +84,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   await S3.saveOrderData(orderId, orderData);
 
   // 7. 印刷有りの場合は、印刷情報の保存（S3）
-  if (data.type === "shipping") {
+  if (data.type === PaymentConfig.ORDER_TYPE.SHIPPING) {
     await S3.saveUserInfo(orderId, data.address);
   }
 
@@ -92,24 +92,25 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const paymentUrl = await SMBC.createSmbcPaymentLink({
     orderId: orderId,
     amount: subTotalPrice + shippingFee,
-    completeUrl: `https://work.uxbrew.jp/work/complete/?action=complete`,
-    cancelUrl: `https://work.uxbrew.jp/work/cancel/?action=cancel`,
+    completeUrl: `https://${AppConfig.NANAPHOTO_FQDN}/member/payment/success?orderId=${orderId}`,
+    cancelUrl: `https://${AppConfig.NANAPHOTO_FQDN}/member/payment/failed?orderId=${orderId}`,
   });
   console.log("paymentUrl", paymentUrl);
 
   // 9. レスポンス形式に変換
-  const items = Cart.toOrderItems(cart, {
-    resolveImageSrc: (src) => `https://example.com/images/${src.photoId}.jpg`,
+  const photos = Cart.toOrderItems(cart, {
+    resolveImageUrl: (src) =>
+      `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
   });
-  console.log("items", items);
+  console.log("photos", photos);
 
   const response: CurrentOrderT = {
     orderId: orderId,
     summary: {
-      ...(data.type === "shipping"
+      ...(data.type === PaymentConfig.ORDER_TYPE.SHIPPING
         ? {shipping: {method: "ゆうパック", address: data.address}}
         : {}),
-      items: items,
+      photos: photos,
       hasDownloadPurchases: summary.downloadSelectedCount > 0,
       downloadPeriod: "",
       subTotal: subTotalPrice,

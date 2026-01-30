@@ -1,9 +1,6 @@
 import * as http from "../http";
-
 import {tagSplitter, sequenceIdSplitter} from "../libs/tool";
-
-import {PhotoConfig, UserConfig} from "../config";
-
+import {PhotoConfig} from "../config";
 import {
   PhotoSelect,
   PhotoSelectT,
@@ -11,9 +8,7 @@ import {
   PhotoListResponseT,
 } from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
-
 import * as Photo from "../utils/Dynamo/Photo";
-import {userInfo} from "os";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -23,26 +18,12 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const query = parseOrThrow(PhotoSelect, event.queryStringParameters ?? {});
   console.log("query", query);
 
-  // 2. 権限により写真一覧取得方法の分岐
-  let data: any;
-  if (
-    // 保育士、フォトグラファーの場合
-    authContext.role === UserConfig.ROLE.TEACHER ||
-    authContext.role === UserConfig.ROLE.PHOTOGRAPHER
-  ) {
-    data = await runByStudio(
-      authContext.facilityCode,
-      authContext.userId,
-      query,
-    );
-  } else if (authContext.role === UserConfig.ROLE.PRINCIPAL) {
-    // 園長の場合
-    data = await runByPrincipal(
-      query,
-      authContext.facilityCode,
-      authContext.userId,
-    );
-  }
+  // 2. 写真一覧取得
+  const data = await runByPrincipal(
+    query,
+    authContext.facilityCode,
+    authContext.userId,
+  );
 
   console.log("data", data);
 
@@ -82,15 +63,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   return http.ok(parseOrThrow(PhotoListResponse, result));
 });
-
-async function runByStudio(
-  facilityCode: string,
-  userId: string,
-  query: any = {},
-) {
-  // 保育士、フォトグラファーの場合は自身の写真を返して終了
-  return await Photo.myList(facilityCode, userId, 2, query.cursor ?? "");
-}
 
 async function runByPrincipal(
   query: PhotoSelectT,

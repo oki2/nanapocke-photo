@@ -326,7 +326,6 @@ export async function list(facilityCode: string): Promise<any> {
 export async function myList(
   facilityCode: string,
   userId: string,
-  limit: number = 30,
   cursor: string = "",
 ): Promise<any> {
   const qh = makeQueryHash({
@@ -364,7 +363,7 @@ export async function myList(
     ExpressionAttributeValues: {
       ":GsiMyPK": getGsiMyPk(facilityCode, userId),
     },
-    Limit: limit,
+    Limit: PhotoConfig.PHOTO_LIMIT_STUDIO,
   };
 
   if (cursor) {

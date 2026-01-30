@@ -70,7 +70,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     return {
       photoId: photo.photoId,
       sequenceId: photo.sequenceId,
-      imageUrl: `/thumbnail/${photo.facilityCode}/${photo.createdBy}/${photo.photoId}.webp`,
+      imageUrl: `/thumbnail/${photo.facilityCode}/photo/${photo.createdBy}/${photo.photoId}.webp`,
       priceTier: photo.priceTier,
       shootingAt: photo.shootingAt,
       width: photo.width,

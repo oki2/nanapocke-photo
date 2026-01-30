@@ -13,8 +13,13 @@
     "gen:openapi:public": "ts-node openapi/gen-public.ts",
     "gen:openapi:public:admin": "ts-node openapi/gen-public-admin.ts",
     "gen:openapi:public:studio": "ts-node openapi/gen-public-studio.ts",
+    "gen:openapi:public:member": "ts-node openapi/gen-public-member.ts",
     "sandbox:front:admin:deploy:dryrun": "aws s3 cp work/static-file/frontend/admin-sandbox s3://nanaphoto-sandbox-publiccfd/admin/ --recursive --dryrun --profile sandbox",
-    "sandbox:front:admin:deploy:exec": "aws s3 cp work/static-file/frontend/admin-sandbox s3://nanaphoto-sandbox-publiccfd/admin/ --recursive --profile sandbox"
+    "sandbox:front:admin:deploy:exec": "aws s3 cp work/static-file/frontend/admin-sandbox s3://nanaphoto-sandbox-publiccfd/admin/ --recursive --profile sandbox",
+    "sandbox:front:studio:deploy:dryrun": "aws s3 cp work/static-file/frontend/studio-sandbox s3://nanaphoto-sandbox-publiccfd/studio/ --recursive --dryrun --profile sandbox",
+    "sandbox:front:studio:deploy:exec": "aws s3 cp work/static-file/frontend/studio-sandbox s3://nanaphoto-sandbox-publiccfd/studio/ --recursive --profile sandbox",
+    "sandbox:front:member:deploy:dryrun": "aws s3 cp work/static-file/frontend/member-sandbox s3://nanaphoto-sandbox-publiccfd/member/ --recursive --dryrun --profile sandbox",
+    "sandbox:front:member:deploy:exec": "aws s3 cp work/static-file/frontend/member-sandbox s3://nanaphoto-sandbox-publiccfd/member/ --recursive --profile sandbox"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.156",

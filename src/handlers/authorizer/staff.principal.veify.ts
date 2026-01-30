@@ -1,11 +1,6 @@
-// 許可対象のユーザー
-// - 園長
-// - 保育士
-// - 保護者
-// - フォトグラファー
-
 import {CognitoJwtVerifier} from "aws-jwt-verify";
 import {CloudFrontVerifyTokenCheck} from "../../utils/Authorizer";
+import {UserConfig} from "../../config";
 import * as User from "../../utils/Dynamo/User";
 
 const NANAPOCKE_AUTHPOOL_ID = process.env.NANAPOCKE_AUTHPOOL_ID || "";
@@ -13,6 +8,7 @@ const NANAPOCKE_AUTHPOOL_CLIENT_ID =
   process.env.NANAPOCKE_AUTHPOOL_CLIENT_ID || "";
 
 export const handler = async (event: any = {}): Promise<any> => {
+  console.log("event : ", event);
   // CloudFrontのVerify Token チェック
   if (CloudFrontVerifyTokenCheck(event) === false) {
     console.log("Unauthorized : x-origin-verify-token");
@@ -51,38 +47,25 @@ export const handler = async (event: any = {}): Promise<any> => {
     const userInfo = await User.get(payload.sub);
     console.log("userInfo", userInfo);
 
-    // 非アクティブユーザー　※基本はフォトグラファーのみ判定対象
-    if (userInfo.status != "ACTIVE") {
-      return {isAuthorized: false};
-    }
-
-    // 有効期限が切れている　※基本はフォトグラファーのみ判定対象
-    if (userInfo.expire.mode == "DATE") {
-      const nowDate = new Date(); // 現在日時
-      const fromDate = new Date(userInfo.expire.from); // 利用期間開始日時
-      const toDate = new Date(userInfo.expire.to); // 利用期間終了日時
-      // 利用期間外は許可しない
-      if (nowDate < fromDate || nowDate > toDate) {
-        return {isAuthorized: false};
-      }
-    }
-
     // Facility Code を確認
     if (userInfo.facilityCode != facilityCode) {
       return {isAuthorized: false};
     }
 
-    // 許可対象のユーザー
-    return {
-      isAuthorized: true,
-      context: {
-        userId: payload.sub,
-        userCode: userInfo.userCode,
-        userName: userInfo.userName,
-        facilityCode: userInfo.facilityCode,
-        userRole: userInfo.userRole,
-      },
-    };
+    // User の Role を確認、PRINCIPAL なら認可
+    if (userInfo.userRole === UserConfig.ROLE.PRINCIPAL) {
+      return {
+        isAuthorized: true,
+        context: {
+          userId: payload.sub,
+          userCode: userInfo.userCode,
+          userName: userInfo.userName,
+          facilityCode: userInfo.facilityCode,
+          userRole: userInfo.userRole,
+        },
+      };
+    }
+    return {isAuthorized: false};
   } catch (e: any) {
     console.error(e);
     return {isAuthorized: false};

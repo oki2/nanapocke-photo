@@ -27,6 +27,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.priceTier = PhotoConfig.PRICE_TIER.STANDARD;
   } else if (authContext.userRole === UserConfig.ROLE.PHOTOGRAPHER) {
     data.priceTier = PhotoConfig.PRICE_TIER.PREMIUM;
+  } else if (!data.priceTier) {
+    // 園長の場合、未指定はエラー
+    return http.badRequest({detail: "価格帯を指定してください"});
   }
 
   // 1. アルバム指定がある場合はチェック

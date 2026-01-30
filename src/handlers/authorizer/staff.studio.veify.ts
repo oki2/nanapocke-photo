@@ -52,8 +52,11 @@ export const handler = async (event: any = {}): Promise<any> => {
       return {isAuthorized: false};
     }
 
-    // User の Role を確認、PRINCIPAL なら認可
-    if (userInfo.userRole === UserConfig.ROLE.PRINCIPAL) {
+    // User の Role を確認、PRINCIPAL, TEACHER, PHOTOGRAPHER なら認可
+    if (
+      userInfo.userRole === UserConfig.ROLE.TEACHER ||
+      userInfo.userRole === UserConfig.ROLE.PHOTOGRAPHER
+    ) {
       return {
         isAuthorized: true,
         context: {
@@ -61,7 +64,7 @@ export const handler = async (event: any = {}): Promise<any> => {
           userCode: userInfo.userCode,
           userName: userInfo.userName,
           facilityCode: userInfo.facilityCode,
-          role: userInfo.userRole,
+          userRole: userInfo.userRole,
         },
       };
     }

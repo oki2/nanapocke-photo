@@ -8,6 +8,10 @@
 # @no-redirect
 GET https://{{customDomainName}}/auth/nanapocke?code=Ptest01 HTTP/1.1
 
+### Nanapocke 認証受け口 : 保育士
+# @no-redirect
+GET https://{{customDomainName}}/auth/nanapocke?code=Ttest02 HTTP/1.1
+
 ### Nanapocke 認証受け口 : 保護者
 # @no-redirect
 GET https://{{customDomainName}}/auth/nanapocke?code=Gtest01 HTTP/1.1
@@ -18,7 +22,7 @@ POST https://{{customDomainName}}/api/auth/signin HTTP/1.1
 content-type: application/json
 
 {
-  "userName":"Photo003",
+  "userCode":"Photo003",
   "password":"test1234",
   "facilityCode":"{{facilityCode}}"
 }
@@ -79,8 +83,8 @@ Authorization: Bearer {{accessToken}}
   "copyFromAlbumId": "",
   "coverImageFileName": "test.jpg",
   "salesPeriod": {
-    "start": "2025-12-16T00:00:00Z",
-    "end": "2025-12-30T00:00:00Z"
+    "start": "2026-01-16T00:00:00Z",
+    "end": "2026-02-30T00:00:00Z"
   },
   "priceTable": "BASIC"
 }
@@ -98,7 +102,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 19e2e4b0-6eaa-4a84-bf96-bddab8ffa2cb
+@albumId = 3390ff64-0496-4de3-abbe-99aa43a0f165
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -183,6 +187,10 @@ Authorization: Bearer {{accessToken}}
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list?albumId=ALL&limit=2&sortOrder=DESC&sequenceIds=1,7,5,6 HTTP/1.1
 Authorization: Bearer {{accessToken}}
 
+### 写真一覧：保育士・フォトグラファー向け
+GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list/my HTTP/1.1
+Authorization: Bearer {{accessToken}}
+
 ### 設定値
 @photoId = ad903aa7-5088-40ec-bb82-93fd7351a599
 
@@ -197,8 +205,8 @@ Authorization: Bearer {{accessToken}}
     "mode": "CHECKED",
     "selectedIds": [
       "{{photoId}}",
-      "43f86296-c14e-4b37-bcf1-4a9afc86ab9f",
-      "7c553af5-829d-4c43-8c80-4efd1a37f0df"
+      "1d2ec0c3-71a7-4706-bb0b-5f009b8dae1d",
+      "2c986b89-332e-45a9-8e3b-d4586ceb314a"
     ],
     "filters": {
       "albumId": "ALL",

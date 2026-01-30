@@ -1,5 +1,11 @@
 import * as v from "valibot";
-import {AppConfig, UserConfig, PhotoConfig, AlbumConfig} from "../config";
+import {
+  AppConfig,
+  UserConfig,
+  PhotoConfig,
+  AlbumConfig,
+  PaymentConfig,
+} from "../config";
 import * as common from "./common";
 import * as nanapocke from "./common.nanapocke";
 
@@ -87,7 +93,7 @@ export const SigninSuccess = v.object({
   userName: v.string(),
   facilityCode: nanapocke.FacilityCode,
   facilityName: v.string(),
-  role: common.PublicRole,
+  userRole: common.PublicRole,
 });
 
 // Signin Response Challenge
@@ -110,7 +116,7 @@ export type SigninChallengeT = v.InferOutput<typeof SigninChallenge>;
 export const AuthSigninBody = v.pipe(
   v.object({
     facilityCode: nanapocke.FacilityCode,
-    userName: common.Name,
+    userCode: common.Name,
     password: v.pipe(v.string(), v.minLength(1)),
   }),
 );
@@ -125,7 +131,7 @@ export type IdTokenPayloadT = v.InferOutput<typeof IdTokenPayload>;
 export const AlbumCreateBody = v.pipe(
   v.object({
     title: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    description: v.optional(v.string(), ""),
     priceTable: PriceTable,
     salesPeriod: v.optional(SalesPeriod, {
       start: "",
@@ -152,7 +158,7 @@ export const AlbumItem = v.object({
   albumId: common.AlbumId,
   sequenceId: v.number(),
   title: v.pipe(v.string(), v.minLength(1)),
-  description: v.pipe(v.string(), v.minLength(1)),
+  description: v.string(),
   salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
   priceTable: PriceTable,
   photoCount: v.optional(v.number()),
@@ -211,7 +217,7 @@ export type AlbumEditResponseT = v.InferOutput<typeof AlbumEditResponse>;
 export const PhotoUploadBody = v.pipe(
   v.object({
     shootingAt: common.ISODateTime,
-    priceTier: common.PhotoPriceTier,
+    priceTier: v.optional(common.PhotoPriceTier),
     tags: v.optional(v.string(), ""),
     albums: v.optional(v.array(common.AlbumId), []),
     fileType: common.PhotoUploadFileType,
@@ -257,6 +263,10 @@ const PhotoSort = v.object({
     v.picklist(Object.values(PhotoConfig.SORT_ORDER)),
     PhotoConfig.SORT_ORDER.DESC,
   ),
+});
+
+export const PhotoSelectMy = v.object({
+  cursor: v.optional(v.string(), ""),
 });
 
 export const PhotoSelect = v.object({
@@ -514,11 +524,14 @@ const CartPrintOption = v.object({
 });
 
 const CartDownloadOption = v.object({
+  size: common.DownloadSize,
   purchasable: v.boolean(),
   unitPrice: v.optional(v.number()),
   selected: v.optional(v.boolean()),
   downloadable: v.optional(v.boolean()),
   purchasedAt: v.optional(common.ISODateTime),
+  width: v.optional(v.number(), 0),
+  height: v.optional(v.number(), 0),
   note: v.string(),
 });
 
@@ -528,12 +541,16 @@ export const CartItem = v.object({
   albumTitle: v.string(),
   albumSequenceId: v.number(),
   photoSequenceId: v.number(),
+  imageUrl: common.Url,
   priceTier: v.picklist(Object.values(PhotoConfig.PRICE_TIER)),
   purchaseDeadline: common.ISODateTime,
   print: v.array(CartPrintOption),
   download: v.array(CartDownloadOption),
 });
-export const CartItemList = v.array(CartItem);
+export const CartItemList = v.object({
+  photos: v.array(CartItem),
+  downloadExpiry: common.ISODateTime,
+});
 export type CartItemListT = v.InferOutput<typeof CartItemList>;
 
 // api.public.cart.edit : request
@@ -556,13 +573,22 @@ const CartEdit = v.object({
 });
 export type CartEditT = v.InferOutput<typeof CartEdit>;
 
-export const CartEditBody = v.array(CartEdit);
+export const CartEditBody = v.object({items: v.array(CartEdit)});
 export type CartEditBodyT = v.InferOutput<typeof CartEditBody>;
 
 // api.public.cart.photo.delete : pathParameters
 export const CartPhotoDeletePathParameters = v.object({
   albumId: common.AlbumId,
   photoId: common.PhotoId,
+});
+
+// api.public.cart.checkout.shipping.options : response
+export const ShippingOption = v.object({
+  label: v.string(),
+  priceRule: v.object({
+    price: v.number(),
+    maxSheetsPerShipment: v.number(),
+  }),
 });
 
 // api.public.cart.checkout : request
@@ -575,11 +601,11 @@ const ShippingAddress = v.object({
 export type ShippingAddressT = v.InferOutput<typeof ShippingAddress>;
 
 export const CheckoutDigtalOnly = v.object({
-  type: v.picklist(["digital"]),
+  type: v.literal(PaymentConfig.ORDER_TYPE.DIGITAL),
 });
 
 export const CheckoutShipping = v.object({
-  type: v.picklist(["shipping"]),
+  type: v.literal(PaymentConfig.ORDER_TYPE.SHIPPING),
   address: ShippingAddress,
 });
 
@@ -609,8 +635,10 @@ const OrderDownloadLine = v.object({
 const OrderItemBase = v.object({
   albumId: v.string(),
   albumName: v.string(),
-  imageId: v.string(),
-  imageSrc: v.string(),
+  albumSequenceId: v.number(),
+  photoId: v.string(),
+  photoSequenceId: v.number(),
+  imageUrl: v.string(),
   priceTier: common.PhotoPriceTier,
   print: v.array(OrderPrintLine),
   download: v.array(OrderDownloadLine),
@@ -625,7 +653,7 @@ const ShippingInfo = v.object({
 
 const CurrentOrderSummary = v.object({
   shipping: v.optional(ShippingInfo),
-  items: v.array(OrderItemBase),
+  photos: v.array(OrderItemBase),
   hasDownloadPurchases: v.boolean(), // DL購入を含むかどうか（ConfirmView のチェックボックス用）
   downloadPeriod: v.optional(v.string()), // DL有効期間（履歴側の downloadExpiry と意味は同じ）
   subTotal: v.number(), // 商品小計（割引前）

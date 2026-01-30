@@ -27,7 +27,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const facilityInfo = await Facility.isActive(data.facilityCode);
   if (!facilityInfo) {
     console.log(
-      `施設利用不可 : ${data.facilityCode} / user : ${data.userName}`
+      `施設利用不可 : ${data.facilityCode} / user : ${data.userCode}`,
     );
     return http.forbidden();
   }
@@ -37,8 +37,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     AppConfig.MAIN_REGION,
     AppConfig.NANAPOCKE_AUTHPOOL_ID,
     AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
-    `${data.facilityCode}@${data.userName}`,
-    data.password
+    `${data.facilityCode}@${data.userCode}`,
+    data.password,
   );
   // ログイン成功以外は全てエラーとする
   if (auth.result !== CognitoConfig.SigninResults.Success) {
@@ -51,13 +51,13 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     IdTokenPayload,
     jwt.decode(auth.idToken || "", {
       complete: false,
-    }) ?? {}
+    }) ?? {},
   );
   console.log("payload", payload);
   const user = await User.Photographer.isActive(payload.sub);
   if (!user) {
     console.log(
-      `フォトグラファー利用不可 : ${payload.sub} / user : ${data.userName}`
+      `フォトグラファー利用不可 : ${payload.sub} / user : ${data.userCode}`,
     );
     return http.forbidden();
   }
@@ -72,7 +72,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     userName: user.userName,
     facilityCode: data.facilityCode,
     facilityName: facilityInfo.name,
-    role: UserConfig.ROLE.PHOTOGRAPHER,
+    userRole: UserConfig.ROLE.PHOTOGRAPHER,
   };
   console.log("result", result);
   return http.ok(parseOrThrow(SigninSuccess, result), {}, [

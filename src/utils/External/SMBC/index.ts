@@ -1,5 +1,6 @@
 import axios from "redaxios";
 import {GetParameter} from "../../ParameterStore";
+import * as jwt from "jsonwebtoken";
 
 const SSM_SMBC_SETTING_PATH = process.env.SSM_SMBC_SETTING_PATH || "";
 const SMBC_API_GET_LINKPLUS = process.env.SMBC_API_GET_LINKPLUS || "";
@@ -74,7 +75,7 @@ export class SmbcPaymentLinkError extends Error {
 
   constructor(
     message: string,
-    opts?: {status?: number; responseBody?: unknown}
+    opts?: {status?: number; responseBody?: unknown},
   ) {
     super(message);
     this.name = "SmbcPaymentLinkError";
@@ -89,7 +90,7 @@ export class SmbcPaymentLinkError extends Error {
  * - 成功: LinkUrl を返す
  */
 export async function createSmbcPaymentLink(
-  params: CreateSmbcPaymentLinkParams
+  params: CreateSmbcPaymentLinkParams,
 ): Promise<string> {
   const {orderId, amount, completeUrl, cancelUrl} = params;
   const {configId, shopId, shopPass} = await getSmbcSetting();
@@ -120,7 +121,7 @@ export async function createSmbcPaymentLink(
         headers: {"Content-Type": "application/json"},
         // redaxios は validateStatus が使えるので、PHP同様 200 だけ成功に寄せる
         validateStatus: (status) => status === 200,
-      }
+      },
     );
 
     // validateStatus で 200 以外は catch に行くが、念のため
@@ -138,7 +139,7 @@ export async function createSmbcPaymentLink(
         {
           status: res.status,
           responseBody: res.data,
-        }
+        },
       );
     }
 
@@ -157,7 +158,7 @@ export async function createSmbcPaymentLink(
 
 function createPaymentExpiredAtJST(
   expiredSeconds: number,
-  baseDate: Date = new Date()
+  baseDate: Date = new Date(),
 ): string {
   // UTC + expiredSeconds
   const utcTime = baseDate.getTime() + expiredSeconds * 1000;
@@ -203,11 +204,11 @@ type searchTradeMultiResponseT = {
 };
 export async function searchTradeMulti(
   orderId: string,
-  payType: string
+  payType: string,
 ): Promise<searchTradeMultiResponseT | null> {
   const {shopId, shopPass} = await getSmbcSetting();
   const response = await axios.get(
-    `${SMBC_API_SEARCH_TRADE_MULTI}?ShopID=${shopId}&ShopPass=${shopPass}&OrderID=${orderId}&PayType=${payType}`
+    `${SMBC_API_SEARCH_TRADE_MULTI}?ShopID=${shopId}&ShopPass=${shopPass}&OrderID=${orderId}&PayType=${payType}`,
   );
 
   if (response.status !== 200) {
@@ -236,7 +237,7 @@ export async function searchTradeMulti(
 
   // JST → UTC（-9時間）
   const utcDate = new Date(
-    Date.UTC(year, month, day, hour - 9, minute, second)
+    Date.UTC(year, month, day, hour - 9, minute, second),
   );
   res.ProcessDate = utcDate.toISOString().replace(".000", "");
 

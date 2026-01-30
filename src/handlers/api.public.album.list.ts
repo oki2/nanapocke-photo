@@ -16,7 +16,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("albums", albums);
 
   const result: AlbumListResponseT = [];
-  const userRole: Role = authContext.role;
+  const userRole: Role = authContext.userRole;
   const viewStatus: string[] = AlbumConfig.VIEW_STATUS[userRole];
 
   for (const album of albums) {

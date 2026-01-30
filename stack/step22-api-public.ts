@@ -327,7 +327,9 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
         },
         initialPolicy: [
@@ -347,6 +349,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               props.RelationTable.tableArn,
               `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+            resources: [props.PhotoCatalogTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -472,28 +479,43 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 512,
         environment: {
           ...defaultEnvironment,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:DeleteItem"],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
-              "dynamodb:GetItem",
-              "dynamodb:UpdateItem",
               "dynamodb:Query",
               "dynamodb:DeleteItem",
               "dynamodb:BatchWriteItem",
             ],
             resources: [
-              props.AlbumCatalogTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:ListBucket"],
+            resources: [`${props.bucketPhoto.bucketArn}`],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:DeleteObject"],
-            resources: [`${props.bucketUpload.bucketArn}/thumbnail/album/*`],
+            resources: [`${props.bucketPhoto.bucketArn}/thumbnail/album/*`],
           }),
         ],
       },
@@ -587,7 +609,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       },
     );
 
-    // 写真一覧の取得
+    // 写真一覧の取得（園長向け）
     this.lambdaFn.photoListFn = new NodejsFunction(
       this,
       "ApiPublicPhotoListFn",
@@ -626,6 +648,35 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             resources: [
               props.RelationTable.tableArn,
               // `${props.RelationTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+        ],
+      },
+    );
+
+    // 写真一覧の取得（保育士・フォトグラファー向け）
+    this.lambdaFn.photoListMyFn = new NodejsFunction(
+      this,
+      "ApiPublicPhotoListMyFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicPhotoListMy`,
+        description: `${functionPrefix}-ApiPublicPhotoListMy`,
+        entry: "src/handlers/api.public.photo.list.my.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 512,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:Query", "dynamodb:BatchGetItem"],
+            resources: [
+              props.PhotoCatalogTable.tableArn,
+              `${props.PhotoCatalogTable.tableArn}/index/GsiMy_Index`,
             ],
           }),
         ],
@@ -956,6 +1007,44 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         }),
       ],
     });
+
+    // 印刷販売時の選択可能オプションの取得
+    // ※削除する
+    this.lambdaFn.cartCheckoutShippingOptionFn = new NodejsFunction(
+      this,
+      "ApiPublicCartCheckoutShippingOptionFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicCartCheckoutShippingOption`,
+        description: `${functionPrefix}-ApiPublicCartCheckoutShippingOption`,
+        entry: "src/handlers/api.public.options.shipping.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+        },
+      },
+    );
+
+    // 印刷販売時の選択可能配送オプションの取得
+    // ※削除する
+    this.lambdaFn.optionsShippingFn = new NodejsFunction(
+      this,
+      "ApiPublicOptionsShippingFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicOptionsShipping`,
+        description: `${functionPrefix}-ApiPublicOptionsShipping`,
+        entry: "src/handlers/api.public.options.shipping.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+        },
+      },
+    );
 
     // カートから決済情報の作成
     this.lambdaFn.cartCheckoutFn = new NodejsFunction(

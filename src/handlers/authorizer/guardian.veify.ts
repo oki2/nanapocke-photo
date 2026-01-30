@@ -49,7 +49,7 @@ export const handler = async (event: any = {}): Promise<any> => {
           userCode: userInfo.userCode,
           userName: userInfo.userName,
           facilityCode: userInfo.facilityCode,
-          role: userInfo.userRole,
+          userRole: userInfo.userRole,
         },
       };
     }

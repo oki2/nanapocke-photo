@@ -9,13 +9,22 @@ export const STATUS = {
   FAILED_SYSTEM: "FAILED_SYSTEM", // 運営・システム都合
   FAILED_ERROR: "FAILED_ERROR", // SMBC側のエラー
   FAILED_UNKNOWN: "FAILED_UNKNOWN", // 未知のエラー
-};
+} as const;
 
+// 購入種別
 export const ORDER_TYPE = {
-  DIGITAL: "digital",
-  SHIPPING: "shipping",
-};
+  DIGITAL: "DIGITAL", // DLのみ、印刷無し
+  SHIPPING: "SHIPPING", // 印刷・配送アリ
+} as const;
 
+// 配送状況　DLのみの場合は NONE
+export const SHIPPING_STATUS = {
+  PROCESSING: "PROCESSING", // 出荷準備中
+  SHIPPED: "SHIPPED", // 出荷済み
+  NONE: "NONE",
+} as const;
+
+export const SHIPPING_LABEL = "ゆうメール";
 export const SHIPPING_POSTAGE_MAIL_FEE = 101; // ゆうメール送料
 export const POSTAGE_MAIL_LIMIT = 200; // ゆうメール 1配送辺りの上限枚数
 

@@ -14,19 +14,23 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("cart", cart);
 
   // 2. レスポンス形式に変換
-  const response: CartItemListT = cart.map((item: any) => {
-    return {
-      albumId: item.albumId,
-      photoId: item.photoId,
-      albumTitle: item.albumTitle,
-      albumSequenceId: item.albumSequenceId,
-      photoSequenceId: item.photoSequenceId,
-      priceTier: item.priceTier,
-      purchaseDeadline: item.purchaseDeadline,
-      download: [item.downloadOption],
-      print: [item.printLOption, item.print2LOption],
-    };
-  });
+  const response: CartItemListT = {
+    photos: cart.map((item: any) => {
+      return {
+        albumId: item.albumId,
+        photoId: item.photoId,
+        albumTitle: item.albumTitle,
+        albumSequenceId: item.albumSequenceId,
+        photoSequenceId: item.photoSequenceId,
+        imageUrl: `/thumbnail/${item.facilityCode}/photo/${item.shootingBy}/${item.photoId}.webp`,
+        priceTier: item.priceTier,
+        purchaseDeadline: item.purchaseDeadline,
+        download: [item.downloadOption],
+        print: [item.printLOption, item.print2LOption],
+      };
+    }),
+    downloadExpiry: new Date().toISOString(),
+  };
 
   return http.ok(parseOrThrow(CartItemList, response));
 });

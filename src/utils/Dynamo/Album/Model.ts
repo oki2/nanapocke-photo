@@ -21,12 +21,15 @@ import {AlbumConfig, PhotoConfig} from "../../../config";
 import * as Photo from "../Photo";
 import * as Relation from "../Relation";
 
+const getPk = (facilityCode: string) => `FAC#${facilityCode}`;
+const getSk = (albumId: string) => `META#${albumId}`;
+
 export async function get(facilityCode: string, albumId: string): Promise<any> {
   const command = new GetCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
   });
 
@@ -52,8 +55,8 @@ export async function create(
     new PutCommand({
       TableName: AlbumConfig.TABLE_NAME,
       Item: {
-        pk: `FAC#${facilityCode}`,
-        sk: `META#${albumId}`,
+        pk: getPk(facilityCode),
+        sk: getSk(albumId),
         lsi1: nowISO,
         facilityCode: facilityCode,
         albumId: albumId,
@@ -104,7 +107,7 @@ export async function list(facilityCode: string): Promise<any> {
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}`,
+      ":pk": getPk(facilityCode),
     },
   });
 
@@ -128,8 +131,8 @@ export async function update(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
     UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
@@ -170,8 +173,8 @@ export async function setCoverImage(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
     UpdateExpression: `SET #coverImage = :coverImage, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
@@ -242,8 +245,8 @@ export async function actionSalesPublishing(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -297,8 +300,8 @@ export async function actionSalesPublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -350,8 +353,8 @@ export async function actionSalesUnpublished(
   const command = new UpdateCommand({
     TableName: AlbumConfig.TABLE_NAME,
     Key: {
-      pk: `FAC#${facilityCode}`,
-      sk: `META#${albumId}`,
+      pk: getPk(facilityCode),
+      sk: getSk(albumId),
     },
     UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
@@ -401,7 +404,7 @@ export async function draftList(facilityCode: string): Promise<any> {
       "#albumId": "albumId",
     },
     ExpressionAttributeValues: {
-      ":pk": `FAC#${facilityCode}`,
+      ":pk": getPk(facilityCode),
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
     },
   });
@@ -411,48 +414,18 @@ export async function draftList(facilityCode: string): Promise<any> {
   return result.Items;
 }
 
-export async function purge(
+export async function deleteAlbum(
   facilityCode: string,
   albumId: string,
 ): Promise<any> {
   // アルバム削除
-  const delRes = await docClient().send(
+  await docClient().send(
     new DeleteCommand({
       TableName: AlbumConfig.TABLE_NAME,
       Key: {
-        pk: `FAC#${facilityCode}`,
-        sk: albumId,
-      },
-      ReturnValues: "ALL_OLD",
-    }),
-  );
-
-  // 2. アルバムの紐付け情報を取得
-  const delList = await docClient().send(
-    new QueryCommand({
-      TableName: PhotoConfig.TABLE_NAME,
-      KeyConditionExpression: "#pk = :pk",
-      ProjectionExpression: "#photoId",
-      ExpressionAttributeNames: {
-        "#pk": "pk",
-        "#photoId": "photoId",
-      },
-      ExpressionAttributeValues: {
-        ":pk": `JOIN#ALBUM2PHOTO#FAC#${facilityCode}`,
+        pk: getPk(facilityCode),
+        sk: getSk(albumId),
       },
     }),
   );
-
-  console.log("delList", delList);
-
-  // 3. アルバムの紐付けを削除
-  for (const item of delList.Items ?? []) {
-    await Relation.setRelationPhotoAlbums({
-      facilityCode: facilityCode,
-      photoId: item.photoId,
-      addAlbums: [],
-      delAlbums: [albumId],
-      userId: "",
-    });
-  }
 }

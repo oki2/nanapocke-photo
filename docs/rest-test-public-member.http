@@ -19,7 +19,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定
-@albumId = 19e2e4b0-6eaa-4a84-bf96-bddab8ffa2cb
+@albumId = feb4d740-6609-40e3-8d41-9a27991a83dd
 
 ### 写真一覧：保護者向け
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
@@ -27,7 +27,7 @@ Authorization: Bearer {{accessToken}}
 
 
 ### 設定
-@photoId = bbb
+@photoId = 2c986b89-332e-45a9-8e3b-d4586ceb314a
 
 ### カートに写真追加
 POST https://{{customDomainName}}/api/my/cart HTTP/1.1

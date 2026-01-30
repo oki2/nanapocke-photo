@@ -159,10 +159,11 @@ export async function list(facilityCode: string, userId: string): Promise<any> {
     // IndexName: "lsi1_index",
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #shootingBy, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #facilityCode,#albumId, #photoId, #albumSequenceId, #photoSequenceId, #albumTitle, #purchaseDeadline, #priceTable, #priceTier, #shootingBy, #downloadOption, #printLOption, #print2LOption, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
+      "#facilityCode": "facilityCode",
       "#albumId": "albumId",
       "#photoId": "photoId",
       "#albumSequenceId": "albumSequenceId",

@@ -113,7 +113,7 @@ const doc = {
       },
     },
 
-    "/api/facility/{facilityCode}/photo/list": {
+    "/api/facility/{facilityCode}/photo/list/my": {
       get: {
         tags: ["Photo"],
         summary: "写真一覧",

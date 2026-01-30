@@ -145,3 +145,26 @@ export async function photoCount(
 ): Promise<number> {
   return await Relation.photoCount(facilityCode, albumId);
 }
+
+export async function purge(
+  facilityCode: string,
+  albumId: string,
+): Promise<any> {
+  // 1. アルバム削除
+  await AlbumModel.deleteAlbum(facilityCode, albumId);
+
+  // 2. アルバムの紐付け情報を取得
+  const delList = await Relation.getPhotoIdsByAlbumId(facilityCode, albumId);
+  console.log("delList", delList);
+
+  // 3. アルバムの紐付けを削除
+  for (const item of delList ?? []) {
+    await Relation.setRelationPhotoAlbums({
+      facilityCode: facilityCode,
+      photoId: item.photoId,
+      addAlbums: [],
+      delAlbums: [albumId],
+      userId: "",
+    });
+  }
+}

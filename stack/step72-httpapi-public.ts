@@ -89,7 +89,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       {
         functionName: `${functionPrefix}-AuthorizerPrincipalVeify`,
         description: `${functionPrefix}-AuthorizerPrincipalVeify`,
-        entry: "src/handlers/authorizer/principal.veify.ts",
+        entry: "src/handlers/authorizer/staff.principal.veify.ts",
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
@@ -114,6 +114,50 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     const AuthorizerPrincipalVeify = new HttpLambdaAuthorizer(
       "AuthorizerPrincipalVeify",
       AuthorizerPrincipalVeifyFn,
+      {
+        responseTypes: [HttpLambdaResponseType.SIMPLE],
+        identitySource: [
+          "$request.header.Authorization",
+          "$request.header.x-origin-verify-token",
+        ],
+        // 必要に応じてキャッシュを有効化
+        resultsCacheTtl: cdk.Duration.seconds(60),
+      },
+    );
+
+    // ==========================================================
+    // Access Token : Principal（園長）を判定するオーソライザー
+    const AuthorizerStudioVeifyFn = new NodejsFunction(
+      this,
+      "AuthorizerStudioVeifyFn",
+      {
+        functionName: `${functionPrefix}-AuthorizerStudioVeify`,
+        description: `${functionPrefix}-AuthorizerStudioVeify`,
+        entry: "src/handlers/authorizer/staff.studio.veify.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+          X_ORIGIN_VERIFY_TOKEN: this.cfdVerifyToken,
+          NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
+          }),
+        ],
+      },
+    );
+    const AuthorizerStudioVeify = new HttpLambdaAuthorizer(
+      "AuthorizerStudioVeify",
+      AuthorizerStudioVeifyFn,
       {
         responseTypes: [HttpLambdaResponseType.SIMPLE],
         identitySource: [
@@ -391,7 +435,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
     // アルバムの販売設定変更
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/album/{albumId}/sales",
-      methods: [apigwv2.HttpMethod.PUT],
+      methods: [apigwv2.HttpMethod.PATCH],
       integration: new HttpLambdaIntegration(
         "AlbumSetPhotoIntegration",
         props.lambdaFnPublic.albumSalseFn,
@@ -422,7 +466,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerStaffVeify,
     });
 
-    // 写真一覧
+    // 写真一覧（園長向け）
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/photo/list",
       methods: [apigwv2.HttpMethod.GET],
@@ -430,7 +474,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "PhotoListIntegration",
         props.lambdaFnPublic.photoListFn,
       ),
-      authorizer: AuthorizerStaffVeify,
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
+    // 写真一覧（保育士・フォトグラファー向け）
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/photo/list/my",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "PhotoListMyIntegration",
+        props.lambdaFnPublic.photoListMyFn,
+      ),
+      authorizer: AuthorizerStudioVeify,
     });
 
     // 写真のアルバム一括紐付け
@@ -531,6 +586,41 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       integration: new HttpLambdaIntegration(
         "CartPhotoDeleteIntegration",
         props.lambdaFnPublic.cartPhotoDeleteFn,
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // 決済オプションの取得
+    // ※後で消す
+    this.httpApi.addRoutes({
+      path: "/api/my/cart/checkout/shipping-options",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "CartCheckoutShippingOptionIntegration",
+        props.lambdaFnPublic.cartCheckoutShippingOptionFn,
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // 決済オプションの取得
+    // ※後で消す
+    this.httpApi.addRoutes({
+      path: "/api/checkout/shipping-options",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "CartCheckoutShippingOptionIntegration",
+        props.lambdaFnPublic.cartCheckoutShippingOptionFn,
+      ),
+      authorizer: AuthorizerGuardianlVeify,
+    });
+
+    // 配送オプションの取得
+    this.httpApi.addRoutes({
+      path: "/api/options/shipping",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "CartCheckoutShippingOptionIntegration",
+        props.lambdaFnPublic.optionsShippingFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });

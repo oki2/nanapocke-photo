@@ -19,7 +19,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("cart", cart);
 
   // 2. 更新情報を作成する
-  const updateItems = mergePurchasableOptions(cart, data);
+  const updateItems = mergePurchasableOptions(cart, data.items);
   console.log("updateItems", updateItems);
 
   // 3. カートの中身を更新する
@@ -31,7 +31,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       item.photoId,
       item.dl ?? undefined,
       item.printl ?? undefined,
-      item.print2l ?? undefined
+      item.print2l ?? undefined,
     );
   }
 
@@ -69,7 +69,7 @@ const buildSk = (albumId: string, photoId: string) =>
 
 export function mergePurchasableOptions(
   a: CartItem[],
-  b: CartEditT[]
+  b: CartEditT[],
 ): ResultItem[] {
   // A を sk -> item の Map に
   const aBySk = new Map<string, CartItem>(a.map((x) => [x.sk, x]));

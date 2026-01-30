@@ -29,7 +29,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   let classList: any[] | undefined = undefined;
   let academicYear: any[] | undefined = undefined;
 
-  if (authContext.role === UserConfig.ROLE.PRINCIPAL) {
+  if (authContext.userRole === UserConfig.ROLE.PRINCIPAL) {
     staff = await User.staffList(authContext.facilityCode);
     console.log("staff", staff);
 
@@ -48,6 +48,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       staff: staff,
       classList: classList,
       academicYear: academicYear,
-    })
+    }),
   );
 });

@@ -28,7 +28,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     cookieArray.map((c: any) => {
       const [k, v] = c.split("=");
       return [k.trim(), v];
-    })
+    }),
   );
 
   // バリデーション
@@ -39,7 +39,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     AppConfig.MAIN_REGION,
     AppConfig.NANAPOCKE_AUTHPOOL_ID,
     AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
-    cookie.refreshToken
+    cookie.refreshToken,
   );
 
   if (!res.idToken || !res.accessToken) {
@@ -62,26 +62,26 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const facilityInfo = await Facility.isActive(userInfo.facilityCode);
   if (!facilityInfo) {
     console.log(
-      `施設利用不可 : ${userInfo.facilityCode} / user : ${payload.sub}`
+      `施設利用不可 : ${userInfo.facilityCode} / user : ${payload.sub}`,
     );
     return http.forbidden();
   }
 
   // 4. Thumbnail アクセス用署名付きCookieを作成
   const privateKey = await GetParameter(
-    AppConfig.PEM_THUMBNAIL_PREVIEW_KEYPATH
+    AppConfig.PEM_THUMBNAIL_PREVIEW_KEYPATH,
   );
   const targetPath = thumbnailAllowedPath(
     userInfo.facilityCode,
     userInfo.userRole,
-    payload.sub
+    payload.sub,
   );
 
   const cookieAry = GetSignedCookie(
     AppConfig.NANAPHOTO_FQDN,
     AppConfig.CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID,
     privateKey,
-    targetPath
+    targetPath,
   );
 
   const result: SigninResponseT = {
@@ -90,7 +90,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     userName: userInfo.userName,
     facilityName: facilityInfo.name,
     facilityCode: userInfo.facilityCode,
-    role: userInfo.userRole,
+    userRole: userInfo.userRole,
   };
   return http.ok(parseOrThrow(SigninResponse, result), {}, cookieAry);
 });
