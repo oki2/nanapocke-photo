@@ -683,41 +683,6 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       },
     );
 
-    // 写真の情報を編集（アルバムIDの紐付けに利用）
-    this.lambdaFn.photoEditFn = new NodejsFunction(
-      this,
-      "ApiPublicPhotoEditFn",
-      {
-        functionName: `${functionPrefix}-ApiPublicPhotoEdit`,
-        description: `${functionPrefix}-ApiPublicPhotoEdit`,
-        entry: "src/handlers/api.public.photo.edit.ts",
-        handler: "handler",
-        runtime: lambda.Runtime.NODEJS_22_X,
-        architecture: lambda.Architecture.ARM_64,
-        memorySize: 512,
-        environment: {
-          ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
-        },
-        initialPolicy: [
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: [
-              "dynamodb:GetItem",
-              "dynamodb:Query",
-              "dynamodb:PutItem",
-              "dynamodb:UpdateItem",
-              "dynamodb:DeleteItem",
-            ],
-            resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
-            ],
-          }),
-        ],
-      },
-    );
-
     // 写真のアルバム一括紐付け
     this.lambdaFn.photoJoinAlbumFn = new NodejsFunction(
       this,
@@ -1008,27 +973,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       ],
     });
 
-    // 印刷販売時の選択可能オプションの取得
-    // ※削除する
-    this.lambdaFn.cartCheckoutShippingOptionFn = new NodejsFunction(
-      this,
-      "ApiPublicCartCheckoutShippingOptionFn",
-      {
-        functionName: `${functionPrefix}-ApiPublicCartCheckoutShippingOption`,
-        description: `${functionPrefix}-ApiPublicCartCheckoutShippingOption`,
-        entry: "src/handlers/api.public.options.shipping.ts",
-        handler: "handler",
-        runtime: lambda.Runtime.NODEJS_22_X,
-        architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
-        environment: {
-          ...defaultEnvironment,
-        },
-      },
-    );
-
     // 印刷販売時の選択可能配送オプションの取得
-    // ※削除する
     this.lambdaFn.optionsShippingFn = new NodejsFunction(
       this,
       "ApiPublicOptionsShippingFn",

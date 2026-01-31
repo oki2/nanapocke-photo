@@ -37,14 +37,14 @@ export class Step82CloudfrontStack extends cdk.Stack {
       this,
       "cachePolicyForApiGwAuth",
       {
-        defaultTtl: cdk.Duration.seconds(10),
-        minTtl: cdk.Duration.seconds(10),
-        maxTtl: cdk.Duration.seconds(10),
+        defaultTtl: cdk.Duration.seconds(0),
+        minTtl: cdk.Duration.seconds(0),
+        maxTtl: cdk.Duration.seconds(1),
         headerBehavior:
           cloudfront.CacheHeaderBehavior.allowList("Authorization"),
         cookieBehavior: cloudfront.CacheCookieBehavior.all(),
         queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-      }
+      },
     );
 
     // 必要ならここでキャッシュポリシーやレスポンスヘッダポリシーを作り込む
@@ -83,7 +83,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
             expiredObjectDeleteMarker: true,
           },
         ],
-      }
+      },
     );
 
     const bucketPublicCfdOrigin =
@@ -104,7 +104,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
       certificate: acm.Certificate.fromCertificateArn(
         this,
         "ImportedCert",
-        props.publicCertificateArn
+        props.publicCertificateArn,
       ),
       defaultRootObject: "index.html",
       defaultBehavior: {
@@ -122,7 +122,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
               customHeaders: {
                 "x-origin-verify-token": props.cfdAdminVerifyToken,
               },
-            }
+            },
           ),
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cachePolicyForApiGwAuth,
@@ -138,7 +138,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
               customHeaders: {
                 "x-origin-verify-token": props.cfdPublicVerifyToken,
               },
-            }
+            },
           ),
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cachePolicyForApiGwAuth,
@@ -154,7 +154,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
               customHeaders: {
                 "x-origin-verify-token": props.cfdPublicVerifyToken,
               },
-            }
+            },
           ),
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cachePolicyForApiGwAuth,
@@ -162,6 +162,18 @@ export class Step82CloudfrontStack extends cdk.Stack {
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           responseHeadersPolicy:
             cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS,
+        },
+        "/admin": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
         },
         "/admin/*": {
           origin: bucketPublicCfdOrigin,
@@ -175,7 +187,31 @@ export class Step82CloudfrontStack extends cdk.Stack {
             },
           ],
         },
+        "/studio": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
+        },
         "/studio/*": {
+          origin: bucketPublicCfdOrigin,
+          cachePolicy: defaultCachePolicy,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          functionAssociations: [
+            {
+              function: cfFnSpaRouting,
+              eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            },
+          ],
+        },
+        "/member": {
           origin: bucketPublicCfdOrigin,
           cachePolicy: defaultCachePolicy,
           viewerProtocolPolicy:
@@ -201,7 +237,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
         },
         "/thumbnail/*": {
           origin: origins.S3BucketOrigin.withOriginAccessIdentity(
-            props.bucketPhoto
+            props.bucketPhoto,
           ),
           cachePolicy: new cloudfront.CachePolicy(
             this,
@@ -214,7 +250,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
               queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
               headerBehavior:
                 cloudfront.CacheHeaderBehavior.allowList("Origin"),
-            }
+            },
           ),
           trustedKeyGroups: [props.cfKeyGroupNanaPhoto],
         },
@@ -234,7 +270,7 @@ export class Step82CloudfrontStack extends cdk.Stack {
       recordName: props.Config.HostedZone.PublicDomain,
       zone: hostedZone,
       target: route53.RecordTarget.fromAlias(
-        new route53Tg.CloudFrontTarget(cfdPublic)
+        new route53Tg.CloudFrontTarget(cfdPublic),
       ),
     });
   }

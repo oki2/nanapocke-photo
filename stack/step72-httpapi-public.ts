@@ -499,18 +499,6 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
-    // 写真の情報を編集（アルバムIDの紐付けに利用）
-    // ※削除予定
-    this.httpApi.addRoutes({
-      path: "/api/facility/{facilityCode}/photo/{photoId}",
-      methods: [apigwv2.HttpMethod.PUT],
-      integration: new HttpLambdaIntegration(
-        "PhotoEditIntegration",
-        props.lambdaFnPublic.photoEditFn,
-      ),
-      authorizer: AuthorizerPrincipalVeify,
-    });
-
     // 写真削除
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/photo/{photoId}",
@@ -586,30 +574,6 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       integration: new HttpLambdaIntegration(
         "CartPhotoDeleteIntegration",
         props.lambdaFnPublic.cartPhotoDeleteFn,
-      ),
-      authorizer: AuthorizerGuardianlVeify,
-    });
-
-    // 決済オプションの取得
-    // ※後で消す
-    this.httpApi.addRoutes({
-      path: "/api/my/cart/checkout/shipping-options",
-      methods: [apigwv2.HttpMethod.GET],
-      integration: new HttpLambdaIntegration(
-        "CartCheckoutShippingOptionIntegration",
-        props.lambdaFnPublic.cartCheckoutShippingOptionFn,
-      ),
-      authorizer: AuthorizerGuardianlVeify,
-    });
-
-    // 決済オプションの取得
-    // ※後で消す
-    this.httpApi.addRoutes({
-      path: "/api/checkout/shipping-options",
-      methods: [apigwv2.HttpMethod.GET],
-      integration: new HttpLambdaIntegration(
-        "CartCheckoutShippingOptionIntegration",
-        props.lambdaFnPublic.cartCheckoutShippingOptionFn,
       ),
       authorizer: AuthorizerGuardianlVeify,
     });
