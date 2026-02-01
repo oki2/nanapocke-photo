@@ -1,6 +1,12 @@
 import {CartConfig, PhotoConfig} from "../../../config";
 import * as CartModel from "./Model";
 
+import {
+  OrderItemBaseT,
+  OrderPrintLineT,
+  OrderDownloadLineT,
+} from "../../../schemas/public";
+
 export type PriceTier =
   (typeof PhotoConfig.PRICE_TIER)[keyof typeof PhotoConfig.PRICE_TIER];
 const ALL_PRICE_TIERS = Object.values(PhotoConfig.PRICE_TIER) as PriceTier[];
@@ -94,7 +100,8 @@ export function sumAllTiers(summaryByTier: SummaryByTier): Summary {
 }
 
 // CHECKOUT レスポンス用 ===============================================
-type SalesSize = "printl" | "print2l" | "dl";
+type SalesSize =
+  (typeof PhotoConfig.SALES_SIZE)[keyof typeof PhotoConfig.SALES_SIZE];
 
 type SourceItem = {
   facilityCode: string;
@@ -126,28 +133,6 @@ type SourceItem = {
   };
 };
 
-// 変換後（OrderItemBase 相当）
-type OrderPrintLine = {size: SalesSize; quantity: number; subTotal: number};
-type OrderDownloadLine = {
-  size: SalesSize;
-  note: string;
-  subTotal: number;
-  downloadUrl?: string;
-};
-
-type OrderItemBase = {
-  albumId: string;
-  albumSequenceId: number;
-  albumName: string;
-  photoId: string;
-  photoSequenceId: number;
-  imageUrl: string;
-  priceTier: string;
-  print: OrderPrintLine[];
-  download: OrderDownloadLine[];
-  itemTotal: number;
-};
-
 type ResolveImageUrl = (src: SourceItem) => string;
 type ResolveDownloadUrl = (src: SourceItem) => string | undefined;
 
@@ -157,10 +142,10 @@ export function toOrderItems(
     resolveImageUrl: ResolveImageUrl;
     resolveDownloadUrl?: ResolveDownloadUrl; // 履歴のみ必要なら渡す
   },
-): OrderItemBase[] {
+): OrderItemBaseT[] {
   return sources.map((src) => {
     // ---- print lines ----
-    const print: OrderPrintLine[] = [];
+    const print: OrderPrintLineT[] = [];
 
     // printL
     if (src.printLOption?.purchasable === true) {
@@ -169,7 +154,7 @@ export function toOrderItems(
 
       if (qty > 0) {
         print.push({
-          size: "printl",
+          size: PhotoConfig.SALES_SIZE.PRINT_L,
           quantity: qty,
           subTotal: qty * unit,
         });
@@ -183,7 +168,7 @@ export function toOrderItems(
 
       if (qty > 0) {
         print.push({
-          size: "print2l",
+          size: PhotoConfig.SALES_SIZE.PRINT_2L,
           quantity: qty,
           subTotal: qty * unit,
         });
@@ -191,7 +176,7 @@ export function toOrderItems(
     }
 
     // ---- download lines ----
-    const download: OrderDownloadLine[] = [];
+    const download: OrderDownloadLineT[] = [];
 
     if (
       src.downloadOption?.purchasable === true &&
@@ -200,7 +185,7 @@ export function toOrderItems(
       const unit = src.downloadOption.unitPrice ?? 0;
 
       download.push({
-        size: "dl",
+        size: PhotoConfig.SALES_SIZE.DL_ORIGINAL,
         note: src.downloadOption.note ?? "",
         subTotal: unit, // DL は数量概念が無い想定（1件=unitPrice）
         downloadUrl: deps.resolveDownloadUrl?.(src),
@@ -214,7 +199,7 @@ export function toOrderItems(
     return {
       albumId: src.albumId,
       albumSequenceId: src.albumSequenceId,
-      albumName: src.albumTitle,
+      albumTitle: src.albumTitle,
       photoId: src.photoId,
       photoSequenceId: src.photoSequenceId,
       imageUrl: deps.resolveImageUrl(src),

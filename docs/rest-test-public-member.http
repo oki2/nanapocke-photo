@@ -19,7 +19,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定
-@albumId = feb4d740-6609-40e3-8d41-9a27991a83dd
+@albumId = 7735dd24-f38c-47b7-a95e-00284b3f1345
 
 ### 写真一覧：保護者向け
 GET https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/photo/list HTTP/1.1
@@ -27,7 +27,7 @@ Authorization: Bearer {{accessToken}}
 
 
 ### 設定
-@photoId = 2c986b89-332e-45a9-8e3b-d4586ceb314a
+@photoId = 1d2ec0c3-71a7-4706-bb0b-5f009b8dae1d
 
 ### カートに写真追加
 POST https://{{customDomainName}}/api/my/cart HTTP/1.1
@@ -52,48 +52,50 @@ PUT https://{{customDomainName}}/api/my/cart HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
-[
-  {
-    "albumId": "{{albumId}}",
-    "photoId": "7a1ca146-c497-4f14-8b3c-1eed246db830",
-    "print": [
-      {
-        "size": "printl",
-        "quantity": 1
-      },
-      {
-        "size": "print2l",
-        "quantity": 2
-      }
-    ],
-    "download": [
-      {
-        "size": "dl",
-        "selected": true
-      }
-    ]
-  },
-  {
-    "albumId": "{{albumId}}",
-    "photoId": "1533c165-96e0-4986-b60e-a0ec44aa05a0",
-    "print": [
-      {
-        "size": "printl",
-        "quantity": 1
-      },
-      {
-        "size": "print2l",
-        "quantity": 2
-      }
-    ],
-    "download": [
-      {
-        "size": "dl",
-        "selected": true
-      }
-    ]
-  }
-]
+{"items":
+  [
+    {
+      "albumId": "{{albumId}}",
+      "photoId": "{{photoId}}",
+      "print": [
+        {
+          "size": "printl",
+          "quantity": 1
+        },
+        {
+          "size": "print2l",
+          "quantity": 2
+        }
+      ],
+      "download": [
+        {
+          "size": "dl",
+          "selected": true
+        }
+      ]
+    },
+    {
+      "albumId": "{{albumId}}",
+      "photoId": "1533c165-96e0-4986-b60e-a0ec44aa05a0",
+      "print": [
+        {
+          "size": "printl",
+          "quantity": 1
+        },
+        {
+          "size": "print2l",
+          "quantity": 2
+        }
+      ],
+      "download": [
+        {
+          "size": "dl",
+          "selected": true
+        }
+      ]
+    }
+  ]
+}
 
 ### カート内写真からチェックアウト情報を作成：保護者専用
 POST https://{{customDomainName}}/api/my/cart/checkout HTTP/1.1
@@ -101,7 +103,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "type": "shipping",
+  "type": "SHIPPING",
   "address": {
     "name": "山田たろう",
     "postalCode": "1234567",
@@ -115,6 +117,10 @@ GET https://{{customDomainName}}/api/my/payment/list HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 
+
+###
+@OrderID = DNP2-260201-1746-0000000018
+
 ### 決済履歴詳細を取得：保護者専用
 GET https://{{customDomainName}}/api/my/payment/{{OrderID}} HTTP/1.1
 content-type: application/json
@@ -127,48 +133,3 @@ Authorization: Bearer {{accessToken}}
 
 
 
-
-
-### SMBC callback テスト
-POST https://{{customDomainName}}/api/payments/smbc/callback?hoge=fuge HTTP/1.1
-content-type: application/x-www-form-urlencoded
-
-result=eyJ0cmFuc2FjdGlvbnJlc3VsdCI6eyJBY2Nlc3NJRCI6bnVsbCwiQWNjZXNzUGFzcyI6bnVsbCwiT3JkZXJJRCI6IlhYWFgtMjYwMTAxLTAwMzMtMDAwMDAwMDAxMCIsIlJlc3VsdCI6IlBBWVNUQVJUIiwiUHJvY2Vzc2RhdGUiOiIyMDI2LzAxLzAxIDAwOjMzOjE3IiwiRXJyQ29kZSI6bnVsbCwiRXJySW5mbyI6bnVsbCwiUGF5bWV0aG9kIjpudWxsfX0%3D.5a120c23c579009f742e4bc71d6371c6b3ea1b5905957fa0d5d2b2f68bd1ae5d
-
-### SMBC Setting
-@ShopID = tshop00009520
-@ShopPass = 85td5ygq
-@OrderID = DNP2-260107-1330-0000000021
-@PayType = 45
-
-### SMBC notification テスト
-POST https://{{customDomainName}}/api/payments/smbc/notification HTTP/1.1
-content-type: application/x-www-form-urlencoded
-
-ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
-
-
-### SMBC notification テスト 開発環境一次受け
-POST https://work.uxbrew.jp/photo2/smbc/notification/ HTTP/1.1
-content-type: application/x-www-form-urlencoded
-
-ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
-
-
-### SMBC SearchTradeMulti
-GET https://pt01.smbc-gp.co.jp/payment/SearchTradeMulti.idPass?ShopID={{ShopID}}&ShopPass={{ShopPass}}&OrderID={{OrderID}}&PayType={{PayType}} HTTP/1.1
-
-
-
-### test
-POST https://stg.nanapocke.com/manage/api/v1/topics HTTP/1.1
-content-type: application/json
-Authorization: Bearer Dc9b7LWpmu-uwa8cEee6OI_pKceEt7zAvb2YJZW8BHSyMrAiM-Y
-
-{}
-
-### 
-POST https://dev-kids.uxbrew.jp/api/payment/smbc/notification/ HTTP/1.1
-content-type: application/x-www-form-urlencoded
-
-ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=

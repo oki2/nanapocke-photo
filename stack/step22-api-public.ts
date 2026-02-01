@@ -1068,15 +1068,15 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:Query"],
             resources: [
-              props.MainTable.tableArn,
-              `${props.MainTable.tableArn}/index/lsi1_index`,
+              props.CommerceTable.tableArn,
+              `${props.CommerceTable.tableArn}/index/GsiPaidUser_Index`,
             ],
           }),
         ],
@@ -1097,14 +1097,19 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         memorySize: 256,
         environment: {
           ...defaultEnvironment,
-          TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:GetItem"],
-            resources: [props.MainTable.tableArn],
+            resources: [props.CommerceTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["s3:ListBucket"],
+            resources: [props.bucketPhoto.bucketArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,

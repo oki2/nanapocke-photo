@@ -29,7 +29,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const buffer = Buffer.from(
     await S3FileReadToByteArray(
       AppConfig.BUCKET_PHOTO_NAME,
-      `storage/photo/${authContext.facilityCode}/${photo.createdBy}/${photo.photoId}/${photo.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
+      `storage/photo/${authContext.facilityCode}/${photo.createdBy}/${photo.photoId}/${photo.sequenceId}-${PhotoConfig.SALES_SIZE.DL_ORIGINAL}.jpg`,
     ),
   );
 

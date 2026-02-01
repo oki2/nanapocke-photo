@@ -1,5 +1,5 @@
 export const TABLE_NAME = process.env.TABLE_NAME_PHOTO_CATALOG || "";
-export const DL_ACCEPT_TABLE_NAME = process.env.TABLE_NAME_MAIN || "";
+export const DL_ACCEPT_TABLE_NAME = process.env.TABLE_NAME_COMMERCE || "";
 export const STATUS = {
   CREATE: "CREATE",
   ACTIVE: "ACTIVE",
@@ -43,8 +43,8 @@ export const SORT_ORDER = {
 export const SALES_SIZE = {
   PRINT_L: "printl",
   PRINT_2L: "print2l",
-  DONWLOAD: "dl",
-};
+  DL_ORIGINAL: "dl",
+} as const;
 
 export const FILTER_LIMIT = {
   MIN: 1,

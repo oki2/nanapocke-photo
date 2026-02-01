@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, PaymentConfig} from "../config";
 import * as http from "../http";
 import {parseOrThrow} from "../libs/validate";
 import {PaymentHistoryList, PaymentHistoryListT} from "../schemas/public";
@@ -20,6 +20,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       countDl: item.countDl,
       processDate: item.smbcProcessDate,
       grandTotal: item.grandTotal,
+      shippingStatus: item.shippingStatus ?? PaymentConfig.SHIPPING_STATUS.NONE,
     };
   });
 

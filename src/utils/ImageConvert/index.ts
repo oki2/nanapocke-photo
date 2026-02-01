@@ -108,12 +108,12 @@ export async function PhotoConvertResizeSet(
   const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
   await S3FilePut(
     AppConfig.BUCKET_PHOTO_NAME,
-    `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DONWLOAD}.jpg`,
+    `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DL_ORIGINAL}.jpg`,
     finalBuffer,
     "image/jpeg",
     StorageClass.STANDARD_IA,
   );
-  salesSizeDl.push(PhotoConfig.SALES_SIZE.DONWLOAD);
+  salesSizeDl.push(PhotoConfig.SALES_SIZE.DL_ORIGINAL);
 
   // ============================================================
   // 3. 印刷L画像 1051 x 1500 以上

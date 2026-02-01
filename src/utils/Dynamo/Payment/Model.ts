@@ -16,6 +16,9 @@ type PaymentCreateResult = {
 const getPk = () => `PAYMENT#META`;
 const getSk = (orderId: string) => orderId;
 
+const getGsiPaidUserPK = (userId: string) => `USER#${userId}`;
+const getGsiPaidUserSK = (processDate: string) => `PROCESS#${processDate}`;
+
 export async function create(
   facilityCode: string,
   userId: string,
@@ -96,6 +99,7 @@ function dateYmdHiJST(baseDate: Date = new Date()): string {
 export async function setCompleted(
   orderId: string,
   smbcProcessDate: string,
+  countPrint: number,
   userId: string,
   updatedBy: string,
 ): Promise<void> {
@@ -106,17 +110,24 @@ export async function setCompleted(
       sk: getSk(orderId),
     },
     UpdateExpression:
-      "SET #paymentStatus = :paymentStatus, #lsi1 = :lsi1, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
+      "SET #GsiPaidUserPK = :GsiPaidUserPK, #GsiPaidUserSK = :GsiPaidUserSK, #paymentStatus = :paymentStatus, #shippingStatus = :shippingStatus, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
     ExpressionAttributeNames: {
+      "#GsiPaidUserPK": "GsiPaidUserPK",
+      "#GsiPaidUserSK": "GsiPaidUserSK",
       "#paymentStatus": "paymentStatus",
-      "#lsi1": "lsi1",
+      "#shippingStatus": "shippingStatus",
       "#smbcProcessDate": "smbcProcessDate",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
+      ":GsiPaidUserPK": getGsiPaidUserPK(userId),
+      ":GsiPaidUserSK": getGsiPaidUserSK(smbcProcessDate),
       ":paymentStatus": PaymentConfig.STATUS.COMPLETED,
-      ":lsi1": `USER#${userId}#PROCESS#${smbcProcessDate}`,
+      ":shippingStatus":
+        countPrint > 0
+          ? PaymentConfig.SHIPPING_STATUS.PROCESSING
+          : PaymentConfig.SHIPPING_STATUS.NONE,
       ":smbcProcessDate": smbcProcessDate,
       ":updatedAt": new Date().toISOString(),
       ":updatedBy": updatedBy,
@@ -130,24 +141,22 @@ export async function setCompleted(
 export async function myList(userId: string): Promise<any> {
   const command = new QueryCommand({
     TableName: PaymentConfig.TABLE_NAME,
-    IndexName: "lsi1_index",
+    IndexName: "GsiPaidUser_Index",
     ScanIndexForward: false,
-    KeyConditionExpression: "#pk = :pk AND begins_with(#lsi1, :lsi1)",
+    KeyConditionExpression: "#GsiPaidUserPK = :GsiPaidUserPK",
     ProjectionExpression:
-      "#sk, #orderId, #countPrint, #countDl, #smbcProcessDate, grandTotal",
+      "#orderId, #countPrint, #countDl, #smbcProcessDate, #grandTotal, #shippingStatus",
     ExpressionAttributeNames: {
-      "#pk": "pk",
-      "#lsi1": "lsi1",
-      "#sk": "sk",
+      "#GsiPaidUserPK": "GsiPaidUserPK",
       "#orderId": "orderId",
       "#countPrint": "countPrint",
       "#countDl": "countDl",
       "#smbcProcessDate": "smbcProcessDate",
       "#grandTotal": "grandTotal",
+      "#shippingStatus": "shippingStatus",
     },
     ExpressionAttributeValues: {
-      ":pk": `PAYMENT#META`,
-      ":lsi1": `USER#${userId}#PROCESS#`,
+      ":GsiPaidUserPK": getGsiPaidUserPK(userId),
     },
   });
 

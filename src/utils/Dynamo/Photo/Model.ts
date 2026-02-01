@@ -124,7 +124,7 @@ const getSeq2PhotoPk = (facilityCode: string) =>
 const getSeq2PhotoSk = (seq: number) => `SEQ#${seq}`;
 
 const getDlAcceptPk = (facilityCode: string, userId: string) =>
-  `FAC#${facilityCode}#USER#${userId}#DONWLOADACCEPT`;
+  `FAC#${facilityCode}#USER#${userId}#DOWNLOADACCEPT`;
 const getDlAcceptSk = (photoId: string) => `PHOTO#${photoId}`;
 
 /**

@@ -47,6 +47,14 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   // 注文情報を取得
   const payment = await Payment.get(orderData.orderId);
 
+  // 注文データをS3のストレージ領域へコピー
+  await S3.S3FileCopy(
+    bucketName,
+    keyPath,
+    AppConfig.BUCKET_PHOTO_NAME,
+    `paymentLog/${payment.userId}/${orderData.orderId}/order.json`,
+  );
+
   // DL用
   const dlData = orderData.cart
     .filter((cart: any) => {
@@ -67,14 +75,6 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       exp,
     );
   }
-
-  // 決済ログをS3のストレージ領域へコピー
-  await S3.S3FileCopy(
-    bucketName,
-    keyPath,
-    AppConfig.BUCKET_PHOTO_NAME,
-    `paymentLog/${payment.userId}/${orderData.orderId}/order.json`,
-  );
 
   // 印刷購入が存在する場合は、印刷用のレコードを登録
 

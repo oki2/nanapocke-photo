@@ -252,7 +252,7 @@ const doc = {
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/CurrentOrder",
+                  $ref: "#/components/schemas/OrderCheckout",
                 },
               },
             },
@@ -316,7 +316,7 @@ const doc = {
       CartItemList: toJsonSchemaSafe(SchemaPublic.CartItemList),
       CartEditBody: toJsonSchemaSafe(SchemaPublic.CartEditBody),
       CheckoutBody: toJsonSchemaSafe(SchemaPublic.CheckoutBody),
-      CurrentOrder: toJsonSchemaSafe(SchemaPublic.CurrentOrder),
+      OrderCheckout: toJsonSchemaSafe(SchemaPublic.OrderCheckout),
       PaymentHistoryList: toJsonSchemaSafe(SchemaPublic.PaymentHistoryList),
     },
   },

@@ -64,7 +64,7 @@ export const PrintSize = v.picklist([
   PhotoConfig.SALES_SIZE.PRINT_2L,
 ]);
 
-export const DownloadSize = v.picklist([PhotoConfig.SALES_SIZE.DONWLOAD]);
+export const DownloadSize = v.picklist([PhotoConfig.SALES_SIZE.DL_ORIGINAL]);
 
 export const SalesSizePrint = v.object({
   size: PrintSize,

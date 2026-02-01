@@ -1,7 +1,7 @@
 import {AppConfig, PhotoConfig, PaymentConfig} from "../config";
 import * as http from "../http";
 import {parseOrThrow} from "../libs/validate";
-import {CheckoutBody, CurrentOrder, CurrentOrderT} from "../schemas/public";
+import {CheckoutBody, OrderCheckout, OrderCheckoutT} from "../schemas/public";
 
 import * as Cart from "../utils/Dynamo/Cart";
 import * as Payment from "../utils/Dynamo/Payment";
@@ -92,10 +92,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const paymentUrl = await SMBC.createSmbcPaymentLink({
     orderId: orderId,
     amount: subTotalPrice + shippingFee,
-    completeUrl: `https://${AppConfig.NANAPHOTO_FQDN}/member/payment/success?orderId=${orderId}`,
-    cancelUrl: `https://${AppConfig.NANAPHOTO_FQDN}/member/payment/failed?orderId=${orderId}`,
+    completeUrl: `https://${AppConfig.NANAPHOTO_FQDN}/api/payments/smbc/callback?status=success&orderId=${orderId}`,
+    cancelUrl: `https://${AppConfig.NANAPHOTO_FQDN}/api/payments/smbc/callback?status=failed&orderId=${orderId}`,
   });
-  console.log("paymentUrl", paymentUrl);
 
   // 9. レスポンス形式に変換
   const photos = Cart.toOrderItems(cart, {
@@ -104,11 +103,16 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   });
   console.log("photos", photos);
 
-  const response: CurrentOrderT = {
+  const response: OrderCheckoutT = {
     orderId: orderId,
     summary: {
       ...(data.type === PaymentConfig.ORDER_TYPE.SHIPPING
-        ? {shipping: {method: "ゆうパック", address: data.address}}
+        ? {
+            shipping: {
+              method: PaymentConfig.SHIPPING_LABEL,
+              address: data.address,
+            },
+          }
         : {}),
       photos: photos,
       hasDownloadPurchases: summary.downloadSelectedCount > 0,
@@ -122,5 +126,5 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     paymentUrl: paymentUrl,
   };
 
-  return http.ok(parseOrThrow(CurrentOrder, response));
+  return http.ok(parseOrThrow(OrderCheckout, response));
 });

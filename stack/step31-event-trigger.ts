@@ -440,25 +440,25 @@ export class Step31EventTriggerStack extends cdk.Stack {
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: [
-              "dynamodb:UpdateItem",
+              // "dynamodb:UpdateItem",
               "dynamodb:GetItem",
-              "dynamodb:PutItem",
-              "dynamodb:Query",
-              "dynamodb:BatchGetItem",
+              // "dynamodb:PutItem",
+              // "dynamodb:Query",
+              // "dynamodb:BatchGetItem",
               "dynamodb:BatchWriteItem",
             ],
             resources: [props.CommerceTable.tableArn],
           }),
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
-            resources: [props.AlbumCatalogTable.tableArn],
-          }),
-          new cdk.aws_iam.PolicyStatement({
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["dynamodb:Query"],
-            resources: [props.RelationTable.tableArn],
-          }),
+          // new cdk.aws_iam.PolicyStatement({
+          //   effect: cdk.aws_iam.Effect.ALLOW,
+          //   actions: ["dynamodb:UpdateItem", "dynamodb:GetItem"],
+          //   resources: [props.AlbumCatalogTable.tableArn],
+          // }),
+          // new cdk.aws_iam.PolicyStatement({
+          //   effect: cdk.aws_iam.Effect.ALLOW,
+          //   actions: ["dynamodb:Query"],
+          //   resources: [props.RelationTable.tableArn],
+          // }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:GetObject"],

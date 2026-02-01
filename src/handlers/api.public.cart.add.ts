@@ -51,14 +51,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 4. サイズ別販売可否判定
   // Download
   const dlOption: any = {
-    size: PhotoConfig.SALES_SIZE.DONWLOAD,
+    size: PhotoConfig.SALES_SIZE.DL_ORIGINAL,
     purchasable: true, // Download 購入可能か
     note: `Size : ${photo.width} x ${photo.height}`, // 例: "5760 x 3840"
     width: photo.width,
     height: photo.height,
     unitPrice:
       PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][
-        PhotoConfig.SALES_SIZE.DONWLOAD
+        PhotoConfig.SALES_SIZE.DL_ORIGINAL
       ], // 単価
     selected: false, // 購入有無
     // downloadable: false, // 現在DL可能か

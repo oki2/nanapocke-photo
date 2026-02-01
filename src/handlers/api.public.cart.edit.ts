@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {PhotoConfig} from "../config";
 import * as http from "../http";
 import {parseOrThrow} from "../libs/validate";
 import {CartEditBody, CartEditT, ResultOK} from "../schemas/public";
@@ -86,12 +86,12 @@ export function mergePurchasableOptions(
 
     // print の反映
     for (const p of bItem.print ?? []) {
-      if (p.size === "printl") {
+      if (p.size === PhotoConfig.SALES_SIZE.PRINT_L) {
         if (aItem.printLOption?.purchasable === true) {
           out.printl = p.quantity;
           hasAny = true;
         }
-      } else if (p.size === "print2l") {
+      } else if (p.size === PhotoConfig.SALES_SIZE.PRINT_2L) {
         if (aItem.print2LOption?.purchasable === true) {
           out.print2l = p.quantity;
           hasAny = true;
@@ -101,7 +101,7 @@ export function mergePurchasableOptions(
 
     // download の反映
     for (const d of bItem.download ?? []) {
-      if (d.size === "dl") {
+      if (d.size === PhotoConfig.SALES_SIZE.DL_ORIGINAL) {
         if (aItem.downloadOption?.purchasable === true) {
           // 「dl」は selected が true の時だけ入れたいなら、ここで d.selected もチェック
           out.dl = d.selected;

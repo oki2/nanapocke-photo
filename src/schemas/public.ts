@@ -403,22 +403,6 @@ export const MetaListResponse = v.object({
 });
 export type MetaListResponseT = v.InferOutput<typeof MetaListResponse>;
 
-// api.public.payment.list : response
-const PaymentHistory = v.object({
-  orderId: common.OrderId,
-  countPrint: v.number(),
-  countDl: v.number(),
-  processDate: common.ISODateTime,
-  grandTotal: v.number(),
-});
-export const PaymentHistoryList = v.array(PaymentHistory);
-export type PaymentHistoryListT = v.InferOutput<typeof PaymentHistoryList>;
-
-// api.public.payment.detail : pathParameters
-export const PaymentPathParameters = v.object({
-  orderId: common.OrderId,
-});
-
 // api.public.photographer.create : request
 const PhotographerExpireUnlimited = v.object({
   mode: v.literal(UserConfig.EXPIRE_MODE.UNLIMITED),
@@ -542,7 +526,7 @@ export const CartItem = v.object({
   albumSequenceId: v.number(),
   photoSequenceId: v.number(),
   imageUrl: common.Url,
-  priceTier: v.picklist(Object.values(PhotoConfig.PRICE_TIER)),
+  priceTier: common.PhotoPriceTier,
   purchaseDeadline: common.ISODateTime,
   print: v.array(CartPrintOption),
   download: v.array(CartDownloadOption),
@@ -562,7 +546,7 @@ const CartPrintChangeBase = v.object({
   quantity: v.number(),
 });
 const CartDownloadChangeBase = v.object({
-  size: v.picklist([PhotoConfig.SALES_SIZE.DONWLOAD]),
+  size: v.picklist([PhotoConfig.SALES_SIZE.DL_ORIGINAL]),
   selected: v.boolean(),
 });
 const CartEdit = v.object({
@@ -624,34 +608,37 @@ const OrderPrintLine = v.object({
   quantity: v.number(),
   subTotal: v.number(),
 });
+export type OrderPrintLineT = v.InferOutput<typeof OrderPrintLine>;
 
 const OrderDownloadLine = v.object({
-  size: v.literal(PhotoConfig.SALES_SIZE.DONWLOAD), // 常に 'dl'
+  size: v.literal(PhotoConfig.SALES_SIZE.DL_ORIGINAL), // 常に 'dl'
   note: v.string(), // 例: "1920×1280"
   subTotal: v.number(),
   downloadUrl: v.optional(v.string()), // 履歴のみ
 });
+export type OrderDownloadLineT = v.InferOutput<typeof OrderDownloadLine>;
 
 const OrderItemBase = v.object({
-  albumId: v.string(),
-  albumName: v.string(),
+  albumId: common.AlbumId,
+  photoId: common.PhotoId,
+  albumTitle: v.string(),
   albumSequenceId: v.number(),
-  photoId: v.string(),
   photoSequenceId: v.number(),
-  imageUrl: v.string(),
+  imageUrl: common.Url,
   priceTier: common.PhotoPriceTier,
   print: v.array(OrderPrintLine),
   download: v.array(OrderDownloadLine),
   // discounts: v.array(v.object({})),
   itemTotal: v.number(),
 });
+export type OrderItemBaseT = v.InferOutput<typeof OrderItemBase>;
 
 const ShippingInfo = v.object({
   method: v.string(),
   address: ShippingAddress,
 });
 
-const CurrentOrderSummary = v.object({
+const OrderCheckoutSummary = v.object({
   shipping: v.optional(ShippingInfo),
   photos: v.array(OrderItemBase),
   hasDownloadPurchases: v.boolean(), // DL購入を含むかどうか（ConfirmView のチェックボックス用）
@@ -666,9 +653,63 @@ const CurrentOrderSummary = v.object({
   grandTotal: v.number(),
 });
 
-export const CurrentOrder = v.object({
+export const OrderCheckout = v.object({
   orderId: v.string(),
-  summary: CurrentOrderSummary,
+  summary: OrderCheckoutSummary,
   paymentUrl: v.string(),
 });
-export type CurrentOrderT = v.InferOutput<typeof CurrentOrder>;
+export type OrderCheckoutT = v.InferOutput<typeof OrderCheckout>;
+
+// api.public.payment.list : response
+const PaymentHistory = v.object({
+  orderId: common.OrderId,
+  countPrint: v.number(),
+  countDl: v.number(),
+  processDate: common.ISODateTime,
+  grandTotal: v.number(),
+  shippingStatus: v.picklist(Object.values(PaymentConfig.SHIPPING_STATUS)),
+});
+export const PaymentHistoryList = v.array(PaymentHistory);
+export type PaymentHistoryListT = v.InferOutput<typeof PaymentHistoryList>;
+
+// api.public.payment.detail : pathParameters
+export const PaymentPathParameters = v.object({
+  orderId: common.OrderId,
+});
+
+// api.public.payment.detail : response
+export const OrderAmountSummary = v.object({
+  subTotal: v.number(),
+  // itemsDiscountTotal: v.number(),
+  shippingFee: v.object({
+    after: v.number(),
+    before: v.optional(v.number()),
+    label: v.optional(v.string()),
+  }),
+  grandTotal: v.number(),
+});
+
+export const OrderDetail = v.object({
+  orderId: v.string(),
+  processDate: common.ISODateTime, // 注文日時
+  photos: v.array(OrderItemBase),
+  shipping: v.object({
+    status: v.picklist(Object.values(PaymentConfig.SHIPPING_STATUS)), // 発送処理中なのか発送済みなのか、それ以外（DL販売のみなのか）
+    method: v.string(),
+    trackingNumber: v.optional(v.string(), ""), // string
+  }),
+  download: v.object({
+    status: v.picklist(Object.values(PaymentConfig.DOWNLOAD_STATUS)), // 期限がきれているかどうか
+    expiredAt: common.ISODateTime, // 期限ISO
+    zipDownloadUrl: v.string(), // zipURL
+  }),
+  ...OrderAmountSummary.entries,
+});
+
+export type OrderDetailT = v.InferOutput<typeof OrderDetail>;
+
+// === SMBC関連 ================================================================
+export const SmbcCallback = v.object({
+  status: v.picklist(["success", "failed"]),
+  orderId: v.pipe(v.string(), v.minLength(1)),
+});
