@@ -536,6 +536,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
         },
         initialPolicy: [
@@ -543,6 +544,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["dynamodb:GetItem"],
             resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:BatchGetItem"],
+            resources: [props.CommerceTable.tableArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -912,7 +918,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ["dynamodb:Query"],
+          actions: ["dynamodb:Query", "dynamodb:BatchGetItem"],
           resources: [
             props.CommerceTable.tableArn,
             // `${props.CommerceTable.tableArn}/index/lsi1_index`,

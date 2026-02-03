@@ -5,6 +5,7 @@ import {AlbumPathParameters, AlbumPhotoListResponse} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
+import * as Photo from "../utils/Dynamo/Photo";
 
 import {S3FileReadToString} from "../utils/S3";
 
@@ -38,17 +39,31 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const salesObj = JSON.parse(
     await S3FileReadToString(
       AppConfig.BUCKET_PHOTO_NAME,
-      `sales/${authContext.facilityCode}/${path.albumId}.json`
-    )
+      `sales/${authContext.facilityCode}/${path.albumId}.json`,
+    ),
   );
   console.log("salesObj", salesObj);
 
-  return http.ok(parseOrThrow(AlbumPhotoListResponse, salesObj));
+  // 4. photoId のリスト作成し、購入済みデータの取得
+  const dlAccept = await Photo.getDownloadAceptList(
+    authContext.facilityCode,
+    authContext.userId,
+    salesObj.photos.map((p: any) => p.photoId),
+  );
 
-  // return http.ok(
-  //   parseOrThrow(AlbumCreateResponse, {
-  //     albumId: path.albumId,
-  //     title: data.title,
-  //   })
-  // );
+  // 5. レスポンス形式に変換
+  const res = {
+    album: salesObj.album,
+    photos: salesObj.photos.map((p: any) => {
+      const dl = dlAccept.find((u) => u.photoId === p.photoId);
+      return {
+        ...p,
+        downloadUrl:
+          dl && dl.expiredAt > nowISOString
+            ? `/aaa/bbb/${authContext.userId}/photo/${p.photoId}.webp`
+            : "",
+      };
+    }),
+  };
+  return http.ok(parseOrThrow(AlbumPhotoListResponse, res));
 });

@@ -118,6 +118,8 @@ type SourceItem = {
     size?: SalesSize; // "dl"
     note?: string;
     unitPrice?: number;
+    width?: number;
+    height?: number;
   };
   printLOption?: {
     purchasable?: boolean;
@@ -189,6 +191,8 @@ export function toOrderItems(
         note: src.downloadOption.note ?? "",
         subTotal: unit, // DL は数量概念が無い想定（1件=unitPrice）
         downloadUrl: deps.resolveDownloadUrl?.(src),
+        width: src.downloadOption.width ?? 0,
+        height: src.downloadOption.height ?? 0,
       });
     }
 

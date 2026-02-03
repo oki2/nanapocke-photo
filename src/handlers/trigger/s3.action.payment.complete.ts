@@ -68,10 +68,11 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   // DL購入が存在する場合は、DL用のレコードを登録
   if (dlData.length > 0) {
     const exp = Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
-    await Photo.downloadAceptPhoto(
+    await Photo.setDownloadAceptPhoto(
       payment.facilityCode,
       payment.userId,
       dlData,
+      payment.smbcProcessDate,
       exp,
     );
   }

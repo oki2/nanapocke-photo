@@ -7,7 +7,7 @@
  * gsi5 : 自身がアップした写真：アップロード日ソート
  */
 
-import {docClient, batchWriteAll} from "../dynamo";
+import {docClient, batchWriteAll, batchGetAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
@@ -123,9 +123,9 @@ const getSeq2PhotoPk = (facilityCode: string) =>
   `SEQ2PHOTO#FAC#${facilityCode}`;
 const getSeq2PhotoSk = (seq: number) => `SEQ#${seq}`;
 
-const getDlAcceptPk = (facilityCode: string, userId: string) =>
-  `FAC#${facilityCode}#USER#${userId}#DOWNLOADACCEPT`;
-const getDlAcceptSk = (photoId: string) => `PHOTO#${photoId}`;
+const getDlAcceptPk = (userId: string) => `DOWNLOADACCEPT#USER#${userId}`;
+const getDlAcceptSk = (facilityCode: string, photoId: string) =>
+  `FAC#${facilityCode}PHOTO#${photoId}`;
 
 /**
  * Get a single photo by facility code and photo ID.
@@ -653,10 +653,11 @@ export async function queryPhotos({
   return result;
 }
 
-export async function downloadAceptPhoto(
+export async function setDownloadAceptPhoto(
   facilityCode: string,
   userId: string,
   photoIds: string[],
+  purchasedAt: string,
   expiredAt: string,
 ) {
   const nowISO = new Date().toISOString();
@@ -666,10 +667,11 @@ export async function downloadAceptPhoto(
   let requestItems: Record<string, any>[] = photoIds.map((photoId) => ({
     PutRequest: {
       Item: {
-        pk: getDlAcceptPk(facilityCode, userId),
-        sk: getDlAcceptSk(photoId),
+        pk: getDlAcceptPk(userId),
+        sk: getDlAcceptSk(facilityCode, photoId),
         facilityCode,
         photoId,
+        purchasedAt,
         expiredAt,
         ttl,
         createdAt: nowISO,
@@ -682,6 +684,24 @@ export async function downloadAceptPhoto(
     requestItems,
     docClient(),
   );
+}
+
+type DlAccept = {
+  photoId: string;
+  purchasedAt: string;
+  expiredAt: string; // ISO文字列前提
+};
+export async function getDownloadAceptList(
+  facilityCode: string,
+  userId: string,
+  photoIds: string[],
+): Promise<DlAccept[]> {
+  const keys = photoIds.map((photoId) => ({
+    pk: getDlAcceptPk(userId),
+    sk: getDlAcceptSk(facilityCode, photoId),
+  }));
+
+  return await batchGetAll(PhotoConfig.DL_ACCEPT_TABLE_NAME, keys, docClient());
 }
 
 // 保護者購入時に保護者ディレクトリ配下へ写真コピーする方式に変更した為不要

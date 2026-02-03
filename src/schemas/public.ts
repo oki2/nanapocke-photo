@@ -34,6 +34,7 @@ export const PhotoDetail = v.object({
   photoId: common.PhotoId,
   sequenceId: v.number(),
   imageUrl: common.Url,
+  downloadUrl: v.optional(common.Url),
   priceTier: common.PhotoPriceTier,
   shootingAt: common.ISODateTime,
   width: v.number(),
@@ -618,6 +619,8 @@ const OrderDownloadLine = v.object({
   note: v.string(), // 例: "1920×1280"
   subTotal: v.number(),
   downloadUrl: v.optional(v.string()), // 履歴のみ
+  width: v.optional(v.number(), 0),
+  height: v.optional(v.number(), 0),
 });
 export type OrderDownloadLineT = v.InferOutput<typeof OrderDownloadLine>;
 

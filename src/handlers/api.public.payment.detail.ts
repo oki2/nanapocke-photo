@@ -47,8 +47,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   let downloadZipDownloadUrl = "";
 
   if (detail.countDownload > 0) {
-    downloadExpiredAt = payment.downloadExpiredAt ?? payment.smbcProcessDate;
-    // downloadExpiredAt = "2026-03-30T00:00:00+09:00";
+    downloadExpiredAt =
+      payment.downloadExpiredAt ??
+      Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
     downloadStatus =
       new Date(downloadExpiredAt) > new Date()
         ? PaymentConfig.DOWNLOAD_STATUS.VALID
