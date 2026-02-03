@@ -6,6 +6,12 @@ export const SALES_STATUS = {
   UNPUBLISHED: "UNPUBLISHED",
 };
 
+export const IMAGE_STATUS = {
+  NONE: "NONE",
+  PROCESSING: "PROCESSING", // 準備中
+  VALID: "VALID", // 存在する＆有効
+} as const;
+
 // 表示可能なアルバムステータス
 export const VIEW_STATUS = {
   PRINCIPAL: [

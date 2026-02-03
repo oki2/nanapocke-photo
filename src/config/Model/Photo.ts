@@ -41,9 +41,15 @@ export const SORT_ORDER = {
 };
 
 export const SALES_SIZE = {
-  PRINT_L: "printl",
-  PRINT_2L: "print2l",
-  DL_ORIGINAL: "dl",
+  PRINT_L: "PRINT_L",
+  PRINT_2L: "PRINT_2L",
+  DL_ORIGINAL: "DL_ORIGINAL",
+} as const;
+
+export const PHOTO_SIZE_SUFFIX = {
+  PRINT_L: "print-l",
+  PRINT_2L: "print-2l",
+  DL_ORIGINAL: "dl-original",
 } as const;
 
 export const FILTER_LIMIT = {

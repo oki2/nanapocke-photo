@@ -290,7 +290,7 @@ const doc = {
             content: {
               "application/json": {
                 schema: {
-                  $ref: "#/components/schemas/PaymentHistoryList",
+                  $ref: "#/components/schemas/OrderDetail",
                 },
               },
             },

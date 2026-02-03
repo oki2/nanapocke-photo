@@ -39,12 +39,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     ),
   );
 
-  const photos = Cart.toOrderItems(detail.cart, {
-    resolveImageUrl: (src) =>
-      `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
-  });
-  console.log("photos", photos);
-
   // 4. Doownload の状態を判定
   type downloadStatusT =
     (typeof PaymentConfig.DOWNLOAD_STATUS)[keyof typeof PaymentConfig.DOWNLOAD_STATUS];
@@ -53,9 +47,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   let downloadZipDownloadUrl = "";
 
   if (detail.countDownload > 0) {
-    downloadExpiredAt = payment.downloadExpiredAt;
+    downloadExpiredAt = payment.downloadExpiredAt ?? payment.smbcProcessDate;
+    // downloadExpiredAt = "2026-03-30T00:00:00+09:00";
     downloadStatus =
-      new Date(payment.downloadExpiredAt) > new Date()
+      new Date(downloadExpiredAt) > new Date()
         ? PaymentConfig.DOWNLOAD_STATUS.VALID
         : PaymentConfig.DOWNLOAD_STATUS.INVALID;
     downloadZipDownloadUrl =
@@ -63,6 +58,19 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         ? "S3のDL用URLを組み立てて返す"
         : "";
   }
+
+  // 5. レスポンス形式に変換
+  const photos = Cart.toOrderItems(detail.cart, {
+    resolveImageUrl: (src) =>
+      `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
+    ...(downloadStatus === PaymentConfig.DOWNLOAD_STATUS.VALID
+      ? {
+          resolveDownloadUrl: (src) =>
+            `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
+        }
+      : {}),
+  });
+  console.log("photos", photos);
 
   // 5. レスポンス形式に変換
   const response: OrderDetailT = {
@@ -79,7 +87,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       expiredAt: downloadExpiredAt,
       zipDownloadUrl: downloadZipDownloadUrl,
     },
-    subTotal: detail.subTotal,
+    subTotal: detail.subTotalPrice,
     shippingFee: detail.shippingFee,
     grandTotal: detail.grandTotal,
   };

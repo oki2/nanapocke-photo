@@ -1,5 +1,5 @@
 import * as http from "../http";
-import {AppConfig} from "../config";
+import {AppConfig, AlbumConfig} from "../config";
 
 import {S3PutObjectSignedUrl} from "../utils/S3";
 
@@ -40,6 +40,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.description ?? "",
     data.priceTable,
     data.salesPeriod,
+    data.coverImageFileName
+      ? AlbumConfig.IMAGE_STATUS.PROCESSING
+      : AlbumConfig.IMAGE_STATUS.NONE,
   );
 
   const result: AlbumCreateResponseT = {

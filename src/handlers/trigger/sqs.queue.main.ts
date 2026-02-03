@@ -43,7 +43,7 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
   const printDataAry = [];
   // 現在日時（日本時間）のyyyyMMdd を取得
   const d = new Date(
-    new Date().toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"})
+    new Date().toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"}),
   );
   const yyyymmdd =
     d.getFullYear().toString() +
@@ -58,8 +58,8 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
         photoId: cart.photoId,
         photoSequanceId: cart.photoSequenceId,
         size: "L",
-        fileName: `${cart.photoSequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
-        s3Path: `storage/photo/${orderData.facilityCode}/${cart.shootingBy}/${cart.photoId}/${cart.photoSequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
+        fileName: `${cart.photoSequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_L}.jpg`,
+        s3Path: `storage/photo/${orderData.facilityCode}/${cart.shootingBy}/${cart.photoId}/${cart.photoSequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_L}.jpg`,
         quantity: cart.printLOption.quantity,
       });
     }
@@ -70,8 +70,8 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
         photoId: cart.photoId,
         photoSequanceId: cart.photoSequenceId,
         size: "2L",
-        fileName: `${cart.photoSequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
-        s3Path: `storage/photo/${orderData.facilityCode}/${cart.shootingBy}/${cart.photoId}/${cart.photoSequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
+        fileName: `${cart.photoSequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_2L}.jpg`,
+        s3Path: `storage/photo/${orderData.facilityCode}/${cart.shootingBy}/${cart.photoId}/${cart.photoSequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_2L}.jpg`,
         quantity: cart.print2LOption.quantity,
       });
     }
@@ -87,7 +87,7 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
     const signedUrl = await S3.S3GetObjectSignedUrl(
       AppConfig.BUCKET_PHOTO_NAME,
       printData.s3Path,
-      900
+      900,
     );
     console.log("signedUrl", signedUrl);
 
@@ -101,13 +101,13 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
         headers: {"Content-Type": "application/json"},
         // redaxios は validateStatus が使えるので、PHP同様 200 だけ成功に寄せる
         validateStatus: (status) => status === 200,
-      }
+      },
     );
     console.log("res", res);
 
     // TSVデータに追加
     tsvRowAry.push(
-      `${shimaumaId}\t${yyyymmdd}\t${shimaumaId}/\t${printData.fileName}\tetc\t${printData.size}\t${printData.quantity}\t0\t0\t1\t1\t${userInfo.name}\t${userInfo.postalCode}\t${userInfo.line}\t${userInfo.phone}`
+      `${shimaumaId}\t${yyyymmdd}\t${shimaumaId}/\t${printData.fileName}\tetc\t${printData.size}\t${printData.quantity}\t0\t0\t1\t1\t${userInfo.name}\t${userInfo.postalCode}\t${userInfo.line}\t${userInfo.phone}`,
     );
     // 注文写真ファイル一覧に追加
     orderPhotoAry.push(printData.fileName);
@@ -128,7 +128,7 @@ async function SqsJobSendPhotoFileByOrderId(data: Record<string, any>) {
       headers: {"Content-Type": "application/json"},
       // redaxios は validateStatus が使えるので、PHP同様 200 だけ成功に寄せる
       validateStatus: (status) => status === 200,
-    }
+    },
   );
   console.log("res", res);
 }

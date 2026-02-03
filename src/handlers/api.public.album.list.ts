@@ -40,10 +40,15 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
           ? Album.toJstYesterday2359(album.salesPeriod.end).toISOString()
           : "",
       },
-      coverImageUrl: album.coverImage
-        ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.coverImage}`
-        : "",
-      ...(album.photoCount ? {photoCount: album.photoCount} : {}),
+      cover: {
+        imageStatus: album.coverImageStatus ?? AlbumConfig.IMAGE_STATUS.NONE,
+        imageUrl:
+          album.coverImageStatus === AlbumConfig.IMAGE_STATUS.VALID &&
+          album.coverImage
+            ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.coverImage}`
+            : "",
+        ...(album.photoCount ? {photoCount: album.photoCount} : {}),
+      },
     });
   }
 

@@ -1,6 +1,6 @@
 import * as http from "../http";
 
-import {AppConfig} from "../config";
+import {AppConfig, AlbumConfig} from "../config";
 import {
   AlbumEditBody,
   AlbumPathParameters,
@@ -27,10 +27,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // 販売開始日・終了日の計算
   data.salesPeriod.start = Album.toJstToday0500(
-    data.salesPeriod.start
+    data.salesPeriod.start,
   ).toISOString();
   data.salesPeriod.end = Album.toJstTomorrow0200(
-    data.salesPeriod.end
+    data.salesPeriod.end,
   ).toISOString();
 
   // 2. DynamoDB に Albumデータを更新
@@ -41,7 +41,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.title,
     data.description ?? "",
     data.priceTable,
-    data.salesPeriod
+    data.salesPeriod,
+    data.coverImageFileName ? AlbumConfig.IMAGE_STATUS.PROCESSING : "",
   );
 
   const result: AlbumEditResponseT = {
@@ -53,7 +54,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     result.url = await S3PutObjectSignedUrl(
       AppConfig.BUCKET_UPLOAD_NAME,
       `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${path.albumId}/${authContext.userId}/${data.coverImageFileName}`,
-      60 // 即時アップされる想定なので、有効期限を短く1分とする
+      60, // 即時アップされる想定なので、有効期限を短く1分とする
     );
   }
 

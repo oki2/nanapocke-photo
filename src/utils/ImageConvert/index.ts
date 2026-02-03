@@ -108,7 +108,7 @@ export async function PhotoConvertResizeSet(
   const finalBuffer = await sharp(dlBf).withMetadata(ExifData).toBuffer();
   await S3FilePut(
     AppConfig.BUCKET_PHOTO_NAME,
-    `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.DL_ORIGINAL}.jpg`,
+    `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.DL_ORIGINAL}.jpg`,
     finalBuffer,
     "image/jpeg",
     StorageClass.STANDARD_IA,
@@ -141,7 +141,7 @@ export async function PhotoConvertResizeSet(
 
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
-      `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_L}.jpg`,
+      `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_L}.jpg`,
       plBf,
       "image/jpeg",
       StorageClass.STANDARD_IA,
@@ -175,7 +175,7 @@ export async function PhotoConvertResizeSet(
 
     await S3FilePut(
       AppConfig.BUCKET_PHOTO_NAME,
-      `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.SALES_SIZE.PRINT_2L}.jpg`,
+      `storage/photo/${facilityCode}/${userId}/${photoId}/${photo?.sequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.PRINT_2L}.jpg`,
       p2lBf,
       "image/jpeg",
       StorageClass.STANDARD_IA,

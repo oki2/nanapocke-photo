@@ -27,6 +27,7 @@ export const SHIPPING_STATUS = {
 // ダウンロードステータス NONE
 export const DOWNLOAD_STATUS = {
   NONE: "NONE", // DL注文無し
+  PROCESSING: "PROCESSING", // 準備中
   VALID: "VALID", // DL可能
   INVALID: "INVALID", // DL無効：有効期限切れ
 } as const;

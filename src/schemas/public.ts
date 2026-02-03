@@ -162,7 +162,10 @@ export const AlbumItem = v.object({
   salesStatus: v.picklist(Object.values(AlbumConfig.SALES_STATUS)),
   priceTable: PriceTable,
   photoCount: v.optional(v.number()),
-  coverImageUrl: v.optional(common.Url, ""),
+  cover: v.object({
+    imageStatus: v.picklist(Object.values(AlbumConfig.IMAGE_STATUS)),
+    imageUrl: v.optional(common.Url, ""),
+  }),
   salesPeriod: v.optional(SalesPeriod, {
     start: "",
     end: "",
@@ -512,11 +515,11 @@ const CartDownloadOption = v.object({
   purchasable: v.boolean(),
   unitPrice: v.optional(v.number()),
   selected: v.optional(v.boolean()),
-  downloadable: v.optional(v.boolean()),
-  purchasedAt: v.optional(common.ISODateTime),
+  downloadable: v.optional(v.boolean(), false),
+  purchasedAt: v.optional(v.union([common.ISODateTime, v.literal("")]), ""),
   width: v.optional(v.number(), 0),
   height: v.optional(v.number(), 0),
-  note: v.string(),
+  // note: v.string(),
 });
 
 export const CartItem = v.object({
@@ -667,7 +670,9 @@ const PaymentHistory = v.object({
   countDl: v.number(),
   processDate: common.ISODateTime,
   grandTotal: v.number(),
-  shippingStatus: v.picklist(Object.values(PaymentConfig.SHIPPING_STATUS)),
+  shipping: v.object({
+    status: v.picklist(Object.values(PaymentConfig.SHIPPING_STATUS)),
+  }),
 });
 export const PaymentHistoryList = v.array(PaymentHistory);
 export type PaymentHistoryListT = v.InferOutput<typeof PaymentHistoryList>;

@@ -38,4 +38,4 @@ export const PHOTO_PRICE = {
       [PhotoConfig.SALES_SIZE.PRINT_2L]: 603,
     },
   },
-};
+} as const;

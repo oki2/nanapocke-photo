@@ -16,20 +16,22 @@ export function GetSignedCookie(
   publicKeyId: string,
   privateKey: string,
   targetPath: string,
-  maxAge: number = EXPIRES_SECONDS
+  maxAge: number = EXPIRES_SECONDS,
 ): string[] {
   // ワイルドカード指定の場合、カスタムポリシー対応が必要
   // 手っ取り早くカスタムポリシーにする為、アクセス許可開始日（dateGreaterThan）も設定する
+  // 現在時刻だとミスる可能性があるため、60秒前にする
+  const CLOCK_SKEW_SECONDS = 60;
 
   const now = new Date();
-  const nowISO = now.toISOString();
-  const expISO = new Date(now.getTime() + maxAge * 1000).toISOString();
+  const notBefore = new Date(now.getTime() - CLOCK_SKEW_SECONDS * 1000);
+  const expires = new Date(now.getTime() + maxAge * 1000);
 
   const cookies = getSignedCookies({
     url: `https://${domain}${targetPath}*`,
     keyPairId: publicKeyId,
-    dateGreaterThan: nowISO,
-    dateLessThan: expISO,
+    dateGreaterThan: notBefore.toISOString(),
+    dateLessThan: expires.toISOString(),
     privateKey: privateKey,
   });
 
@@ -46,7 +48,7 @@ export function PutSignedUrl(
   publicKeyId: string,
   privateKey: string,
   targetPath: string,
-  maxAge: number = EXPIRES_SECONDS
+  maxAge: number = EXPIRES_SECONDS,
 ): string[] {
   // ワイルドカード指定の場合、カスタムポリシー対応が必要
   // 手っ取り早くカスタムポリシーにする為、アクセス許可開始日（dateGreaterThan）も設定する

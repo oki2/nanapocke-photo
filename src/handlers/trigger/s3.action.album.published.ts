@@ -64,6 +64,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   console.log("photos", photos);
 
   // 4. 料金等を計算し、保護者向け情報に変換
+  type SizeKey = keyof typeof PhotoConfig.SALES_SIZE;
   const photoIds: string[] = [];
   const photosObj = photos.items.map((photo) => {
     photoIds.push(photo.photoId);
@@ -79,14 +80,18 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         return {
           size: size,
           price:
-            PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][size],
+            PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][
+              size as SizeKey
+            ],
         };
       }),
       salesSizePrint: photo.salesSizePrint.map((size) => {
         return {
           size: size,
           price:
-            PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][size],
+            PriceConfig.PHOTO_PRICE[album.priceTable][photo.priceTier][
+              size as SizeKey
+            ],
         };
       }),
     };
@@ -100,9 +105,14 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     salesStatus: album.salesStatus,
     priceTable: album.priceTable,
     photoCount: photosObj.length,
-    coverImageUrl: album.coverImage
-      ? `/thumbnail/${album.facilityCode}/album/${album.albumId}/${album.coverImage}`
-      : "",
+    cover: {
+      imageStatus: album.coverImageStatus ?? AlbumConfig.IMAGE_STATUS.NONE,
+      imageUrl:
+        album.coverImageStatus === AlbumConfig.IMAGE_STATUS.VALID &&
+        album.coverImage
+          ? `/thumbnail/${album.facilityCode}/album/${album.albumId}/${album.coverImage}`
+          : "",
+    },
     salesPeriod: album.salesPeriod,
   };
 

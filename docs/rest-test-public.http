@@ -78,8 +78,8 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 {
-  "title": "テストアルバム6",
-  "description": "アルバムの説明6",
+  "title": "テストアルバム1",
+  "description": "アルバムの説明1",
   "copyFromAlbumId": "",
   "coverImageFileName": "test.jpg",
   "salesPeriod": {
@@ -102,7 +102,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = 3390ff64-0496-4de3-abbe-99aa43a0f165
+@albumId = c48ef389-934c-48b0-94ed-6b90ab05acb1
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -192,7 +192,7 @@ GET https://{{customDomainName}}/api/facility/{{facilityCode}}/photo/list/my HTT
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@photoId = ad903aa7-5088-40ec-bb82-93fd7351a599
+@photoId = 7a35d995-1fd5-4469-be7f-5303b087bc3f
 
 ### 写真のアルバム一括紐付け
 # @name photoUploadUrl

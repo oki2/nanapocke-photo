@@ -44,7 +44,11 @@ export async function create(
   title: string,
   description: string,
   priceTable: string,
-  salesPeriod: any | undefined,
+  salesPeriod: {
+    start: string;
+    end: string;
+  },
+  coverImageStatus: string,
 ): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
   const albumId = crypto.randomUUID();
@@ -66,6 +70,8 @@ export async function create(
         priceTable: priceTable,
         salesPeriod: salesPeriod,
         salesStatus: AlbumConfig.SALES_STATUS.DRAFT,
+        coverImageStatus: coverImageStatus,
+        coverImage: "",
         createdAt: nowISO,
         createdBy: userId,
         updatedAt: nowISO,
@@ -88,7 +94,7 @@ export async function list(facilityCode: string): Promise<any> {
     ScanIndexForward: false,
     KeyConditionExpression: "#pk = :pk",
     ProjectionExpression:
-      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #salesPeriod, #salesStatus, #photoCount, #coverImage, #createdAt, #createdBy, #updatedAt, #updatedBy",
+      "#sk, #albumId, #sequenceId, #title, #description, #priceTable, #salesPeriod, #salesStatus, #photoCount, #coverImage, #coverImageStatus, #createdAt, #createdBy, #updatedAt, #updatedBy",
     ExpressionAttributeNames: {
       "#pk": "pk",
       "#sk": "sk",
@@ -101,6 +107,7 @@ export async function list(facilityCode: string): Promise<any> {
       "#salesStatus": "salesStatus",
       "#photoCount": "photoCount",
       "#coverImage": "coverImage",
+      "#coverImageStatus": "coverImageStatus",
       "#createdAt": "createdAt",
       "#createdBy": "createdBy",
       "#updatedAt": "updatedAt",
@@ -123,9 +130,42 @@ export async function update(
   title: string,
   description: string,
   priceTable: string,
-  salesPeriod: any | undefined,
+  salesPeriod: {
+    start: string;
+    end: string;
+  },
+  coverImageStatus: string,
 ): Promise<boolean> {
   const nowISO = new Date().toISOString();
+
+  let UpdateExpression = `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`;
+  const ExpressionAttributeNames: Record<string, string> = {
+    "#title": "title",
+    "#description": "description",
+    "#priceTable": "priceTable",
+    "#salesPeriod": "salesPeriod",
+    "#salesStatus": "salesStatus",
+    "#updatedAt": "updatedAt",
+    "#updatedBy": "updatedBy",
+  };
+  const ExpressionAttributeValues: Record<string, any> = {
+    ":title": title,
+    ":description": description,
+    ":priceTable": priceTable,
+    ":salesPeriod": salesPeriod,
+    ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
+    ":updatedAt": nowISO,
+    ":updatedBy": userId,
+  };
+
+  // アルバムのカバーイメージの更新がある場合
+  if (coverImageStatus === AlbumConfig.IMAGE_STATUS.PROCESSING) {
+    UpdateExpression += `, #coverImageStatus = :coverImageStatus, #coverImage = :coverImage`;
+    ExpressionAttributeNames["#coverImageStatus"] = "coverImageStatus";
+    ExpressionAttributeNames["#coverImage"] = "coverImage";
+    ExpressionAttributeValues[":coverImageStatus"] = coverImageStatus;
+    ExpressionAttributeValues[":coverImage"] = "";
+  }
 
   // コマンド生成
   const command = new UpdateCommand({
@@ -134,26 +174,10 @@ export async function update(
       pk: getPk(facilityCode),
       sk: getSk(albumId),
     },
-    UpdateExpression: `SET #title = :title, #description = :description, #priceTable = :priceTable, #salesPeriod = :salesPeriod, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: UpdateExpression,
     ConditionExpression: "#salesStatus = :salesStatus",
-    ExpressionAttributeNames: {
-      "#title": "title",
-      "#description": "description",
-      "#priceTable": "priceTable",
-      "#salesPeriod": "salesPeriod",
-      "#salesStatus": "salesStatus",
-      "#updatedAt": "updatedAt",
-      "#updatedBy": "updatedBy",
-    },
-    ExpressionAttributeValues: {
-      ":title": title,
-      ":description": description,
-      ":priceTable": priceTable,
-      ":salesPeriod": salesPeriod,
-      ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
-      ":updatedAt": nowISO,
-      ":updatedBy": userId,
-    },
+    ExpressionAttributeNames: ExpressionAttributeNames,
+    ExpressionAttributeValues: ExpressionAttributeValues,
   });
 
   // コマンド実行
@@ -176,16 +200,18 @@ export async function setCoverImage(
       pk: getPk(facilityCode),
       sk: getSk(albumId),
     },
-    UpdateExpression: `SET #coverImage = :coverImage, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
+    UpdateExpression: `SET #coverImage = :coverImage, #coverImageStatus = :coverImageStatus, #updatedAt = :updatedAt, #updatedBy = :updatedBy`,
     ConditionExpression: "#salesStatus = :salesStatus",
     ExpressionAttributeNames: {
       "#coverImage": "coverImage",
+      "#coverImageStatus": "coverImageStatus",
       "#salesStatus": "salesStatus",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
     },
     ExpressionAttributeValues: {
       ":coverImage": coverImage,
+      ":coverImageStatus": AlbumConfig.IMAGE_STATUS.VALID,
       ":salesStatus": AlbumConfig.SALES_STATUS.DRAFT,
       ":updatedAt": nowISO,
       ":updatedBy": userId,
