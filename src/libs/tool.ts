@@ -8,7 +8,15 @@ import crypto from "crypto";
  * @returns {string[]}
  */
 export function tagSplitter(tagStr: string): string[] {
-  return [...new Set(tagStr.trim().split(/[,#]+/).filter(Boolean))];
+  return [
+    ...new Set(
+      tagStr
+        .trim()
+        .split(/[,#]+/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 /**
@@ -39,7 +47,7 @@ export function sequenceIdSplitter(str: string): number[] {
   return [
     ...new Set(
       s
-        .split(/[ ,#　]+/)
+        .split(/[ ,#\s]+/)
         .map(Number)
         .filter(Number.isFinite),
     ),

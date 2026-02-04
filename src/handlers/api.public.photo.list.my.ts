@@ -1,18 +1,12 @@
 import * as http from "../http";
-
-import {tagSplitter, sequenceIdSplitter} from "../libs/tool";
-
-import {PhotoConfig, UserConfig} from "../config";
-
+import {PhotoConfig} from "../config";
 import {
   PhotoSelectMy,
   PhotoListResponse,
   PhotoListResponseT,
 } from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
-
 import * as Photo from "../utils/Dynamo/Photo";
-import {userInfo} from "os";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};

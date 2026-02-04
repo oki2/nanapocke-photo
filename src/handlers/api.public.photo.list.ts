@@ -71,7 +71,6 @@ async function runByPrincipal(
 ) {
   // Step.1 検索条件の整理 =========== //
   const tags = tagSplitter(query.tags); // タグの分解
-  // const photoIds = photoIdSplitter(query.photoIdQuery); // 写真IDの分解
   const sequenceIds = sequenceIdSplitter(query.sequenceIds); // 写真通し番号の分解
   if (sequenceIds.length > PhotoConfig.FILTER_LIMIT.MAX) {
     return http.badRequest({

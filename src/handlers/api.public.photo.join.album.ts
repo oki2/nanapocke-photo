@@ -11,7 +11,7 @@ import * as Photo from "../utils/Dynamo/Photo";
 import * as Album from "../utils/Dynamo/Album";
 import * as Relation from "../utils/Dynamo/Relation";
 
-import {tagSplitter, photoIdSplitter} from "../libs/tool";
+import {tagSplitter, sequenceIdSplitter} from "../libs/tool";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const authContext = (event.requestContext as any)?.authorizer?.lambda ?? {};
@@ -58,7 +58,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     // ID指定の場合
     photoIds = data.scope.selectedIds;
   } else if (data.scope.mode === PhotoConfig.PHOTO_JOIN_SCOPE.FILTER) {
-    const sequenceIds = photoIdSplitter(data.scope.filters.sequenceIds);
+    const sequenceIds = sequenceIdSplitter(data.scope.filters.sequenceIds);
     const tags = tagSplitter(data.scope.filters.tags);
 
     const filter: Photo.FilterOptions = {
@@ -115,7 +115,7 @@ function hasOnlyInArrayCheck<T>(a: T[], b: T[]): boolean {
 
 async function getPhotoIdsByFilter(p: {
   facilityCode: string;
-  sequenceIds: string[];
+  sequenceIds: number[];
   albumId: string;
   filter: Photo.FilterOptions;
 }): Promise<any> {
@@ -144,7 +144,7 @@ async function getPhotoIdsByFilter(p: {
 
 async function getPhotosBySequenceIdsAndFilter(
   facilityCode: string,
-  sequenceIds: string[],
+  sequenceIds: number[],
   albumId: string,
   filter: Photo.FilterOptions,
 ): Promise<string[]> {

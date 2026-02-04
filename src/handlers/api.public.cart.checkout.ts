@@ -77,7 +77,9 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     countPrint: summary.printLQuantityTotal + summary.print2LQuantityTotal,
     countDownload: summary.downloadSelectedCount,
     subTotalPrice: subTotalPrice,
-    shippingFee: shippingFee,
+    shippingFee: {
+      after: shippingFee,
+    },
     grandTotal: subTotalPrice + shippingFee,
     createdAt: new Date().toISOString(),
   };
