@@ -53,6 +53,42 @@
         }
       }
     },
+    "stg": {
+      "projectName": "NanaPhoto",
+      "hostedZone": {
+        "rootDomain": "stg.photo2.nanapocke.com",
+        "publicDomain": "stg.photo2.nanapocke.com"
+      },
+      "setting": {
+        "payment": {
+          "orderIdPrefix": "SNP2"
+        }
+      },
+      "s3": {
+        "setting": {
+          "autoDeleteObjects": true
+        }
+      },
+      "external": {
+        "nanapocke": {
+          "setting": {
+            "clientId": "12345678",
+            "clientSecret": "XXXXXXXX",
+            "grantType": "authorization_code"
+          },
+          "api": {
+            "accessToken": "https://stg-auth.nanapocke.com/oauth2/token",
+            "userInfo": "https://stg-auth.nanapocke.com//nanapocke-api/user"
+          }
+        },
+        "smbc": {
+          "api": {
+            "getLinkplus": "https://pt01.smbc-gp.co.jp/payment/GetLinkplusUrlPayment.json",
+            "searchTradeMulti": "https://pt01.smbc-gp.co.jp/payment/SearchTradeMulti.idPass"
+          }
+        }
+      }
+    },
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [
