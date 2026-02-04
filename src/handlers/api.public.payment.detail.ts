@@ -1,4 +1,4 @@
-import {AppConfig, PaymentConfig} from "../config";
+import {AppConfig, PaymentConfig, PhotoConfig} from "../config";
 import * as http from "../http";
 import {
   PaymentPathParameters,
@@ -8,6 +8,7 @@ import {
 import {parseOrThrow} from "../libs/validate";
 
 import * as Cart from "../utils/Dynamo/Cart";
+import * as Photo from "../utils/Dynamo/Photo";
 
 import * as Payment from "../utils/Dynamo/Payment";
 import * as S3 from "../utils/S3";
@@ -63,11 +64,21 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 5. レスポンス形式に変換
   const photos = Cart.toOrderItems(detail.cart, {
     resolveImageUrl: (src) =>
-      `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
+      `/${Photo.userLibraryThumbnail(
+        authContext.userId,
+        src.facilityCode,
+        src.photoId,
+        src.photoSequenceId,
+      )}`,
     ...(downloadStatus === PaymentConfig.DOWNLOAD_STATUS.VALID
       ? {
           resolveDownloadUrl: (src) =>
-            `/thumbnail/${src.facilityCode}/photo/${src.shootingBy}/${src.photoId}.webp`,
+            `/${Photo.userLibraryPhoto(
+              authContext.userId,
+              src.facilityCode,
+              src.photoId,
+              src.photoSequenceId,
+            )}`,
         }
       : {}),
   });

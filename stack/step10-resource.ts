@@ -15,6 +15,7 @@ export class Step10ResourceStack extends cdk.Stack {
   public cfKeyGroupNanaPhoto: cloudfront.KeyGroup;
   public bucketUpload: Bucket;
   public bucketPhoto: Bucket;
+  public bucketLibrary: Bucket;
   public queueMain: Queue;
   public queuePhotoConvert: Queue;
 
@@ -79,6 +80,31 @@ export class Step10ResourceStack extends cdk.Stack {
         //     noncurrentVersionExpiration: cdk.Duration.days(1),
         //   },
         // ],
+      },
+    );
+
+    // ユーザー購入済みアルバム用Bucket
+    this.bucketLibrary = new Bucket(
+      this,
+      props.Config.S3.Bucket.Library.BucketName,
+      {
+        bucketName: props.Config.S3.Bucket.Library.BucketName,
+        blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+        removalPolicy: props.Config.S3.Setting.RemovalPolicy,
+        autoDeleteObjects: props.Config.S3.Setting.AutoDeleteObjects,
+        versioned: true,
+        eventBridgeEnabled: true,
+        lifecycleRules: [
+          {
+            id: "auto-delete-photo-expired",
+            enabled: true,
+            expiration: cdk.Duration.days(70),
+            noncurrentVersionExpiration: cdk.Duration.days(1),
+            tagFilters: {
+              "photo-expired": "delete",
+            },
+          },
+        ],
       },
     );
 

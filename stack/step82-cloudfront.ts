@@ -20,6 +20,7 @@ export interface Props extends cdk.StackProps {
   readonly httpApiPublic: apigwv2.HttpApi;
   readonly publicCertificateArn: string;
   bucketPhoto: Bucket;
+  bucketLibrary: Bucket;
   cfKeyGroupNanaPhoto: cloudfront.KeyGroup;
 }
 
@@ -252,6 +253,20 @@ export class Step82CloudfrontStack extends cdk.Stack {
                 cloudfront.CacheHeaderBehavior.allowList("Origin"),
             },
           ),
+          trustedKeyGroups: [props.cfKeyGroupNanaPhoto],
+        },
+        "/library/*": {
+          origin: origins.S3BucketOrigin.withOriginAccessIdentity(
+            props.bucketLibrary,
+          ),
+          cachePolicy: new cloudfront.CachePolicy(this, "cachePolicyLibrary", {
+            defaultTtl: cdk.Duration.minutes(10),
+            minTtl: cdk.Duration.minutes(10),
+            maxTtl: cdk.Duration.minutes(10),
+            cookieBehavior: cloudfront.CacheCookieBehavior.all(),
+            queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+            headerBehavior: cloudfront.CacheHeaderBehavior.allowList("Origin"),
+          }),
           trustedKeyGroups: [props.cfKeyGroupNanaPhoto],
         },
       },

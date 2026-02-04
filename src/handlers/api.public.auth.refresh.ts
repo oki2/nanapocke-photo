@@ -1,4 +1,4 @@
-import {AppConfig} from "../config";
+import {AppConfig, UserConfig} from "../config";
 import * as http from "../http";
 
 import {CognitoJwtVerifier} from "aws-jwt-verify";
@@ -83,6 +83,17 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     privateKey,
     targetPath,
   );
+
+  // 5. 保護者の場合、自身のLibrary へのアクセス用Cookieを作成
+  if (userInfo.userRole === UserConfig.ROLE.GUARDIAN) {
+    const parentCookieAry = GetSignedCookie(
+      AppConfig.NANAPHOTO_FQDN,
+      AppConfig.CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID,
+      privateKey,
+      `/library/${userInfo.facilityCode}/photo/${userInfo.userId}/`,
+    );
+    cookieAry.push(...parentCookieAry);
+  }
 
   const result: SigninResponseT = {
     state: "success",

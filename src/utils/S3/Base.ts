@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   CopyObjectCommand,
+  CopyObjectCommandInput,
   GetObjectCommand,
   GetObjectAttributesCommand,
   SelectObjectContentCommand,
@@ -26,14 +27,14 @@ const SIGNED_URL_DEFAULT_EXPIRES_IN = 60;
  */
 export async function S3DirectoryDelete(
   bucket: string,
-  path: string
+  path: string,
 ): Promise<void> {
   //Bucket内のオブジェクトリスト取得
   const objects = await s3Client.send(
     new ListObjectsV2Command({
       Bucket: bucket,
       Prefix: path,
-    })
+    }),
   );
 
   if (objects.Contents) {
@@ -47,7 +48,7 @@ export async function S3DirectoryDelete(
       new DeleteObjectsCommand({
         Bucket: bucket,
         Delete: {Objects: keys},
-      })
+      }),
     );
   }
 }
@@ -66,19 +67,21 @@ export async function S3FileCopy(
   fromKey: string,
   toBucket: string,
   toKey: string,
-  storageClass: StorageClass = StorageClass.STANDARD
+  storageClass: StorageClass = StorageClass.STANDARD,
+  tagging: string = "",
 ): Promise<void> {
-  const response = await s3Client.send(
-    new CopyObjectCommand({
-      CopySource: `${fromBucket}/${fromKey}`,
-      Bucket: toBucket,
-      Key: toKey,
-      StorageClass: storageClass,
-    })
-  );
+  const command: CopyObjectCommandInput = {
+    CopySource: `${fromBucket}/${fromKey}`,
+    Bucket: toBucket,
+    Key: toKey,
+    StorageClass: storageClass,
+    ...(tagging ? {TaggingDirective: "REPLACE", Tagging: tagging} : {}),
+  };
+  console.log("command", command);
+  const response = await s3Client.send(new CopyObjectCommand(command));
   if (response.$metadata.httpStatusCode != 200) {
     throw new Error(
-      `Copy Error s3://${fromBucket}/${fromKey} to s3://${toBucket}/${toKey}`
+      `Copy Error s3://${fromBucket}/${fromKey} to s3://${toBucket}/${toKey}`,
     );
   }
 }
@@ -96,7 +99,7 @@ export async function S3FileDelete(bucket: string, key: string): Promise<void> {
       new DeleteObjectCommand({
         Bucket: bucket,
         Key: key,
-      })
+      }),
     );
     return;
   } catch (e: any) {
@@ -117,7 +120,7 @@ export async function S3FilePut(
   key: string,
   body: string | Buffer,
   contentType: string | undefined = undefined,
-  storageClass: StorageClass = StorageClass.STANDARD
+  storageClass: StorageClass = StorageClass.STANDARD,
 ): Promise<void> {
   const response = await s3Client.send(
     new PutObjectCommand({
@@ -126,7 +129,7 @@ export async function S3FilePut(
       Body: body,
       ContentType: contentType,
       StorageClass: storageClass,
-    })
+    }),
   );
 }
 
@@ -139,13 +142,13 @@ export async function S3FilePut(
  */
 export async function S3FileReadToByteArray(
   bucket: string,
-  key: string
+  key: string,
 ): Promise<Uint8Array> {
   const response = await s3Client.send(
     new GetObjectCommand({
       Bucket: bucket,
       Key: key,
-    })
+    }),
   );
   if (response.Body == undefined) {
     throw new Error(`file undefinde : [ Bucket : ${bucket}, Key: ${key} ]`);
@@ -162,13 +165,13 @@ export async function S3FileReadToByteArray(
  */
 export async function S3FileReadToString(
   bucket: string,
-  key: string
+  key: string,
 ): Promise<string> {
   const response = await s3Client.send(
     new GetObjectCommand({
       Bucket: bucket,
       Key: key,
-    })
+    }),
   );
   if (response.Body == undefined) {
     throw new Error(`file undefinde : [ Bucket : ${bucket}, Key: ${key} ]`);
@@ -187,7 +190,7 @@ export async function S3FileReadToString(
 export async function S3FileSelect(
   bucketName: string,
   keyPath: string,
-  expressionSql: string
+  expressionSql: string,
 ): Promise<any> {
   try {
     const selectResponse = await s3Client.send(
@@ -207,7 +210,7 @@ export async function S3FileSelect(
             RecordDelimiter: ",",
           },
         },
-      })
+      }),
     );
     const jsonString = await streamToString(selectResponse.Payload);
 
@@ -247,7 +250,7 @@ async function streamToString(generator: any): Promise<string> {
 export async function S3GetObjectSignedUrl(
   bucket: string,
   key: string,
-  expiresIn: number = SIGNED_URL_DEFAULT_EXPIRES_IN
+  expiresIn: number = SIGNED_URL_DEFAULT_EXPIRES_IN,
 ): Promise<string> {
   return await getSignedUrl(
     s3Client,
@@ -257,7 +260,7 @@ export async function S3GetObjectSignedUrl(
     }),
     {
       expiresIn: expiresIn,
-    }
+    },
   );
 }
 
@@ -272,7 +275,7 @@ export async function S3GetObjectSignedUrl(
 export async function S3PutObjectSignedUrl(
   bucket: string,
   key: string,
-  expiresIn: number = SIGNED_URL_DEFAULT_EXPIRES_IN
+  expiresIn: number = SIGNED_URL_DEFAULT_EXPIRES_IN,
 ): Promise<string> {
   return await getSignedUrl(
     s3Client,
@@ -282,7 +285,7 @@ export async function S3PutObjectSignedUrl(
     }),
     {
       expiresIn: expiresIn,
-    }
+    },
   );
 }
 
@@ -295,14 +298,14 @@ export async function S3PutObjectSignedUrl(
  */
 export async function S3ObjectSize(
   bucketName: string,
-  path: string
+  path: string,
 ): Promise<number> {
   const reelInfo = await s3Client.send(
     new GetObjectAttributesCommand({
       Bucket: bucketName,
       Key: path,
       ObjectAttributes: ["ObjectSize"],
-    })
+    }),
   );
   return reelInfo.ObjectSize ?? 0;
 }

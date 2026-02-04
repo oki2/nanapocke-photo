@@ -14,6 +14,7 @@ import {
   PhotoConfig,
   PriceConfig,
   PaymentConfig,
+  ApplicationConfig,
 } from "../../config";
 import * as S3 from "../../utils/S3";
 import * as Album from "../../utils/Dynamo/Album";
@@ -33,10 +34,6 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 ) => {
   console.log("event", event);
   const {bucketName, keyPath} = event.detail;
-
-  // keyPathを分解
-  const [prefix, actionName, fileName] = keyPath.split("/");
-  console.log("keyPath", keyPath);
 
   // S3からデータ取得
   const orderData = JSON.parse(
@@ -61,12 +58,64 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       return cart.downloadOption.selected;
     })
     .map((cart: any) => {
-      return cart.photoId;
+      return {
+        photoId: cart.photoId,
+        photoSequenceId: cart.photoSequenceId,
+        shootingBy: cart.shootingBy,
+      };
     });
   console.log("dlData", dlData);
 
-  // DL購入が存在する場合は、DL用のレコードを登録
+  // 印刷用
+  const printData = orderData.cart
+    .filter((cart: any) => {
+      return (
+        cart.print2LOption?.quantity > 0 || cart.printLOption?.quantity > 0
+      );
+    })
+    .map((cart: any) => {
+      return {
+        photoId: cart.photoId,
+        photoSequenceId: cart.photoSequenceId,
+        shootingBy: cart.shootingBy,
+      };
+    });
+
+  // DL購入が存在する場合は
   if (dlData.length > 0) {
+    for (const data of dlData) {
+      // 写真コピー
+      await S3.S3FileCopy(
+        AppConfig.BUCKET_PHOTO_NAME,
+        `storage/photo/${payment.facilityCode}/${data.shootingBy}/${data.photoId}/${data.photoSequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.DL_ORIGINAL}.jpg`,
+        AppConfig.BUCKET_LIBRARY_NAME,
+        Photo.userLibraryPhoto(
+          payment.userId,
+          payment.facilityCode,
+          data.photoId,
+          data.photoSequenceId,
+        ),
+        StorageClass.STANDARD_IA,
+        ApplicationConfig.S3_LIFECYCLE_TAG.DL_PHOTO_DELETE,
+      );
+
+      // サムネイルコピー
+      await S3.S3FileCopy(
+        AppConfig.BUCKET_PHOTO_NAME,
+        `thumbnail/${payment.facilityCode}/photo/${data.shootingBy}/${data.photoId}.webp`,
+        AppConfig.BUCKET_LIBRARY_NAME,
+        Photo.userLibraryThumbnail(
+          payment.userId,
+          payment.facilityCode,
+          data.photoId,
+          data.photoSequenceId,
+        ),
+        StorageClass.STANDARD_IA,
+        ApplicationConfig.S3_LIFECYCLE_TAG.DL_PHOTO_DELETE,
+      );
+    }
+
+    // DL用のレコードを登録
     const exp = Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
     await Photo.setDownloadAceptPhoto(
       payment.facilityCode,
@@ -76,8 +125,24 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       exp,
     );
   }
-
-  // 印刷購入が存在する場合は、印刷用のレコードを登録
+  // 印刷購入が存在する場合は、サムネイルのみ作成
+  if (dlData.length > 0) {
+    for (const data of printData) {
+      // サムネイルコピー
+      await S3.S3FileCopy(
+        AppConfig.BUCKET_PHOTO_NAME,
+        `thumbnail/${payment.facilityCode}/photo/${data.shootingBy}/${data.photoId}.webp`,
+        AppConfig.BUCKET_LIBRARY_NAME,
+        Photo.userLibraryThumbnail(
+          payment.userId,
+          payment.facilityCode,
+          data.photoId,
+          data.photoSequenceId,
+        ),
+        StorageClass.STANDARD_IA,
+      );
+    }
+  }
 
   console.log("orderData", orderData);
 };

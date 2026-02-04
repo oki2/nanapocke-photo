@@ -381,3 +381,20 @@ export async function getPhotosBySequenceIdsAndFilter(
     nextCursor: res.nextCursor ?? "",
   };
 }
+
+export function userLibraryThumbnail(
+  userId: string,
+  facilityCode: string,
+  photoId: string,
+  sequenceId: number,
+) {
+  return `library/${facilityCode}/photo/${userId}/${photoId}/${sequenceId}.webp`;
+}
+export function userLibraryPhoto(
+  userId: string,
+  facilityCode: string,
+  photoId: string,
+  sequenceId: number,
+) {
+  return `library/${facilityCode}/photo/${userId}/${photoId}/${sequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.DL_ORIGINAL}.jpg`;
+}

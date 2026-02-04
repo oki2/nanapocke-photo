@@ -11,6 +11,7 @@ export const env = {
   // S3
   BUCKET_UPLOAD_NAME: process.env.BUCKET_UPLOAD_NAME || "",
   BUCKET_PHOTO_NAME: process.env.BUCKET_PHOTO_NAME || "",
+  BUCKET_LIBRARY_NAME: process.env.BUCKET_LIBRARY_NAME || "",
 
   // SQS
   SQS_QUEUE_URL_MAIN: process.env.SQS_QUEUE_URL_MAIN || "",

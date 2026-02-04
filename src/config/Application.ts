@@ -6,3 +6,7 @@ export const APPLICATION_PATH: Record<string, string> = {
   [ROLE.GUARDIAN]: "/member/",
   [ROLE.PHOTOGRAPHER]: "/studio/",
 };
+
+export const S3_LIFECYCLE_TAG = {
+  DL_PHOTO_DELETE: "photo-expired=delete",
+} as const;

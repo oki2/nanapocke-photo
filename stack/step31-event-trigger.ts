@@ -21,6 +21,7 @@ export interface Props extends cdk.StackProps {
   // readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
+  readonly bucketLibrary: Bucket;
   readonly queueMain: Queue;
   readonly queuePhotoConvert: Queue;
   // readonly cfPublicKeyPhotoUploadUrl: cloudfront.PublicKey;
@@ -435,6 +436,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
           TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+          BUCKET_LIBRARY_NAME: props.bucketLibrary.bucketName,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -465,14 +467,17 @@ export class Step31EventTriggerStack extends cdk.Stack {
             resources: [
               `${props.bucketUpload.bucketArn}/action/*`,
               `${props.bucketUpload.bucketArn}/order/*`,
+              `${props.bucketPhoto.bucketArn}/storage/*`,
+              `${props.bucketPhoto.bucketArn}/thumbnail/*`,
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ["s3:PutObject"],
+            actions: ["s3:PutObject", "s3:PutObjectTagging"],
             resources: [
               `${props.bucketPhoto.bucketArn}/sales/*`,
               `${props.bucketPhoto.bucketArn}/paymentLog/*`,
+              `${props.bucketLibrary.bucketArn}/library/*`,
             ],
           }),
         ],

@@ -70,6 +70,9 @@ const Config = {
       Photo: {
         BucketName: `${PROJECT_NAME}-${stage}-Photo`.toLowerCase(),
       },
+      Library: {
+        BucketName: `${PROJECT_NAME}-${stage}-Library`.toLowerCase(),
+      },
     },
   },
   CloudFront: {
@@ -178,6 +181,7 @@ const stackStep22 = new Step22ApiPublicleStack(
     NanapockeUserTable: stackStep15.NanapockeUserTable,
     bucketUpload: stackStep10.bucketUpload,
     bucketPhoto: stackStep10.bucketPhoto,
+    // bucketLibrary: stackStep10.bucketLibrary,
     queueMain: stackStep10.queueMain,
     cfPublicKeyThumbnailUrl: stackStep10.cfPublicKeyThumbnailUrl,
   },
@@ -201,6 +205,7 @@ const stackStep31 = new Step31EventTriggerStack(
     // NanapockeUserTable: stackStep15.NanapockeUserTable,
     bucketUpload: stackStep10.bucketUpload,
     bucketPhoto: stackStep10.bucketPhoto,
+    bucketLibrary: stackStep10.bucketLibrary,
     queueMain: stackStep10.queueMain,
     queuePhotoConvert: stackStep10.queuePhotoConvert,
   },
@@ -256,6 +261,7 @@ const stackStep82 = new Step82CloudfrontStack(
     httpApiPublic: stackStep72.httpApi,
     publicCertificateArn: stackStep81.publicCertificateArn,
     bucketPhoto: stackStep10.bucketPhoto,
+    bucketLibrary: stackStep10.bucketLibrary,
     cfKeyGroupNanaPhoto: stackStep10.cfKeyGroupNanaPhoto,
   },
 );

@@ -60,7 +60,12 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         ...p,
         downloadUrl:
           dl && dl.expiredAt > nowISOString
-            ? `/aaa/bbb/${authContext.userId}/photo/${p.photoId}.webp`
+            ? `/${Photo.userLibraryPhoto(
+                authContext.userId,
+                authContext.facilityCode,
+                authContext.userId,
+                p.sequenceId,
+              )}`
             : "",
       };
     }),
