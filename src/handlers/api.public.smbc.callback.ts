@@ -6,6 +6,8 @@ import type {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
 import * as crypto from "crypto";
 import {Buffer} from "buffer";
 
+import * as SMBC from "../utils/External/SMBC";
+
 type SmbcResultPayload = {
   transactionresult: {
     OrderID: string;
@@ -33,9 +35,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   }
 
   // 3. ハッシュ検証
+  const smbcSetting = await SMBC.getSmbcSetting();
   const payloadB64Url = resData[0];
   const postedHash = resData[1];
-  const checkHash = sha256Hex(payloadB64Url + "85td5ygq");
+  const checkHash = sha256Hex(payloadB64Url + smbcSetting.shopPass);
   if (postedHash !== checkHash) {
     return http.badRequest({detail: "決済結果ハッシュエラー"});
   }

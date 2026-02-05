@@ -68,13 +68,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             props.Config.External.Nanapocke.ApiUrl.AccessToken,
           EXT_NANAPOCKE_API_URL_USER_INFO:
             props.Config.External.Nanapocke.ApiUrl.UserInfo,
-          EXT_NANAPOCKE_SETTING_CLIENTID:
-            props.Config.External.Nanapocke.Setting.ClientId,
-          EXT_NANAPOCKE_SETTING_CLIENTSECRET:
-            props.Config.External.Nanapocke.Setting.ClientSecret,
-          EXT_NANAPOCKE_SETTING_GRANTTYPE:
-            props.Config.External.Nanapocke.Setting.GrantType,
           EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT: `${props.Config.HostedZone.PublicDomain}/auth/nanapocke`,
+          SSM_NANAPOCKE_AUTH_SETTING_PATH: `/NanaPhoto/${props.Config.Stage}/nanapocke/auth/setting`,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -102,6 +97,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:PutItem",
             ],
             resources: [props.NanapockeUserTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/auth/setting`,
+            ],
           }),
         ],
       },

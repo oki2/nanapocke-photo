@@ -35,11 +35,6 @@
       },
       "external": {
         "nanapocke": {
-          "setting": {
-            "clientId": "12345678",
-            "clientSecret": "XXXXXXXX",
-            "grantType": "authorization_code"
-          },
           "api": {
             "accessToken": "https://work.uxbrew.jp/test-npp/accessToken.php",
             "userInfo": "https://work.uxbrew.jp/test-npp/userInfo.php"
@@ -71,11 +66,6 @@
       },
       "external": {
         "nanapocke": {
-          "setting": {
-            "clientId": "4b1TmPvX6jwq01ZG1Oy7.00000001.photo-stg",
-            "clientSecret": "ShA7SuiapjY3rOvNBttmzDF2ymxsPj",
-            "grantType": "authorization_code"
-          },
           "api": {
             "accessToken": "https://stg-auth.nanapocke.com/oauth2/token",
             "userInfo": "https://stg-auth.nanapocke.com//nanapocke-api/user"

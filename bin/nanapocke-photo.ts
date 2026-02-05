@@ -88,11 +88,6 @@ const Config = {
   },
   External: {
     Nanapocke: {
-      Setting: {
-        ClientId: context.external.nanapocke.setting.clientId,
-        ClientSecret: context.external.nanapocke.setting.clientSecret,
-        GrantType: context.external.nanapocke.setting.grantType,
-      },
       ApiUrl: {
         AccessToken: context.external.nanapocke.api.accessToken,
         UserInfo: context.external.nanapocke.api.userInfo,

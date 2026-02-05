@@ -44,9 +44,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.2 アクセストークン取得 =========== //
   let tmpObj = await GetAccessToken(
     AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
-    AppConfig.EXT_NANAPOCKE_SETTING_CLIENTID,
-    AppConfig.EXT_NANAPOCKE_SETTING_CLIENTSECRET,
-    AppConfig.EXT_NANAPOCKE_SETTING_GRANTTYPE,
     `https://${AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT}`,
     query.code,
   );

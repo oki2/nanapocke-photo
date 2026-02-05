@@ -48,7 +48,7 @@ export type SmbcNotificationT = {
   PayType: string;
 };
 
-async function getSmbcSetting(): Promise<any> {
+export async function getSmbcSetting(): Promise<any> {
   if (!_smbcSetting) {
     const tmp = await GetParameter(SSM_SMBC_SETTING_PATH);
     _smbcSetting = JSON.parse(tmp);
