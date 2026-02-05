@@ -38,7 +38,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.1 クエリストリングチェック code を取得 =========== //
   const query = parseOrThrow(
     CodeQueryParams,
-    event.queryStringParameters ?? {}
+    event.queryStringParameters ?? {},
   );
 
   // === Step.2 アクセストークン取得 =========== //
@@ -47,8 +47,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     AppConfig.EXT_NANAPOCKE_SETTING_CLIENTID,
     AppConfig.EXT_NANAPOCKE_SETTING_CLIENTSECRET,
     AppConfig.EXT_NANAPOCKE_SETTING_GRANTTYPE,
-    AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT,
-    query.code
+    `https://${AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN_REDIRECT}`,
+    query.code,
   );
   console.log("externalAccessToken", tmpObj);
   const nToken = parseOrThrow(NanapockeAccessTokenResponse, tmpObj ?? {});
@@ -56,7 +56,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // === Step.3 ユーザー情報取得 =========== //
   const userRes = await GetUserInfo(
     AppConfig.EXT_NANAPOCKE_API_URL_USER_INFO,
-    nToken.access_token
+    nToken.access_token,
   );
   const userInfo = parseOrThrow(NanapockeUserInfoResponse, userRes ?? {});
   const roleName = ConvertRoleCdToName(userInfo.role_cd);
@@ -66,7 +66,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const facilityInfo = await Facility.isActive(userInfo.nursery_cd);
   if (!facilityInfo) {
     console.log(
-      `施設利用不可 : ${userInfo.nursery_cd} / user : ${userInfo.user_cd}`
+      `施設利用不可 : ${userInfo.nursery_cd} / user : ${userInfo.user_cd}`,
     );
     return http.notFound();
   }
@@ -81,7 +81,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       ClientId: AppConfig.NANAPOCKE_AUTHPOOL_CLIENT_ID,
       AuthFlow: "CUSTOM_AUTH",
       AuthParameters: {USERNAME: userInfo.user_cd},
-    })
+    }),
   );
 
   // === Step.7 CUSTOM_AUTH チャレンジ応答 =========== //
@@ -95,7 +95,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         USERNAME: userInfo.user_cd,
         ANSWER: nToken.access_token, // Verifyトリガーで再検証
       },
-    })
+    }),
   );
   console.log("finish", finish);
   const auth = finish.AuthenticationResult!;
@@ -104,7 +104,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     IdTokenPayload,
     jwt.decode(auth.IdToken || "", {
       complete: false,
-    }) ?? {}
+    }) ?? {},
   );
   console.log("payload", payload);
 
@@ -114,7 +114,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     userInfo.user_cd,
     userInfo.name,
     roleName,
-    userInfo.nursery_cd
+    userInfo.nursery_cd,
   );
 
   // === Step.9 各権限別ページへとリダイレクト =========== //
@@ -128,7 +128,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 async function ensureUserConfirmed(
   uid: string,
   facilityCd: string,
-  roleName: string
+  roleName: string,
 ) {
   try {
     // UserPool 内に対象ユーザーが存在するかチェック
@@ -136,7 +136,7 @@ async function ensureUserConfirmed(
       new AdminGetUserCommand({
         UserPoolId: AppConfig.NANAPOCKE_AUTHPOOL_ID,
         Username: uid,
-      })
+      }),
     );
   } catch (e: any) {
     if (e.name !== "UserNotFoundException") throw e;
@@ -157,7 +157,7 @@ async function ensureUserConfirmed(
             Value: roleName,
           },
         ],
-      })
+      }),
     );
     // パスワードを登録して認証済みに設定（カスタム認証でも安定運用）
     await idp.send(
@@ -166,7 +166,7 @@ async function ensureUserConfirmed(
         Username: uid,
         Password: crypto.randomUUID() + crypto.randomUUID(),
         Permanent: true,
-      })
+      }),
     );
 
     // // ユーザーをグループに追加

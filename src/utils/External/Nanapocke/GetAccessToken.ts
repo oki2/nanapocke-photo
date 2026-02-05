@@ -6,7 +6,7 @@ export async function GetAccessToken(
   client_secret: string,
   grant_type: string,
   redirect_uri: string,
-  code: string
+  code: string,
 ): Promise<string> {
   const params = new URLSearchParams();
   params.append("client_id", client_id);
