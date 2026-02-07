@@ -32,6 +32,10 @@ content-type: application/json
 POST https://{{customDomainName}}/api/auth/refresh HTTP/1.1
 content-type: application/json
 
+### リフレッシュトークンの削除
+DELETE https://{{customDomainName}}/api/auth/refresh HTTP/1.1
+content-type: application/json
+
 ### フォトグラファー追加
 POST https://{{customDomainName}}/api/facility/{{facilityCode}}/photographer HTTP/1.1
 content-type: application/json

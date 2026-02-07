@@ -9,6 +9,7 @@ import {
   ChallengeNameType,
   AdminInitiateAuthCommand,
   AdminRespondToAuthChallengeCommand,
+  RevokeTokenCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 interface SigninResponseSchema {
@@ -26,7 +27,7 @@ export async function Signin(
   userPoolId: string,
   clientId: string,
   userName: string,
-  password: string
+  password: string,
 ): Promise<SigninResponseSchema> {
   // Cognitoへリクエスト
   const cognitoClient = new CognitoIdentityProviderClient({
@@ -43,7 +44,7 @@ export async function Signin(
         USERNAME: userName,
         PASSWORD: password,
       },
-    })
+    }),
   );
 
   // ID token が取得できたか判定
@@ -78,7 +79,7 @@ export async function Challenge(
   clientId: string,
   userName: string,
   password: string,
-  session: string
+  session: string,
 ): Promise<boolean> {
   // Cognitoへリクエスト
   const cognitoClient = new CognitoIdentityProviderClient({
@@ -95,7 +96,7 @@ export async function Challenge(
         USERNAME: userName,
         NEW_PASSWORD: password,
       },
-    })
+    }),
   );
 
   // ID token が取得できたか判定 ※メール未認証の場合もエラーとなる
@@ -114,7 +115,7 @@ export async function Refresh(
   region: string,
   userPoolId: string,
   clientId: string,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<SigninResponseSchema> {
   // Cognitoへリクエスト
   const cognitoClient = new CognitoIdentityProviderClient({
@@ -129,7 +130,7 @@ export async function Refresh(
       AuthParameters: {
         REFRESH_TOKEN: refreshToken,
       },
-    })
+    }),
   );
 
   // AccessToken が取得できたか判定 ※メール未認証の場合もエラーとなる
@@ -145,4 +146,22 @@ export async function Refresh(
     idToken: result.AuthenticationResult.IdToken,
     accessToken: result.AuthenticationResult.AccessToken,
   };
+}
+
+export async function RevokeRefresh(
+  region: string,
+  clientId: string,
+  refreshToken: string,
+): Promise<void> {
+  // Cognitoへリクエスト
+  const cognitoClient = new CognitoIdentityProviderClient({
+    region: region,
+  });
+
+  const result = await cognitoClient.send(
+    new RevokeTokenCommand({
+      ClientId: clientId,
+      Token: refreshToken,
+    }),
+  );
 }

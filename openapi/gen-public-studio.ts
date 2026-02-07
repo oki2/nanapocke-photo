@@ -76,6 +76,34 @@ const doc = {
           },
         },
       },
+      delete: {
+        tags: ["Auth"],
+        summary: "リフレッシュトークンの無効化・ログアウト",
+        parameters: [
+          {
+            name: "refreshToken",
+            in: "cookie",
+            required: true,
+            schema: toJsonSchemaSafe(SchemasPublic.RefreshToken), // もしくは components 参照
+          },
+          {
+            name: "userRole",
+            in: "cookie",
+            required: true,
+            schema: toJsonSchemaSafe(SchemasPublic.PublicRole), // もしくは components 参照
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Refresh Revoke success",
+            content: {
+              "application/json": {
+                schema: {$ref: "#/components/schemas/ResultOK"},
+              },
+            },
+          },
+        },
+      },
     },
 
     "/api/facility/{facilityCode}/photo": {

@@ -349,6 +349,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPublicVerifyToken,
     });
 
+    // リフレッシュトークン削除
+    this.httpApi.addRoutes({
+      path: "/api/auth/refresh",
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration(
+        "AuthRefreshRevokeIntegration",
+        props.lambdaFnPublic.authRefreshRevokeFn,
+      ),
+      authorizer: AuthorizerPublicVerifyToken,
+    });
+
     // ==========================================================
     // フォトグラファー管理関連
     // ==========================================================

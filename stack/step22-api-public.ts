@@ -128,6 +128,11 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             props.NanapockeAuthPoolClient.userPoolClientId,
           TABLE_NAME_MAIN: props.MainTable.tableName,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
+          PEM_THUMBNAIL_PREVIEW_KEYPATH:
+            props.Config.CloudFront.PublicKey.Thumbnail.ParameterStoreKeyPath
+              .Private,
+          CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID:
+            props.cfPublicKeyThumbnailUrl.publicKeyId,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -151,6 +156,13 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:PutItem",
             ],
             resources: [props.NanapockeUserTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/cfd/thumbnail-access-cookie-pem/private`,
+            ],
           }),
         ],
       },
@@ -185,10 +197,49 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["cognito-idp:AdminInitiateAuth"],
+            resources: [props.NanapockeAuthPool.userPoolArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
             resources: [
-              props.NanapockeAuthPool.userPoolArn,
-              props.NanapockeAuthPool.userPoolArn,
+              props.NanapockeUserTable.tableArn,
+              props.MainTable.tableArn,
             ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/cfd/thumbnail-access-cookie-pem/private`,
+            ],
+          }),
+        ],
+      },
+    );
+
+    // Refresh revoke
+    this.lambdaFn.authRefreshRevokeFn = new NodejsFunction(
+      this,
+      "ApiPublicAuthRefreshRevokeFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAuthRefreshRevoke`,
+        description: `${functionPrefix}-ApiPublicAuthRefreshRevoke`,
+        entry: "src/handlers/api.public.auth.refresh.revoke.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          NANAPOCKE_AUTHPOOL_CLIENT_ID:
+            props.NanapockeAuthPoolClient.userPoolClientId,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["cognito-idp:RevokeToken"],
+            resources: [props.NanapockeAuthPool.userPoolArn],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,

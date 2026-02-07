@@ -14,6 +14,11 @@ import * as Auth from "../utils/Cognito";
 import * as Facility from "../utils/Dynamo/Facility";
 import * as User from "../utils/Dynamo/User";
 
+import {GetParameter} from "../utils/ParameterStore";
+import {GetSignedCookie} from "../utils/Cloudfront";
+
+import {thumbnailAllowedPath} from "../libs/tool";
+
 /**
  * Hello World!
  */
@@ -75,7 +80,25 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     userRole: UserConfig.ROLE.PHOTOGRAPHER,
   };
   console.log("result", result);
+
+  // === Step.6. Thumbnail アクセス用署名付きCookieを作成
+  const privateKey = await GetParameter(
+    AppConfig.PEM_THUMBNAIL_PREVIEW_KEYPATH,
+  );
+  const targetPath = thumbnailAllowedPath(
+    data.facilityCode,
+    UserConfig.ROLE.PHOTOGRAPHER,
+    payload.sub,
+  );
+  const cookieAry = GetSignedCookie(
+    AppConfig.NANAPHOTO_FQDN,
+    AppConfig.CF_PUBLIC_KEY_THUMBNAIL_URL_KEYID,
+    privateKey,
+    targetPath,
+  );
+
   return http.ok(parseOrThrow(SigninSuccess, result), {}, [
+    ...cookieAry,
     `refreshToken=${auth.refreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
     `userRole=${UserConfig.ROLE.PHOTOGRAPHER}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
   ]);
