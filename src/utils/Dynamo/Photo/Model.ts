@@ -714,35 +714,6 @@ export async function getDownloadAceptList(
   return await batchGetAll(PhotoConfig.DL_ACCEPT_TABLE_NAME, keys, docClient());
 }
 
-// 保護者購入時に保護者ディレクトリ配下へ写真コピーする方式に変更した為不要
-// ※後ほど削除
-// export async function setFirstSoldAt(facilityCode: string, photoIds: string[]) {
-//   const nowISO = new Date().toISOString();
-//   for (const photoId of photoIds) {
-//     await docClient().send(
-//       new UpdateCommand({
-//         TableName: PhotoConfig.TABLE_NAME,
-//         Key: {
-//           pk: `PHOTO#FAC#${facilityCode}#META`,
-//           sk: photoId,
-//         },
-//         UpdateExpression:
-//           "SET #firstSoldAt = if_not_exists(#firstSoldAt, :now) REMOVE #GsiDeletePk, #GsiDeleteSk, #ttl",
-//         ExpressionAttributeNames: {
-//           "#firstSoldAt": "firstSoldAt",
-//           "#GsiDeletePk": "GsiDeletePk",
-//           "#GsiDeleteSk": "GsiDeleteSk",
-//           "#ttl": "ttl",
-//         },
-//         ExpressionAttributeValues: {
-//           ":now": nowISO,
-//         },
-//       }),
-//     );
-//   }
-//   // コマンド実行
-// }
-
 // ========================================================= //
 
 export async function setAlbumsOnePhotoSafe(
