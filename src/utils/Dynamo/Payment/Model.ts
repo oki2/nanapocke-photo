@@ -100,6 +100,7 @@ export async function setCompleted(
   orderId: string,
   smbcProcessDate: string,
   countPrint: number,
+  countDl: number,
   userId: string,
   updatedBy: string,
 ): Promise<void> {
@@ -110,12 +111,13 @@ export async function setCompleted(
       sk: getSk(orderId),
     },
     UpdateExpression:
-      "SET #GsiPaidUserPK = :GsiPaidUserPK, #GsiPaidUserSK = :GsiPaidUserSK, #paymentStatus = :paymentStatus, #shippingStatus = :shippingStatus, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
+      "SET #GsiPaidUserPK = :GsiPaidUserPK, #GsiPaidUserSK = :GsiPaidUserSK, #paymentStatus = :paymentStatus, #shippingStatus = :shippingStatus, #zipDownloadStatus = :zipDownloadStatus, #smbcProcessDate = :smbcProcessDate, #updatedAt = :updatedAt, #updatedBy = :updatedBy",
     ExpressionAttributeNames: {
       "#GsiPaidUserPK": "GsiPaidUserPK",
       "#GsiPaidUserSK": "GsiPaidUserSK",
       "#paymentStatus": "paymentStatus",
       "#shippingStatus": "shippingStatus",
+      "#zipDownloadStatus": "zipDownloadStatus",
       "#smbcProcessDate": "smbcProcessDate",
       "#updatedAt": "updatedAt",
       "#updatedBy": "updatedBy",
@@ -128,9 +130,40 @@ export async function setCompleted(
         countPrint > 0
           ? PaymentConfig.SHIPPING_STATUS.PROCESSING
           : PaymentConfig.SHIPPING_STATUS.NONE,
+      ":zipDownloadStatus": PaymentConfig.zipCreateCheck(countDl)
+        ? PaymentConfig.DOWNLOAD_STATUS.PROCESSING
+        : PaymentConfig.DOWNLOAD_STATUS.NONE,
       ":smbcProcessDate": smbcProcessDate,
       ":updatedAt": new Date().toISOString(),
       ":updatedBy": updatedBy,
+    },
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+}
+
+export async function setZipDownloadInfo(
+  orderId: string,
+  zipPath: string,
+): Promise<void> {
+  const command = new UpdateCommand({
+    TableName: PaymentConfig.TABLE_NAME,
+    Key: {
+      pk: getPk(),
+      sk: getSk(orderId),
+    },
+    UpdateExpression:
+      "SET #zipDownloadStatus = :zipDownloadStatus, #zipPath = :zipPath, #updatedAt = :updatedAt",
+    ExpressionAttributeNames: {
+      "#zipDownloadStatus": "zipDownloadStatus",
+      "#zipPath": "zipPath",
+      "#updatedAt": "updatedAt",
+    },
+    ExpressionAttributeValues: {
+      ":zipDownloadStatus": PaymentConfig.DOWNLOAD_STATUS.VALID,
+      ":zipPath": zipPath,
+      ":updatedAt": new Date().toISOString(),
     },
   });
 

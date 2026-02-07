@@ -7,7 +7,7 @@
  * gsi5 : 自身がアップした写真：アップロード日ソート
  */
 
-import {docClient, batchWriteAll} from "../dynamo";
+import {docClient} from "../dynamo";
 import {PutCommand, GetCommand} from "@aws-sdk/lib-dynamodb";
 import {PhotoZipConfig} from "../../../config";
 

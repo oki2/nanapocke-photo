@@ -19,10 +19,23 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const userRole: Role = authContext.userRole;
   const viewStatus: string[] = AlbumConfig.VIEW_STATUS[userRole];
 
+  const nowTimestamp = new Date().getTime(); // 現在時刻
+
   for (const album of albums) {
     // 権限別の表示制限
     if (!viewStatus.includes(album.salesStatus)) {
       continue;
+    }
+
+    // 保護者の場合は販売期間もチェック
+    if (userRole === UserConfig.ROLE.GUARDIAN) {
+      const now = new Date().toISOString();
+      if (
+        nowTimestamp < new Date(album.salesPeriod.start).getTime() ||
+        nowTimestamp > new Date(album.salesPeriod.end).getTime()
+      ) {
+        continue;
+      }
     }
 
     result.push({

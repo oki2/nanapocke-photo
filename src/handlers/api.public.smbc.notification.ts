@@ -117,6 +117,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     postObj.OrderID,
     smbcResult.ProcessDate,
     payment.countPrint,
+    payment.countDl,
     payment.userId,
     SMBC.CALLBACK_USER_ID,
   );

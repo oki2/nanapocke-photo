@@ -71,7 +71,7 @@ export async function S3FileCopy(
   tagging: string = "",
 ): Promise<void> {
   const command: CopyObjectCommandInput = {
-    CopySource: `${fromBucket}/${fromKey}`,
+    CopySource: `${fromBucket}/${encodeURIComponent(fromKey)}`,
     Bucket: toBucket,
     Key: toKey,
     StorageClass: storageClass,

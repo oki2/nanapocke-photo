@@ -32,6 +32,7 @@
     "stg:front:member:deploy:exec": "aws s3 cp work/static-file/frontend/member-stg s3://nanaphoto-stg-publiccfd/member/ --recursive --profile nanaphoto-stg"
   },
   "devDependencies": {
+    "@types/archiver": "^7.0.0",
     "@types/aws-lambda": "^8.10.156",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
@@ -56,6 +57,7 @@
     "@aws-sdk/lib-dynamodb": "^3.914.0",
     "@aws-sdk/lib-storage": "^3.966.0",
     "@aws-sdk/s3-request-presigner": "^3.937.0",
+    "archiver": "^7.0.1",
     "aws-cdk-lib": "^2.220.0",
     "aws-jwt-verify": "^5.1.1",
     "constructs": "^10.0.0",

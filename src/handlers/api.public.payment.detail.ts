@@ -43,22 +43,34 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   // 4. Doownload の状態を判定
   type downloadStatusT =
     (typeof PaymentConfig.DOWNLOAD_STATUS)[keyof typeof PaymentConfig.DOWNLOAD_STATUS];
-  let downloadStatus: downloadStatusT = PaymentConfig.DOWNLOAD_STATUS.NONE;
+  let zipDownloadStatus: downloadStatusT = PaymentConfig.DOWNLOAD_STATUS.NONE;
   let downloadExpiredAt = "";
-  let downloadZipDownloadUrl = "";
+  let isDownload = false;
+  let zipDownloadUrl = "";
 
   if (detail.countDownload > 0) {
+    // DL有効期限
     downloadExpiredAt =
       payment.downloadExpiredAt ??
       Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
-    downloadStatus =
-      new Date(downloadExpiredAt) > new Date()
-        ? PaymentConfig.DOWNLOAD_STATUS.VALID
-        : PaymentConfig.DOWNLOAD_STATUS.INVALID;
-    downloadZipDownloadUrl =
-      downloadStatus === PaymentConfig.DOWNLOAD_STATUS.VALID
-        ? "S3のDL用URLを組み立てて返す"
-        : "";
+
+    isDownload = new Date(downloadExpiredAt) > new Date();
+
+    // ZIPダウンロードのステータス
+    zipDownloadStatus =
+      payment.zipDownloadStatus ?? PaymentConfig.DOWNLOAD_STATUS.NONE;
+
+    // ZIPダウンロード可、かつDL有効期限内の場合、ZIPダウンロードURLを設定
+    if (
+      zipDownloadStatus === PaymentConfig.DOWNLOAD_STATUS.VALID &&
+      isDownload
+    ) {
+      zipDownloadUrl = `/${Photo.userLibraryZip(
+        authContext.userId,
+        authContext.facilityCode,
+        path.orderId,
+      )}`;
+    }
   }
 
   // 5. レスポンス形式に変換
@@ -70,7 +82,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         src.photoId,
         src.photoSequenceId,
       )}`,
-    ...(downloadStatus === PaymentConfig.DOWNLOAD_STATUS.VALID
+    ...(isDownload
       ? {
           resolveDownloadUrl: (src) =>
             `/${Photo.userLibraryPhoto(
@@ -94,10 +106,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       method: PaymentConfig.SHIPPING_LABEL,
       trackingNumber: payment.shippingTrackingNumber ?? "",
     },
-    download: {
-      status: downloadStatus,
+    zipDownload: {
+      status: zipDownloadStatus,
       expiredAt: downloadExpiredAt,
-      zipDownloadUrl: downloadZipDownloadUrl,
+      downloadUrl: zipDownloadUrl,
     },
     subTotal: detail.subTotalPrice,
     shippingFee: detail.shippingFee,
@@ -105,6 +117,6 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   };
 
   // 3. レスポンスを返却
-  return http.ok(response);
-  // return http.ok(parseOrThrow(OrderDetail, response));
+  // return http.ok(response);
+  return http.ok(parseOrThrow(OrderDetail, response));
 });

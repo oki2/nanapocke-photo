@@ -398,3 +398,11 @@ export function userLibraryPhoto(
 ) {
   return `library/${facilityCode}/photo/${userId}/${photoId}/${sequenceId}-${PhotoConfig.PHOTO_SIZE_SUFFIX.DL_ORIGINAL}.jpg`;
 }
+
+export function userLibraryZip(
+  userId: string,
+  facilityCode: string,
+  orderId: string,
+) {
+  return `library/${facilityCode}/photo/${userId}/${orderId}.zip`;
+}

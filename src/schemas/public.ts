@@ -706,10 +706,10 @@ export const OrderDetail = v.object({
     method: v.string(),
     trackingNumber: v.optional(v.string(), ""), // string
   }),
-  download: v.object({
+  zipDownload: v.object({
     status: v.picklist(Object.values(PaymentConfig.DOWNLOAD_STATUS)), // 期限がきれているかどうか
     expiredAt: common.ISODateTime, // 期限ISO
-    zipDownloadUrl: v.string(), // zipURL
+    downloadUrl: v.string(), // zipURL
   }),
   ...OrderAmountSummary.entries,
 });

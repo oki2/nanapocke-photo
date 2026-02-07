@@ -24,7 +24,11 @@ export const SHIPPING_STATUS = {
   SHIPPED: "SHIPPED", // 出荷済み
 } as const;
 
-// ダウンロードステータス NONE
+// 写真購入時にzipを作か否か、その閾値となる枚数。この枚数以上の場合はzipを作る
+export const ZIP_THRESHOLD = 3;
+export const zipCreateCheck = (count: number) => count >= ZIP_THRESHOLD;
+
+// Zipダウンロードステータス NONE
 export const DOWNLOAD_STATUS = {
   NONE: "NONE", // DL注文無し
   PROCESSING: "PROCESSING", // 準備中

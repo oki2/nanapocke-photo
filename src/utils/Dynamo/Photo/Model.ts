@@ -663,8 +663,12 @@ export async function setDownloadAceptPhoto(
   const nowISO = new Date().toISOString();
   const ttl = Math.floor(new Date(expiredAt).getTime() / 1000) + 15552000; // 有効期限切れの半年後にレコード消す
 
+  console.log("photoIds", photoIds);
+  const unique = [...new Set(photoIds)];
+  console.log("unique", unique);
+
   // 1バッチ分の PutRequest を作成
-  let requestItems: Record<string, any>[] = photoIds.map((photoId) => ({
+  let requestItems: Record<string, any>[] = unique.map((photoId) => ({
     PutRequest: {
       Item: {
         pk: getDlAcceptPk(userId),
@@ -678,6 +682,8 @@ export async function setDownloadAceptPhoto(
       },
     },
   }));
+
+  console.log("requestItems", requestItems);
 
   await batchWriteAll(
     PhotoConfig.DL_ACCEPT_TABLE_NAME,
@@ -696,7 +702,11 @@ export async function getDownloadAceptList(
   userId: string,
   photoIds: string[],
 ): Promise<DlAccept[]> {
-  const keys = photoIds.map((photoId) => ({
+  console.log("photoIds", photoIds);
+  const unique = [...new Set(photoIds)];
+  console.log("unique", unique);
+
+  const keys = unique.map((photoId) => ({
     pk: getDlAcceptPk(userId),
     sk: getDlAcceptSk(facilityCode, photoId),
   }));
