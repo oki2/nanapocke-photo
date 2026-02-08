@@ -1227,7 +1227,9 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           }),
         ],
       },
-    ); // SMBC からの通知
+    );
+
+    // SMBC からの通知
     this.lambdaFn.smbcNotificationFn = new NodejsFunction(
       this,
       "ApiPublicSmbcNotificationFn",
@@ -1286,6 +1288,43 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["sqs:sendmessage"],
             resources: [props.queueMain.queueArn],
+          }),
+        ],
+      },
+    );
+
+    // しまうま からの通知、さくら経由
+    this.lambdaFn.shippingNotificationFn = new NodejsFunction(
+      this,
+      "ApiPublicShippingNotificationFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicShippingNotification`,
+        description: `${functionPrefix}-ApiPublicShippingNotification`,
+        entry: "src/handlers/api.public.shipping.notification.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
+          SSM_SHIPPING_NOTIRY_SECRET_KEY: `/NanaPhoto/${props.Config.Stage}/shipping/notify/secretKey`,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:UpdateItem"],
+            resources: [
+              props.CommerceTable.tableArn,
+              // `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/shipping/notify/secretKey`,
+            ],
           }),
         ],
       },

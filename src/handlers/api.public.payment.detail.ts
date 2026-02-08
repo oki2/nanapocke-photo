@@ -103,8 +103,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     photos: photos,
     shipping: {
       status: payment.shippingStatus,
-      method: PaymentConfig.SHIPPING_LABEL,
-      trackingNumber: payment.shippingTrackingNumber ?? "",
+      method:
+        payment.shippingStatus === PaymentConfig.SHIPPING_STATUS.NONE
+          ? ""
+          : PaymentConfig.SHIPPING_LABEL,
+      trackingNumber: payment.printerTracking ?? "",
     },
     zipDownload: {
       status: zipDownloadStatus,

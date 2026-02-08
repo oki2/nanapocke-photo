@@ -171,6 +171,43 @@ export async function setZipDownloadInfo(
   await docClient().send(command);
 }
 
+export async function setShippingInfo(
+  orderId: string,
+  printerAcceptance: string,
+  printerShipping: string,
+  printerTracking: string,
+  printerNumber: number,
+): Promise<void> {
+  const command = new UpdateCommand({
+    TableName: PaymentConfig.TABLE_NAME,
+    Key: {
+      pk: getPk(),
+      sk: getSk(orderId),
+    },
+    UpdateExpression:
+      "SET #shippingStatus = :shippingStatus, #printerAcceptance = :printerAcceptance, #printerShipping = :printerShipping, #printerTracking = :printerTracking, #printerNumber = :printerNumber, #updatedAt = :updatedAt",
+    ExpressionAttributeNames: {
+      "#shippingStatus": "shippingStatus",
+      "#printerAcceptance": "printerAcceptance",
+      "#printerShipping": "printerShipping",
+      "#printerTracking": "printerTracking",
+      "#printerNumber": "printerNumber",
+      "#updatedAt": "updatedAt",
+    },
+    ExpressionAttributeValues: {
+      ":shippingStatus": PaymentConfig.SHIPPING_STATUS.SHIPPED,
+      ":printerAcceptance": printerAcceptance,
+      ":printerShipping": printerShipping,
+      ":printerTracking": printerTracking,
+      ":printerNumber": printerNumber,
+      ":updatedAt": new Date().toISOString(),
+    },
+  });
+
+  // コマンド実行
+  await docClient().send(command);
+}
+
 export async function myList(userId: string): Promise<any> {
   const command = new QueryCommand({
     TableName: PaymentConfig.TABLE_NAME,

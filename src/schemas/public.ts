@@ -708,7 +708,7 @@ export const OrderDetail = v.object({
   }),
   zipDownload: v.object({
     status: v.picklist(Object.values(PaymentConfig.DOWNLOAD_STATUS)), // 期限がきれているかどうか
-    expiredAt: common.ISODateTime, // 期限ISO
+    expiredAt: v.optional(v.union([common.ISODateTime, v.literal("")]), ""), // 期限ISO
     downloadUrl: v.string(), // zipURL
   }),
   ...OrderAmountSummary.entries,
@@ -720,4 +720,18 @@ export type OrderDetailT = v.InferOutput<typeof OrderDetail>;
 export const SmbcCallback = v.object({
   status: v.picklist(["success", "failed"]),
   orderId: v.pipe(v.string(), v.minLength(1)),
+});
+
+// === しまうまからの通知 さくら経由 =============================================
+const ShippingNotify = v.object({
+  orderId: v.pipe(v.string(), v.minLength(1)),
+  printerAcceptance: v.pipe(v.string(), v.minLength(1)),
+  printerShipping: v.pipe(v.string(), v.minLength(1)),
+  printerTracking: v.pipe(v.string(), v.minLength(1)),
+  printerNumber: v.number(),
+});
+export const ShippingOrders = v.object({orders: v.array(ShippingNotify)});
+
+export const ShippingNotifySakuraRequest = v.object({
+  shipping: v.pipe(v.string(), v.minLength(1)),
 });

@@ -642,6 +642,7 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "SmbcCallbackIntegration",
         props.lambdaFnPublic.smbcCallbackFn,
       ),
+      authorizer: AuthorizerPublicVerifyToken,
     });
 
     this.httpApi.addRoutes({
@@ -651,6 +652,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
         "SmbcNotificationIntegration",
         props.lambdaFnPublic.smbcNotificationFn,
       ),
+      authorizer: AuthorizerPublicVerifyToken,
+    });
+
+    // しまうま からの通知、さくら経由 ====================================
+    this.httpApi.addRoutes({
+      path: "/api/payments/shipping/notification",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "ShippingNotificationIntegration",
+        props.lambdaFnPublic.shippingNotificationFn,
+      ),
+      authorizer: AuthorizerPublicVerifyToken,
     });
 
     // ==========================================================
