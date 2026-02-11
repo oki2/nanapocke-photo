@@ -352,7 +352,7 @@ export async function actionSalesUnpublished(
   facilityCode: string,
   albumId: string,
   userId: string,
-): Promise<void> {
+): Promise<Record<string, any>> {
   const nowISO = new Date().toISOString();
 
   let UpdateExpression =
@@ -386,11 +386,13 @@ export async function actionSalesUnpublished(
     ConditionExpression: "#salesStatus = :beforeSalesStatus",
     ExpressionAttributeNames: ExpressionAttributeNames,
     ExpressionAttributeValues: ExpressionAttributeValues,
+    ReturnValues: "ALL_NEW",
   });
 
   // コマンド実行
-  await docClient().send(command);
-  return;
+  const res = await docClient().send(command);
+  console.log("res", res);
+  return res.Attributes ?? {};
 }
 
 async function nextSequence(facilityCode: string): Promise<number> {
@@ -452,6 +454,71 @@ export async function deleteAlbum(
         pk: getPk(facilityCode),
         sk: getSk(albumId),
       },
+    }),
+  );
+}
+
+type NanapockeTopicT = {
+  noticeId: string;
+  sendAt: string;
+};
+export type NanapockeTopicsT = {
+  facilityCode: string;
+  albumId: string;
+  startNotice?: NanapockeTopicT;
+  end5Notice?: NanapockeTopicT;
+  end1Notice?: NanapockeTopicT;
+  endNotice?: NanapockeTopicT;
+};
+export async function setNanapockeTopicsIds(
+  p: NanapockeTopicsT,
+): Promise<void> {
+  // 一つも通知が無い場合はそのまま終了
+  if (!p.startNotice && !p.end5Notice && !p.end1Notice && !p.endNotice) {
+    return;
+  }
+
+  let UpdateExpression = "SET ";
+  const ExpressionAttributeNames: Record<string, any> = {
+    "#updatedAt": "updatedAt",
+  };
+  const ExpressionAttributeValues: Record<string, any> = {
+    ":updatedAt": new Date().toISOString(),
+  };
+
+  if (p.startNotice && p.startNotice.noticeId) {
+    UpdateExpression += `#startNotice = :startNotice, `;
+    ExpressionAttributeNames["#startNotice"] = "topicsSendStart";
+    ExpressionAttributeValues[":startNotice"] = p.startNotice;
+  }
+  if (p.end5Notice && p.end5Notice.noticeId) {
+    UpdateExpression += `#end5Notice = :end5Notice, `;
+    ExpressionAttributeNames["#end5Notice"] = "topicsSendEnd5";
+    ExpressionAttributeValues[":end5Notice"] = p.end5Notice;
+  }
+  if (p.end1Notice && p.end1Notice.noticeId) {
+    UpdateExpression += `#end1Notice = :end1Notice, `;
+    ExpressionAttributeNames["#end1Notice"] = "topicsSendEnd1";
+    ExpressionAttributeValues[":end1Notice"] = p.end1Notice;
+  }
+  if (p.endNotice && p.endNotice.noticeId) {
+    UpdateExpression += `#endNotice = :endNotice, `;
+    ExpressionAttributeNames["#endNotice"] = "topicsSendEnd";
+    ExpressionAttributeValues[":endNotice"] = p.endNotice;
+  }
+  UpdateExpression += `#updatedAt = :updatedAt`;
+
+  // コマンド実行
+  await docClient().send(
+    new UpdateCommand({
+      TableName: AlbumConfig.TABLE_NAME,
+      Key: {
+        pk: getPk(p.facilityCode),
+        sk: getSk(p.albumId),
+      },
+      UpdateExpression: UpdateExpression,
+      ExpressionAttributeNames: ExpressionAttributeNames,
+      ExpressionAttributeValues: ExpressionAttributeValues,
     }),
   );
 }

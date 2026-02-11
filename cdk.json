@@ -35,9 +35,12 @@
       },
       "external": {
         "nanapocke": {
+          "photoHome": "https://stg-photo.nanapocke.com",
           "api": {
             "accessToken": "https://work.uxbrew.jp/test-npp/accessToken.php",
-            "userInfo": "https://work.uxbrew.jp/test-npp/userInfo.php"
+            "userInfo": "https://work.uxbrew.jp/test-npp/userInfo.php",
+            "topicsSend": "https://dev-kids.uxbrew.jp/api/nanapocke/manage/api/v1/topics/",
+            "topicsDelete": "https://dev-kids.uxbrew.jp/api/nanapocke/manage/api/v1/topics/"
           }
         },
         "smbc": {
@@ -66,9 +69,12 @@
       },
       "external": {
         "nanapocke": {
+          "photoHome": "https://stg-photo.nanapocke.com",
           "api": {
             "accessToken": "https://stg-auth.nanapocke.com/oauth2/token",
-            "userInfo": "https://stg-auth.nanapocke.com//nanapocke-api/user"
+            "userInfo": "https://stg-auth.nanapocke.com//nanapocke-api/user",
+            "topicsSend": "https://stg-photo.nanapocke.com/api/nanapocke/manage/api/v1/topics/",
+            "topicsDelete": "https://stg-photo.nanapocke.com/api/nanapocke/manage/api/v1/topics/"
           }
         },
         "smbc": {

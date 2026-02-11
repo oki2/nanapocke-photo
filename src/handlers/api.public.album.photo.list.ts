@@ -52,8 +52,19 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   );
 
   // 5. レスポンス形式に変換
+  // ※販売期間を、Album販売開始時に時刻変換することを検討
   const res = {
-    album: salesObj.album,
+    album: {
+      ...salesObj.album,
+      salesPeriod: {
+        start: Album.toJstToday0000(
+          salesObj.album.salesPeriod.start,
+        ).toISOString(),
+        end: Album.toJstYesterday2359(
+          salesObj.album.salesPeriod.end,
+        ).toISOString(),
+      },
+    },
     photos: salesObj.photos.map((p: any) => {
       const dl = dlAccept.find((u) => u.photoId === p.photoId);
       return {

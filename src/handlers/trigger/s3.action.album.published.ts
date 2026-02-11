@@ -21,6 +21,8 @@ import * as Photo from "../../utils/Dynamo/Photo";
 import * as Cart from "../../utils/Dynamo/Cart";
 import * as Payment from "../../utils/Dynamo/Payment";
 
+import * as NanapockeTopics from "../../utils/External/Nanapocke/Topics";
+
 interface Detail {
   bucketName: string;
   keyPath: string;
@@ -136,11 +138,91 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     data.userId,
   );
 
-  // // 7 写真を販売実績アリへと変更
-  // await Photo.setFirstSoldAt(data.facilityCode, photoIds);
-
-  // 7. ナナポケへの通知が必要な場合は通知 ※データをS3Eventトリガー経由で送信
+  // 7. ナナポケへの通知が必要な場合は通知
   if (album.topicsSend) {
     console.log("album.topicsSend", album.topicsSend);
+
+    const now = new Date().getTime(); // 現在日時のタイムスタンプ
+    const start = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.start); // 販売開始日時
+    const end5 = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end, -5); // 販売終了日時
+    const end1 = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end, -1); // 販売終了日時
+    const end = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end); // 販売終了日時
+
+    // 販売開始のTopics送信 ================================
+    const noticeContent: Album.NanapockeTopicsT = {
+      facilityCode: data.facilityCode,
+      albumId: data.albumId,
+    };
+    if (now < start.getTime()) {
+      // 7.1.1 販売開始前の場合は未来日を指定
+      noticeContent.startNotice = {
+        noticeId: await NanapockeTopics.SendClass({
+          nurseryCd: album.facilityCode,
+          classReceivedList: album.topicsClassReceivedList,
+          academicYear: album.topicsAcademicYear,
+          noticeTitle: "新しいアルバムの販売が開始されました",
+          noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。`,
+          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(start),
+        }),
+        sendAt: start.toISOString(),
+      };
+    } else {
+      // 7.1.2 販売開始時刻を過ぎている場合は即時送信
+      NanapockeTopics.SendClass({
+        nurseryCd: album.facilityCode,
+        classReceivedList: album.topicsClassReceivedList,
+        academicYear: album.topicsAcademicYear,
+        noticeTitle: "新しいアルバムの販売が開始されました",
+        noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。`,
+      });
+    }
+
+    // 7.2 販売終了5日前の通知
+    if (now < end5.getTime()) {
+      noticeContent.end5Notice = {
+        noticeId: await NanapockeTopics.SendClass({
+          nurseryCd: album.facilityCode,
+          classReceivedList: album.topicsClassReceivedList,
+          academicYear: album.topicsAcademicYear,
+          noticeTitle: "アルバムの販売終了5日前になりました",
+          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の終了5日前になりました。`,
+          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end5),
+        }),
+        sendAt: end5.toISOString(),
+      };
+    }
+
+    // 7.3 販売終了前日の通知
+    if (now < end1.getTime()) {
+      noticeContent.end1Notice = {
+        noticeId: await NanapockeTopics.SendClass({
+          nurseryCd: album.facilityCode,
+          classReceivedList: album.topicsClassReceivedList,
+          academicYear: album.topicsAcademicYear,
+          noticeTitle: "アルバムの販売終了前日になりました",
+          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の終了前日になりました。`,
+          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end1),
+        }),
+        sendAt: end1.toISOString(),
+      };
+    }
+
+    // 7.4 販売終了日の通知
+    if (now < end.getTime()) {
+      noticeContent.endNotice = {
+        noticeId: await NanapockeTopics.SendClass({
+          nurseryCd: album.facilityCode,
+          classReceivedList: album.topicsClassReceivedList,
+          academicYear: album.topicsAcademicYear,
+          noticeTitle: "本日で販売終了するアルバムがあります",
+          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売終了となります。お早めにお買い求めください。`,
+          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end),
+        }),
+        sendAt: end.toISOString(),
+      };
+    }
+
+    // noticeIdsを保存
+    await Album.setNanapockeTopicsIds(noticeContent);
   }
 };

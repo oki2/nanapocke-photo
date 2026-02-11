@@ -345,6 +345,14 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 
+### 配送テスト
+POST https://{{customDomainName}}/api/payments/shipping/notification HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "shipping": "shipping",
+}
 
 
 
@@ -396,3 +404,12 @@ POST https://dev-kids.uxbrew.jp/api/payment/smbc/notification/ HTTP/1.1
 content-type: application/x-www-form-urlencoded
 
 ShopID={{ShopID}}&ShopPass=**********&AccessID=8d0bc188bb97574cc5d52e634a55cc3d&AccessPass=********************************&OrderID={{OrderID}}&Status=CAPTURE&JobCd=CAPTURE&Amount=502&Tax=0&CancelAmount=0&CancelTax=0&TranDate=20260101142235&ErrCode=&ErrInfo=&PayType={{PayType}}&PayPayTrackingID=&PayPayOrderID=
+
+### 通知テスト
+POST https://dev-kids.uxbrew.jp/api/nanapocke/manage/api/v1/topics/
+content-type: application/json
+Authorization: Bearer Dc9b7LWpmu-uwa8cEee6OI_pKceEt7zAvb2YJZW8BHSyMrAiM-Y
+
+{
+  "body":"data"
+}

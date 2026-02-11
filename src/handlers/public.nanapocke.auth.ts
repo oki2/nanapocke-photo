@@ -41,6 +41,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     event.queryStringParameters ?? {},
   );
 
+  // キャンセル等のエラーの場合は、リダイレクトする
+  if (!query.code) {
+    return http.seeOther(AppConfig.NANAPOCKE_PHOTO_HOME_URL);
+  }
+
   // === Step.2 アクセストークン取得 =========== //
   let tmpObj = await GetAccessToken(
     AppConfig.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN,
@@ -115,7 +120,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   );
 
   // === Step.9 各権限別ページへとリダイレクト =========== //
-  const location = ApplicationConfig.APPLICATION_PATH[roleName];
+  let location = ApplicationConfig.APPLICATION_PATH[roleName];
+  // state がある場合は、前方一致チェック、前方一致する場合は、 state へリダイレクトを行う
+  if (query.state) {
+    if (query.state.startsWith(location)) {
+      location = query.state;
+    }
+  }
+
   return http.seeOther(location, {}, [
     `refreshToken=${auth.RefreshToken}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,
     `userRole=${roleName}; path=/api/auth/refresh; max-age=2592000; secure; samesite=strict; httponly`,

@@ -68,7 +68,7 @@ export const AlbumSalesStart = v.pipe(
 
 export const AlbumSalesStop = v.pipe(
   v.object({
-    action: v.literal(AlbumConfig.SALES_ACTION.STOP),
+    action: v.literal(AlbumConfig.SALES_ACTION.END),
   }),
 );
 
@@ -202,10 +202,10 @@ export const AlbumSalesBody = v.variant("action", [
 export const AlbumEditBody = v.pipe(
   v.object({
     title: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.pipe(v.string(), v.minLength(1))),
+    description: v.optional(v.string(), ""),
     priceTable: PriceTable,
     salesPeriod: SalesPeriod,
-    coverImageFileName: v.optional(v.pipe(v.string(), v.minLength(1))),
+    coverImageFileName: v.optional(v.string(), ""),
   }),
 );
 export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;

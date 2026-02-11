@@ -24,17 +24,17 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const albums = await Album.list(authContext.facilityCode);
   console.log("albums", albums);
 
-  // === Step.3 園長の場合はスタッフ一覧とクラス一覧、年度を取得 ========== //
+  // === Step.3 クラス一覧を取得 =========== //
+  const classList = await Facility.classList(authContext.facilityCode);
+  console.log("classList", classList);
+
+  // === Step.4 園長の場合はスタッフ一覧と年度を取得 ========== //
   let staff: any[] | undefined = undefined;
-  let classList: any[] | undefined = undefined;
   let academicYear: any[] | undefined = undefined;
 
   if (authContext.userRole === UserConfig.ROLE.PRINCIPAL) {
     staff = await User.staffList(authContext.facilityCode);
     console.log("staff", staff);
-
-    classList = await Facility.classList(authContext.facilityCode);
-    console.log("classList", classList);
 
     const noeYear = getAacademicYearJST();
     academicYear = [String(noeYear), String(noeYear - 1)];
@@ -43,7 +43,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   return http.ok(
     parseOrThrow(MetaListResponse, {
-      tags: tags.map((item: any) => item.tag),
+      tags: [
+        ...classList.map((item: any) => item.className),
+        ...tags.map((item: any) => item.tag),
+      ],
       albums: albums,
       staff: staff,
       classList: classList,

@@ -20,6 +20,7 @@ import {Step81CertificateStack} from "../stack/step81-certificate";
 
 import {Step82CloudfrontStack} from "../stack/step82-cloudfront";
 import {Setting} from "../src/utils/Cloudfront/Setting";
+import {Secret} from "aws-cdk-lib/aws-secretsmanager";
 
 const app = new cdk.App();
 
@@ -88,9 +89,16 @@ const Config = {
   },
   External: {
     Nanapocke: {
+      PhotoHomeUrl: context.external.nanapocke.photoHome,
       ApiUrl: {
         AccessToken: context.external.nanapocke.api.accessToken,
         UserInfo: context.external.nanapocke.api.userInfo,
+        TopicsSend: context.external.nanapocke.api.topicsSend,
+        TopicsDelete: context.external.nanapocke.api.topicsDelete,
+      },
+      Secret: {
+        TopicsApiToken: `/${PROJECT_NAME}/${stage}/nanapocke/topicsApi/authToken`,
+        TopicsApiJwtSecret: `/${PROJECT_NAME}/${stage}/nanapocke/topicsApi/jwtSecret`,
       },
     },
     Smbc: {
@@ -193,6 +201,7 @@ const stackStep31 = new Step31EventTriggerStack(
     // OrganizationAuthPool: stackStep11.OrganizationAuthPool,
     // OrganizationAuthPoolClient: stackStep11.OrganizationAuthPoolClient,
     MainTable: stackStep15.MainTable,
+    NanapockeUserTable: stackStep15.NanapockeUserTable,
     PhotoCatalogTable: stackStep15.PhotoCatalogTable,
     AlbumCatalogTable: stackStep15.AlbumCatalogTable,
     RelationTable: stackStep15.RelationTable,

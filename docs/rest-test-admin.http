@@ -1,5 +1,7 @@
 @domainName = 7efu6sfwnc.execute-api.ap-northeast-1.amazonaws.com
-@customDomainName = nanaphoto.sandbox.uxbrew.jp
+
+# @customDomainName = nanaphoto.sandbox.uxbrew.jp
+@customDomainName = stg.photo2.nanapocke.com
 @accessToken = {{login.response.body.$.accessToken}}
 # @accessToken = eyJraWQiOiI5RHpLaWV1NEhuY0JqS0pxU25NRnIycmZcL0h0SURPQWU5ckF3Z0hTMmh0ST0iLCJhbGciOiJSUzI1NiJ9.eyJvcmlnaW5fanRpIjoiN2Y2OGYyOGYtNjJhZS00NDAwLWJhOGQtZGZkNDUyNzliNWMwIiwic3ViIjoiMDdmNDNhNTgtMzAxMS03MDY0LWNiNTQtYWY4NzQ1OGVhZmUzIiwiYXVkIjoiMzVpZWQ4NG9na2FoNm9sZzM3Z3IzYnMzdmwiLCJldmVudF9pZCI6ImY0MGU4ZTU4LTY2NWEtNGQ2Mi1iODQ3LTcwOTFlZjc1ZDYyZCIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzU1NjkyODQ3LCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuYXAtbm9ydGhlYXN0LTEuYW1hem9uYXdzLmNvbVwvYXAtbm9ydGhlYXN0LTFfUkx0WnBKMDZoIiwiY29nbml0bzp1c2VybmFtZSI6InRlc3R1c2VyMSIsImV4cCI6MTc1NTY5NjQ0NywiaWF0IjoxNzU1NjkyODQ3LCJqdGkiOiJkOTRlMWY3Yi0yZGQ2LTQ0YzAtYWY0Zi1iMTMzOWYwMjEyY2MifQ.Sna24kZWNNRKLLRWJACjWX3nHJDkqckXy1rOUy08TF6-xPM5P58sl9odTP1zLZJypz6zN6djT2N2jkQ1iJssHDN0qWvASPnflnlh5wj2ZxgYgqUHP5Xg7DwCzLPha54oFX2eU7jChdb1cf3eFf-RdTp8yapg1Xm8bBqjI1dhpUAo_WQV4U3OAPGSMDTLIlCjZBZnAP31hwRufuD0NEaSpj3W-KVVCqo6idPNnYhRhhtBOMWIIO9wBL1nDitRuX-joUoMfuGMty5z1t0eOQC0fICoT5eSuqk52d_3rXtpqmOYQbxKt1YBLTGFM7rnD_sW766kKWMXMomMwO6Y8VTx2g
 
@@ -37,20 +39,40 @@ Authorization: Bearer {{accessToken}}
 content-type: application/json
 
 {
-  "code": "00001",
-  "name": "テスト保育園00001",
+  "code": "01035",
+  "name": "フォトテストA保育園",
   "nbf": "2025-10-25T07:49:01Z",
-  "exp": "2026-10-25T07:49:02Z",
+  "exp": "2100-04-01T07:49:02Z",
   "classList": [
     {
-      "code": "0000101",
-      "name": "クラス1",
+      "code": "0103501",
+      "name": "だいち（0歳）",
+      "grade": "0"
+    },
+    {
+      "code": "0103502",
+      "name": "そよかぜ（1歳）",
       "grade": "1"
     },
     {
-      "code": "0000102",
-      "name": "クラス2",
+      "code": "0103503",
+      "name": "ふたば（2歳）",
       "grade": "2"
+    },
+    {
+      "code": "0103504",
+      "name": "うみ（3歳）",
+      "grade": "3"
+    },
+    {
+      "code": "0103505",
+      "name": "そら（4歳）",
+      "grade": "4"
+    },
+    {
+      "code": "0103506",
+      "name": "たいよう（5歳）",
+      "grade": "5"
     }
   ]
 }

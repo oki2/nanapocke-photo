@@ -22,10 +22,13 @@ import * as Album from "../../utils/Dynamo/Album";
 import * as Photo from "../../utils/Dynamo/Photo";
 import * as Cart from "../../utils/Dynamo/Cart";
 import * as Payment from "../../utils/Dynamo/Payment";
+import * as User from "../../utils/Dynamo/User";
 
 import {Upload} from "@aws-sdk/lib-storage";
 import archiver from "archiver";
 import {PassThrough} from "stream";
+
+import * as NanapockeTopics from "../../utils/External/Nanapocke/Topics";
 
 const s3 = new S3Client({region: process.env.AWS_REGION});
 
@@ -50,6 +53,11 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
   // 注文情報を取得
   const payment = await Payment.get(orderData.orderId);
+
+  // DL有効期限
+  const expiredAt = Payment.getDownloadExpiresAt(
+    new Date(payment.smbcProcessDate),
+  );
 
   // 注文データをS3のストレージ領域へコピー
   await S3.S3FileCopy(
@@ -134,8 +142,9 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       );
     }
 
+    console.log("=== DL用のレコード登録開始 ===");
+
     // DL用のレコードを登録
-    const exp = Payment.getDownloadExpiresAt(new Date(payment.smbcProcessDate));
     await Photo.setDownloadAceptPhoto(
       payment.facilityCode,
       payment.userId,
@@ -143,7 +152,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         return data.photoId;
       }),
       payment.smbcProcessDate,
-      exp,
+      expiredAt,
     );
   }
   // 印刷購入が存在する場合は、サムネイルのみ作成
@@ -181,6 +190,37 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       // metadata: {createdBy: "lambda"},
     });
     await Payment.setZipDownloadInfo(orderData.orderId, result.key);
+  }
+
+  // DL購入がある場合、最後にナナポケ通知を送る
+  if (dlData.length > 0) {
+    const userInfo = await User.get(payment.userId);
+    // DL期限5日前の通知
+    await NanapockeTopics.SendUser({
+      nurseryCd: payment.facilityCode,
+      childrenList: [userInfo.userCode],
+      noticeTitle: "あと5日でダウンロード期限が切れる写真があります",
+      noticeContent: `期限が切れるまえに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
+      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt, -5),
+    });
+
+    // DL期限1日前の通知
+    await NanapockeTopics.SendUser({
+      nurseryCd: payment.facilityCode,
+      childrenList: [userInfo.userCode],
+      noticeTitle: "あと1日でダウンロード期限が切れる写真があります",
+      noticeContent: `期限が切れるまえに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
+      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt, -1),
+    });
+
+    // DL期限当日の通知
+    await NanapockeTopics.SendUser({
+      nurseryCd: payment.facilityCode,
+      childrenList: [userInfo.userCode],
+      noticeTitle: "本日ダウンロード期限が切れる写真があります",
+      noticeContent: `忘れずに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
+      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt),
+    });
   }
 
   console.log("orderData", orderData);

@@ -18,7 +18,7 @@ export interface Props extends cdk.StackProps {
   readonly AlbumCatalogTable: Table;
   readonly RelationTable: Table;
   readonly CommerceTable: Table;
-  // readonly NanapockeUserTable: Table;
+  readonly NanapockeUserTable: Table;
   readonly bucketUpload: Bucket;
   readonly bucketPhoto: Bucket;
   readonly bucketLibrary: Bucket;
@@ -34,6 +34,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
     const functionPrefix = `${props.Config.ProjectName}-${props.Config.Stage}`;
     const defaultEnvironment = {
       MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
+      NANAPHOTO_FQDN: props.Config.HostedZone.PublicDomain,
     };
 
     // =====================================================
@@ -343,6 +344,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
           TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
+          NANAPOCKE_API_TOPICS_SEND_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsSend,
+          NANAPOCKE_API_TOPICS_DELETE_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsDelete,
+          SSM_NANAPOCKE_TOPICS_API_TOKEN:
+            props.Config.External.Nanapocke.Secret.TopicsApiToken,
+          SSM_NANAPOCKE_TOPICS_JWT_SECRET:
+            props.Config.External.Nanapocke.Secret.TopicsApiJwtSecret,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -374,6 +383,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
             resources: [
               `${props.bucketPhoto.bucketArn}/sales/*`,
               // `${props.bucketPhoto.bucketArn}/paymentLog/*`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/authToken`,
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/jwtSecret`,
             ],
           }),
         ],
@@ -430,6 +447,7 @@ export class Step31EventTriggerStack extends cdk.Stack {
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
+          TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
           TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           TABLE_NAME_RELATION: props.RelationTable.tableName,
@@ -437,6 +455,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
           BUCKET_PHOTO_NAME: props.bucketPhoto.bucketName,
           BUCKET_LIBRARY_NAME: props.bucketLibrary.bucketName,
+          NANAPOCKE_API_TOPICS_SEND_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsSend,
+          NANAPOCKE_API_TOPICS_DELETE_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsDelete,
+          SSM_NANAPOCKE_TOPICS_API_TOKEN:
+            props.Config.External.Nanapocke.Secret.TopicsApiToken,
+          SSM_NANAPOCKE_TOPICS_JWT_SECRET:
+            props.Config.External.Nanapocke.Secret.TopicsApiJwtSecret,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -450,6 +476,11 @@ export class Step31EventTriggerStack extends cdk.Stack {
               "dynamodb:BatchWriteItem",
             ],
             resources: [props.CommerceTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem"],
+            resources: [props.NanapockeUserTable.tableArn],
           }),
           // new cdk.aws_iam.PolicyStatement({
           //   effect: cdk.aws_iam.Effect.ALLOW,
@@ -478,6 +509,14 @@ export class Step31EventTriggerStack extends cdk.Stack {
               `${props.bucketPhoto.bucketArn}/sales/*`,
               `${props.bucketPhoto.bucketArn}/paymentLog/*`,
               `${props.bucketLibrary.bucketArn}/library/*`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/authToken`,
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/jwtSecret`,
             ],
           }),
         ],

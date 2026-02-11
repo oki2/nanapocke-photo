@@ -59,6 +59,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(10),
         environment: {
           ...defaultEnvironment,
+          NANAPOCKE_PHOTO_HOME_URL:
+            props.Config.External.Nanapocke.PhotoHomeUrl,
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
           NANAPOCKE_AUTHPOOL_CLIENT_ID:
             props.NanapockeAuthPoolClient.userPoolClientId,
@@ -495,6 +497,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
           TABLE_NAME_RELATION: props.RelationTable.tableName,
           BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+          NANAPOCKE_API_TOPICS_SEND_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsSend,
+          NANAPOCKE_API_TOPICS_DELETE_URL:
+            props.Config.External.Nanapocke.ApiUrl.TopicsDelete,
+          SSM_NANAPOCKE_TOPICS_API_TOKEN:
+            props.Config.External.Nanapocke.Secret.TopicsApiToken,
+          SSM_NANAPOCKE_TOPICS_JWT_SECRET:
+            props.Config.External.Nanapocke.Secret.TopicsApiJwtSecret,
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -512,6 +522,14 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             actions: ["s3:PutObject"],
             resources: [
               `${props.bucketUpload.bucketArn}/action/albumPublished/*`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/authToken`,
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/nanapocke/topicsApi/jwtSecret`,
             ],
           }),
         ],
@@ -640,7 +658,10 @@ export class Step22ApiPublicleStack extends cdk.Stack {
               "dynamodb:Query",
               "dynamodb:BatchWriteItem",
             ],
-            resources: [props.MainTable.tableArn],
+            resources: [
+              props.MainTable.tableArn,
+              `${props.MainTable.tableArn}/index/lsi1_index`,
+            ],
           }),
           new cdk.aws_iam.PolicyStatement({
             effect: cdk.aws_iam.Effect.ALLOW,

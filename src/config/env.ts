@@ -35,6 +35,7 @@ export const env = {
     process.env.SSM_SHIPPING_NOTIRY_SECRET_KEY || "",
 
   // ナナポケ認証関連
+  NANAPOCKE_PHOTO_HOME_URL: process.env.NANAPOCKE_PHOTO_HOME_URL || "",
   EXT_NANAPOCKE_API_URL_ACCESS_TOKEN:
     process.env.EXT_NANAPOCKE_API_URL_ACCESS_TOKEN || "",
   EXT_NANAPOCKE_API_URL_USER_INFO:

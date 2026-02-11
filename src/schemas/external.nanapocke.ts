@@ -3,6 +3,7 @@ import * as common from "./common";
 import * as nanapocke from "./common.nanapocke";
 import {created} from "../http";
 import {AlbumConfig} from "../config";
+import {stat} from "node:fs";
 
 export const TRIGGER_ACTION = {
   ALBUM_PUBLISHED: "albumPublished",
@@ -13,14 +14,14 @@ export const NanapockeDateFormat = v.pipe(
   v.string(),
   v.regex(
     /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/,
-    "YYYY-MM-DD HH:MM:SS 形式で入力してください"
+    "YYYY-MM-DD HH:MM:SS 形式で入力してください",
   ),
   v.custom((value: any) => {
     // "2024-01-31 12:34:56" → "2024-01-31T12:34:56"
     const iso = value.replace(" ", "T") + "+09:00";
     const date = new Date(iso);
     return !isNaN(date.getTime());
-  }, "存在しない日時です")
+  }, "存在しない日時です"),
 );
 
 // アルバムの公開処理（ 通知登録API : [POST] /manage/api/v1/topics ）
@@ -39,9 +40,21 @@ export type NanapockeTopicsV1SendT = v.InferOutput<
 >;
 
 // ナナポケ認証後のコード
-export const Code = v.pipe(v.string(), v.minLength(1));
+const NanapockeAuthSuccess = v.object({
+  code: v.string(),
+  state: v.optional(v.string(), ""),
+});
+const NanapockeAuthError = v.object({
+  error: v.string(),
+  error_description: v.optional(v.string(), ""),
+  error_uri: v.optional(v.string(), ""),
+  state: v.optional(v.string(), ""),
+});
+
 export const CodeQueryParams = v.object({
-  code: Code,
+  code: v.optional(v.string(), ""),
+  error: v.optional(v.string(), ""),
+  state: v.optional(v.string(), ""),
 });
 export type CodeQueryParamsT = v.InferOutput<typeof CodeQueryParams>;
 
@@ -70,7 +83,7 @@ export const NanapockeUserInfoResponse = v.object({
       class_name: v.pipe(v.string(), v.minLength(1)),
       grade_cd: nanapocke.GradeCode,
       grade_name: v.pipe(v.string(), v.minLength(1)),
-    })
+    }),
   ),
 });
 export type NanapockeUserInfoResponseT = v.InferOutput<

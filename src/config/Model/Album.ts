@@ -35,5 +35,5 @@ export const MAX_PHOTO_COUNT = 150;
 
 export const SALES_ACTION = {
   START: "START",
-  STOP: "STOP",
+  END: "END",
 };

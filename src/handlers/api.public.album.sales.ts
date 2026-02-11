@@ -11,6 +11,8 @@ import * as Album from "../utils/Dynamo/Album";
 
 import {S3FilePut} from "../utils/S3";
 
+import * as NanapockeTopics from "../utils/External/Nanapocke/Topics";
+
 type ActionResultT = {
   ok: boolean;
   detail?: string;
@@ -36,14 +38,14 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
         authContext.facilityCode,
         path.albumId,
         authContext.userId,
-        data
+        data,
       );
       break;
-    case AlbumConfig.SALES_ACTION.STOP:
+    case AlbumConfig.SALES_ACTION.END:
       result = await salesStop(
         authContext.facilityCode,
         path.albumId,
-        authContext.userId
+        authContext.userId,
       );
       break;
     default:
@@ -63,7 +65,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   return http.ok(
     parseOrThrow(ResultOK, {
       ok: true,
-    })
+    }),
   );
 });
 
@@ -72,7 +74,7 @@ async function salesStart(
   facilityCode: string,
   albumId: string,
   userId: string,
-  data: any
+  data: any,
 ): Promise<ActionResultT> {
   // 1. 対象のアルバム情報を取得
   const album = await Album.get(facilityCode, albumId);
@@ -125,7 +127,7 @@ async function salesStart(
     userId,
     data.topics.send,
     data.topics.send ? data.topics.academicYear : "",
-    data.topics.send ? data.topics.classReceivedList : []
+    data.topics.send ? data.topics.classReceivedList : [],
   );
 
   // 5. アルバムの販売データ作成処理（Eventトリガーで実行のためS3に保存）
@@ -137,7 +139,7 @@ async function salesStart(
   await S3FilePut(
     AppConfig.BUCKET_UPLOAD_NAME,
     `action/${TRIGGER_ACTION.ALBUM_PUBLISHED}/${facilityCode}/${albumId}.json`,
-    JSON.stringify(triggerData)
+    JSON.stringify(triggerData),
   );
 
   return {
@@ -149,7 +151,7 @@ async function salesStart(
 async function salesStop(
   facilityCode: string,
   albumId: string,
-  userId: string
+  userId: string,
 ): Promise<ActionResultT> {
   // 1. 対象のアルバム情報を取得
   const album = await Album.get(facilityCode, albumId);
@@ -164,7 +166,32 @@ async function salesStop(
   }
 
   // 3. アルバムを販売開始処理ステータスに変更
-  await Album.actionSalesUnpublished(facilityCode, albumId, userId);
+  const res = await Album.actionSalesUnpublished(facilityCode, albumId, userId);
+
+  // 4. 販売終了したアルバムに、通知設定、及び未送信の通知があるかチェック
+  if (res.topicsSend) {
+    const nowIso = new Date().toISOString();
+
+    // 販売開始の通知未送信の時刻の場合
+    if (res.topicsSendStart?.noticeId && res.topicsSendStart.sendAt > nowIso) {
+      await NanapockeTopics.DeleteNotice(res.topicsSendStart.noticeId);
+    }
+
+    // 販売終了5日前
+    if (res.topicsSendEnd5?.noticeId && res.topicsSendEnd5.sendAt > nowIso) {
+      await NanapockeTopics.DeleteNotice(res.topicsSendEnd5.noticeId);
+    }
+
+    // 販売終了前日
+    if (res.topicsSendEnd1?.noticeId && res.topicsSendEnd1.sendAt > nowIso) {
+      await NanapockeTopics.DeleteNotice(res.topicsSendEnd1.noticeId);
+    }
+
+    // 販売終了当日
+    if (res.topicsSendEnd?.noticeId && res.topicsSendEnd.sendAt > nowIso) {
+      await NanapockeTopics.DeleteNotice(res.topicsSendEnd.noticeId);
+    }
+  }
 
   return {
     ok: true,

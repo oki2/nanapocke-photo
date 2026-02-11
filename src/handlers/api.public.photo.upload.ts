@@ -9,6 +9,7 @@ import * as Photo from "../utils/Dynamo/Photo";
 import * as PhotoZip from "../utils/Dynamo/PhotoZip";
 import * as Album from "../utils/Dynamo/Album";
 import * as Tag from "../utils/Dynamo/Tag";
+import * as Facility from "../utils/Dynamo/Facility";
 import {tagSplitter} from "../libs/tool";
 
 export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
@@ -63,7 +64,15 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
 
   // タグが存在する場合はタグ履歴に登録
   if (tags.length > 0) {
-    await Tag.historyAdd(authContext.facilityCode, authContext.userId, tags);
+    // ただし、クラス名は削除する
+    const classList = await Facility.classList(authContext.facilityCode);
+    const classTags = classList.map((c: any) => c.className);
+    const tagHistory = tags.filter((t: any) => !classTags.includes(t));
+    await Tag.historyAdd(
+      authContext.facilityCode,
+      authContext.userId,
+      tagHistory,
+    );
   }
 
   // 3. DynamoDB にレコードを作成
