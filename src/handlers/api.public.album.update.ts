@@ -42,7 +42,11 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
     data.description ?? "",
     data.priceTable,
     data.salesPeriod,
-    data.coverImageFileName ? AlbumConfig.IMAGE_STATUS.PROCESSING : "",
+    data.removeCover
+      ? AlbumConfig.IMAGE_STATUS.NONE
+      : data.coverImageFileName
+        ? AlbumConfig.IMAGE_STATUS.PROCESSING
+        : "",
   );
 
   const result: AlbumEditResponseT = {
@@ -50,7 +54,7 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   };
 
   // 3. アルバム画像が存在する場合は、署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
-  if (data.coverImageFileName) {
+  if (!data.removeCover && data.coverImageFileName) {
     result.url = await S3PutObjectSignedUrl(
       AppConfig.BUCKET_UPLOAD_NAME,
       `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${path.albumId}/${authContext.userId}/${data.coverImageFileName}`,

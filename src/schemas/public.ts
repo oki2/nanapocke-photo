@@ -206,6 +206,7 @@ export const AlbumEditBody = v.pipe(
     priceTable: PriceTable,
     salesPeriod: SalesPeriod,
     coverImageFileName: v.optional(v.string(), ""),
+    removeCover: v.optional(v.boolean(), false),
   }),
 );
 export type AlbumEditBodyT = v.InferOutput<typeof AlbumEditBody>;

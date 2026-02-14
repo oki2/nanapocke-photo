@@ -1350,5 +1350,34 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         ],
       },
     );
+
+    // その他 ================================================================
+    // フォトグラファー依頼ページへのリダイレクト用
+    this.lambdaFn.extPhotographerRequest = new NodejsFunction(
+      this,
+      "ApiPublicExtPhotographerRequestFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicExtPhotographerRequest`,
+        description: `${functionPrefix}-ApiPublicExtPhotographerRequest`,
+        entry: "src/handlers/api.public.external.link.photographer-request.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: 256,
+        environment: {
+          ...defaultEnvironment,
+          SSM_PHOTOGRAPHY_REQUEST_URL_KEY: `/NanaPhoto/${props.Config.Stage}/external/photographer/request/url`,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["ssm:GetParameter"],
+            resources: [
+              `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/NanaPhoto/${props.Config.Stage}/external/photographer/request/url`,
+            ],
+          }),
+        ],
+      },
+    );
   }
 }

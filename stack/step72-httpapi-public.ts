@@ -666,6 +666,18 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPublicVerifyToken,
     });
 
+    // その他 ====================================
+    // フォトグラファー依頼ページへのリダイレクト
+    this.httpApi.addRoutes({
+      path: "/api/external/link/photographer-request",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration(
+        "ExtPhotographerRequestIntegration",
+        props.lambdaFnPublic.extPhotographerRequest,
+      ),
+      authorizer: AuthorizerPublicVerifyToken,
+    });
+
     // ==========================================================
     // 後処理
     // ==========================================================

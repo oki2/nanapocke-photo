@@ -159,7 +159,7 @@ export async function update(
   };
 
   // アルバムのカバーイメージの更新がある場合
-  if (coverImageStatus === AlbumConfig.IMAGE_STATUS.PROCESSING) {
+  if (coverImageStatus) {
     UpdateExpression += `, #coverImageStatus = :coverImageStatus, #coverImage = :coverImage`;
     ExpressionAttributeNames["#coverImageStatus"] = "coverImageStatus";
     ExpressionAttributeNames["#coverImage"] = "coverImage";
