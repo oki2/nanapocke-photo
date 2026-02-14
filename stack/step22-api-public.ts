@@ -44,6 +44,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
     // =====================================================
     // Lambda
     // =====================================================
+    const defaultMemorySize = 1024;
     // Nanapocke OAuth Signin
     this.lambdaFn.nanapockeAuthFn = new NodejsFunction(
       this,
@@ -55,7 +56,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         timeout: cdk.Duration.seconds(10),
         environment: {
           ...defaultEnvironment,
@@ -122,7 +123,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
@@ -181,7 +182,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
@@ -231,7 +232,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           NANAPOCKE_AUTHPOOL_CLIENT_ID:
@@ -274,7 +275,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         timeout: cdk.Duration.seconds(10),
         environment: {
           ...defaultEnvironment,
@@ -314,7 +315,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
@@ -343,7 +344,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
@@ -379,7 +380,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
@@ -430,7 +431,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
@@ -459,7 +460,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
@@ -491,7 +492,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
@@ -547,7 +548,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 512,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
@@ -603,7 +604,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
@@ -642,7 +643,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -700,7 +701,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 512,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -745,7 +746,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 512,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
@@ -774,7 +775,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 512,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -825,7 +826,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 1024,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
@@ -857,7 +858,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 1024,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -917,7 +918,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      memorySize: defaultMemorySize,
       environment: {
         ...defaultEnvironment,
         TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -949,7 +950,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      memorySize: defaultMemorySize,
       environment: {
         ...defaultEnvironment,
         // TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -984,7 +985,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      memorySize: defaultMemorySize,
       environment: {
         ...defaultEnvironment,
         TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
@@ -1012,7 +1013,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           // TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -1036,7 +1037,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      memorySize: 256,
+      memorySize: defaultMemorySize,
       environment: {
         ...defaultEnvironment,
         TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
@@ -1064,7 +1065,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
         },
@@ -1082,7 +1083,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           // TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -1145,7 +1146,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
@@ -1174,7 +1175,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
@@ -1212,7 +1213,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -1261,7 +1262,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           // TABLE_NAME_MAIN: props.MainTable.tableName,
@@ -1325,7 +1326,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           TABLE_NAME_COMMERCE: props.CommerceTable.tableName,
@@ -1363,7 +1364,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         architecture: lambda.Architecture.ARM_64,
-        memorySize: 256,
+        memorySize: defaultMemorySize,
         environment: {
           ...defaultEnvironment,
           SSM_PHOTOGRAPHY_REQUEST_URL_KEY: `/NanaPhoto/${props.Config.Stage}/external/photographer/request/url`,
