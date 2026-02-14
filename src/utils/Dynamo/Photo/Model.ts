@@ -828,6 +828,8 @@ export type QueryPhotosPageResult<TItem> = {
 };
 
 function buildPhotoQueryInput(opts: QueryBaseOptions): QueryCommandInput {
+  console.log("opts", opts);
+
   const ExpressionAttributeNames: Record<string, string> = {};
   const ExpressionAttributeValues: Record<string, any> = {};
 
@@ -859,6 +861,9 @@ function buildPhotoQueryInput(opts: QueryBaseOptions): QueryCommandInput {
   let from = "";
   let to = "";
 
+  console.log("opts.filter.createdAt", opts.filter.createdAt);
+  console.log("opts.filter.shootingAt", opts.filter.shootingAt);
+
   if (opts.filter.createdAt) {
     rangeAttr = "createdAt";
     from = opts.filter.createdAt.from ?? "";
@@ -868,6 +873,10 @@ function buildPhotoQueryInput(opts: QueryBaseOptions): QueryCommandInput {
     from = opts.filter.shootingAt.from ?? "";
     to = opts.filter.shootingAt.to ?? "";
   }
+
+  console.log("rangeAttr", rangeAttr);
+  console.log("from", from);
+  console.log("to", to);
 
   if (rangeAttr && from && to) {
     ExpressionAttributeNames["#term"] = rangeAttr;
@@ -886,6 +895,9 @@ function buildPhotoQueryInput(opts: QueryBaseOptions): QueryCommandInput {
   };
 
   if (filters.length) input.FilterExpression = filters.join(" AND ");
+
+  console.log("input command", input);
+
   return input;
 }
 
@@ -931,6 +943,8 @@ export async function listPhotoIdsAll(
 export async function queryPhotosPage<TItem extends Record<string, any>>(
   opts: QueryPhotosPageOptions,
 ): Promise<QueryPhotosPageResult<TItem>> {
+  const out: TItem[] = [];
+
   // この queryHash を cursor に埋める（検索条件が同一か検証する）
   const qh = makeQueryHash({
     keys: opts.keys,
@@ -958,19 +972,48 @@ export async function queryPhotosPage<TItem extends Record<string, any>>(
     input.ExclusiveStartKey = token.lek as Record<string, any>;
   }
 
-  const res = await docClient().send(new QueryCommand(input));
+  console.log("input command final", input);
 
-  const items = (res.Items ?? []) as TItem[];
+  // Limitの数になるまで繰り返す
+  while (out.length < input.Limit) {
+    const res = await docClient().send(new QueryCommand(input));
+    console.log("res", res);
+
+    const items = (res.Items ?? []) as TItem[];
+    console.log("items", items);
+    let tmpCnt = items.length;
+
+    for (const item of items) {
+      out.push(item);
+      tmpCnt--;
+      if (out.length >= input.Limit) break;
+    }
+
+    if (tmpCnt == 0 && !res.LastEvaluatedKey) {
+      return {items: out, nextCursor: undefined};
+    }
+    input.ExclusiveStartKey = res.LastEvaluatedKey;
+  }
 
   // nextCursor 作成（次ページがある場合のみ）
-  const nextCursor = res.LastEvaluatedKey
+  const last = out[out.length - 1];
+  console.log("last", last);
+  const nextSk = opts.keys.pkName.replace("PK", "SK");
+  const tmpNnextCursor: Record<string, any> = {
+    pk: getPk(last.facilityCode),
+    sk: last.sk,
+    [opts.keys.pkName]: last[opts.keys.pkName],
+    [nextSk]: last[nextSk],
+  };
+
+  const nextCursor = tmpNnextCursor
     ? encodeCursorToken({
-        lek: res.LastEvaluatedKey as Record<string, unknown>,
+        lek: tmpNnextCursor as Record<string, unknown>,
         qh,
       })
     : undefined;
 
-  return {items, nextCursor};
+  return {items: out, nextCursor};
 }
 
 export async function photoManualDelete(

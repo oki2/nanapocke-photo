@@ -84,13 +84,19 @@ async function runByPrincipal(
     tags: tags, // AND 条件（すべて含む）
     // photoIds: photoIds, // OR 条件（すべて含む）
     // priceTier: {},
-    shootingAt: {},
-    createdAt: {},
+    // shootingAt: {},
+    // createdAt: {},
   };
   if (query.dateType === PhotoConfig.DATE_TYPE.UPLOAD) {
-    filter.createdAt = {from: query.dateFrom, to: query.dateTo};
+    filter.createdAt = {
+      from: new Date(query.dateFrom).toISOString(),
+      to: new Date(query.dateTo).toISOString(),
+    };
   } else if (query.dateType === PhotoConfig.DATE_TYPE.SHOOTING) {
-    filter.shootingAt = {from: query.dateFrom, to: query.dateTo};
+    filter.shootingAt = {
+      from: new Date(query.dateFrom).toISOString(),
+      to: new Date(query.dateTo).toISOString(),
+    };
   }
 
   // === Step.3 並べ替え情報作成 =========== //
