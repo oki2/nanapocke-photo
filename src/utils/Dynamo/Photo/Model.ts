@@ -957,9 +957,6 @@ export async function queryPhotosPage<TItem extends Record<string, any>>(
 
   const input: QueryCommandInput = buildPhotoQueryInput(opts);
 
-  // limit
-  input.Limit = opts.page.limit ?? PhotoConfig.FILTER_LIMIT.MAX;
-
   // cursor -> ExclusiveStartKey
   if (opts.page.cursor) {
     const token = decodeCursorToken(opts.page.cursor);
@@ -972,48 +969,60 @@ export async function queryPhotosPage<TItem extends Record<string, any>>(
     input.ExclusiveStartKey = token.lek as Record<string, any>;
   }
 
+  // limit
+  const want = opts.page.limit ?? PhotoConfig.FILTER_LIMIT.MAX;
+  const need = want + 1;
+
+  // DynamoDBへ渡す Limit は「評価数」なので、1回あたりの上限として持つ
+  // （毎回 need を指定すると重い/無駄なこともあるので、必要なら調整）
+  const pageLimit = need;
+  input.Limit = pageLimit;
+
   console.log("input command final", input);
 
   // Limitの数になるまで繰り返す
-  while (out.length < input.Limit) {
+  while (out.length < need) {
     const res = await docClient().send(new QueryCommand(input));
     console.log("res", res);
 
     const items = (res.Items ?? []) as TItem[];
-    console.log("items", items);
-    let tmpCnt = items.length;
+    out.push(...items);
 
-    for (const item of items) {
-      out.push(item);
-      tmpCnt--;
-      if (out.length >= input.Limit) break;
+    // もう後続がないなら終了（Filterでitemsが0でもLEKが無ければ終わり）
+    if (!res.LastEvaluatedKey) {
+      break;
     }
 
-    if (tmpCnt == 0 && !res.LastEvaluatedKey) {
-      return {items: out, nextCursor: undefined};
-    }
+    // まだ欲しい件数に達してないなら次へ
     input.ExclusiveStartKey = res.LastEvaluatedKey;
   }
 
+  // ---- ここから返却整形 ----
+
+  // 次ページがあるか？（need件目まで取れた = 余分な1件が存在する）
+  const hasNext = out.length >= need;
+
+  // 返すのは want 件まで（余分は捨てる）
+  const itemsToReturn = out.slice(0, want);
+
+  // nextCursor は「最後に返すアイテム」を基準に作る
+  let nextCursor: string | undefined = undefined;
+
   // nextCursor 作成（次ページがある場合のみ）
-  const last = out[out.length - 1];
-  console.log("last", last);
-  const nextSk = opts.keys.pkName.replace("PK", "SK");
-  const tmpNnextCursor: Record<string, any> = {
-    pk: getPk(last.facilityCode),
-    sk: last.sk,
-    [opts.keys.pkName]: last[opts.keys.pkName],
-    [nextSk]: last[nextSk],
-  };
+  if (hasNext && itemsToReturn.length > 0) {
+    const last = itemsToReturn[itemsToReturn.length - 1];
+    console.log("last", last);
+    const nextSk = opts.keys.pkName.replace("PK", "SK");
+    const lek: Record<string, any> = {
+      pk: getPk(last.facilityCode),
+      sk: last.sk,
+      [opts.keys.pkName]: last[opts.keys.pkName],
+      [nextSk]: last[nextSk],
+    };
+    nextCursor = encodeCursorToken({lek, qh});
+  }
 
-  const nextCursor = tmpNnextCursor
-    ? encodeCursorToken({
-        lek: tmpNnextCursor as Record<string, unknown>,
-        qh,
-      })
-    : undefined;
-
-  return {items: out, nextCursor};
+  return {items: itemsToReturn, nextCursor: nextCursor};
 }
 
 export async function photoManualDelete(
