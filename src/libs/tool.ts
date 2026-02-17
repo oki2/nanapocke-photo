@@ -136,7 +136,7 @@ export function thumbnailAllowedPath(
       return `/thumbnail/${$facilityCode}/`;
     case UserConfig.ROLE.TEACHER:
     case UserConfig.ROLE.PHOTOGRAPHER:
-      return `/studio/${$facilityCode}/photo/${$userId}/`;
+      return `/thumbnail/${$facilityCode}/photo/${$userId}/`;
     default:
       return "/";
   }
