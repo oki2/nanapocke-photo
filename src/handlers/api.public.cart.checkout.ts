@@ -117,8 +117,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
           }
         : {}),
       photos: photos,
-      hasDownloadPurchases: summary.downloadSelectedCount > 0,
-      downloadPeriod: "",
+      downloadExpiry:
+        summary.downloadSelectedCount > 0
+          ? Payment.getDownloadExpiresAt(new Date())
+          : "",
       subTotal: subTotalPrice,
       shippingFee: {
         after: shippingFee,

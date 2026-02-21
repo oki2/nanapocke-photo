@@ -655,8 +655,7 @@ const ShippingInfo = v.object({
 const OrderCheckoutSummary = v.object({
   shipping: v.optional(ShippingInfo),
   photos: v.array(OrderItemBase),
-  hasDownloadPurchases: v.boolean(), // DL購入を含むかどうか（ConfirmView のチェックボックス用）
-  downloadPeriod: v.optional(v.string()), // DL有効期間（履歴側の downloadExpiry と意味は同じ）
+  downloadExpiry: v.optional(v.string()), // DL有効期間（履歴側の downloadExpiry と意味は同じ）
   subTotal: v.number(), // 商品小計（割引前）
   // itemsDiscountTotal: v.number(), // 割引合計（負値。0 のときは UI で非表示にできる）
   shippingFee: v.object({

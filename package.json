@@ -32,7 +32,10 @@
     "stg:front:studio:deploy:dryrun": "aws s3 cp work/static-file/frontend/studio-stg s3://nanaphoto-stg-publiccfd/studio/ --recursive --dryrun --profile nanaphoto-stg",
     "stg:front:studio:deploy:exec": "aws s3 cp work/static-file/frontend/studio-stg s3://nanaphoto-stg-publiccfd/studio/ --recursive --profile nanaphoto-stg",
     "stg:front:member:deploy:dryrun": "aws s3 cp work/static-file/frontend/member-stg s3://nanaphoto-stg-publiccfd/member/ --recursive --dryrun --profile nanaphoto-stg",
-    "stg:front:member:deploy:exec": "aws s3 cp work/static-file/frontend/member-stg s3://nanaphoto-stg-publiccfd/member/ --recursive --profile nanaphoto-stg"
+    "stg:front:member:deploy:exec": "aws s3 cp work/static-file/frontend/member-stg s3://nanaphoto-stg-publiccfd/member/ --recursive --profile nanaphoto-stg",
+    "stg:album-cover:deploy:dryrun": "aws s3 cp work/static-file/cfd-common/assets/images/album-cover.webp s3://nanaphoto-stg-publiccfd/assets/images/album-cover.webp  --dryrun --content-type image/webp --profile nanaphoto-stg",
+    "stg:album-cover:deploy:exec": "aws s3 cp work/static-file/cfd-common/assets/images/album-cover.webp s3://nanaphoto-stg-publiccfd/assets/images/album-cover.webp --content-type image/webp --profile nanaphoto-stg",
+    "stg:front:cache:clear": "aws cloudfront create-invalidation --distribution-id E1TYNEUHGVYQKW --paths \"/admin/*\" \"/studio/*\" \"/member/*\" --profile nanaphoto-stg"
   },
   "devDependencies": {
     "@types/archiver": "^7.0.0",

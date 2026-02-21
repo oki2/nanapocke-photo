@@ -25,7 +25,7 @@ export const SHIPPING_STATUS = {
 } as const;
 
 // 写真購入時にzipを作か否か、その閾値となる枚数。この枚数以上の場合はzipを作る
-export const ZIP_THRESHOLD = 3;
+export const ZIP_THRESHOLD = 2;
 export const zipCreateCheck = (count: number) => count >= ZIP_THRESHOLD;
 
 // Zipダウンロードステータス NONE
