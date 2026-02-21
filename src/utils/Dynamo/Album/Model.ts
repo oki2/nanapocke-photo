@@ -466,15 +466,14 @@ export type NanapockeTopicsT = {
   facilityCode: string;
   albumId: string;
   startNotice?: NanapockeTopicT;
-  end5Notice?: NanapockeTopicT;
-  end1Notice?: NanapockeTopicT;
+  end3Notice?: NanapockeTopicT;
   endNotice?: NanapockeTopicT;
 };
 export async function setNanapockeTopicsIds(
   p: NanapockeTopicsT,
 ): Promise<void> {
   // 一つも通知が無い場合はそのまま終了
-  if (!p.startNotice && !p.end5Notice && !p.end1Notice && !p.endNotice) {
+  if (!p.startNotice && !p.end3Notice && !p.endNotice) {
     return;
   }
 
@@ -491,15 +490,10 @@ export async function setNanapockeTopicsIds(
     ExpressionAttributeNames["#startNotice"] = "topicsSendStart";
     ExpressionAttributeValues[":startNotice"] = p.startNotice;
   }
-  if (p.end5Notice && p.end5Notice.noticeId) {
-    UpdateExpression += `#end5Notice = :end5Notice, `;
-    ExpressionAttributeNames["#end5Notice"] = "topicsSendEnd5";
-    ExpressionAttributeValues[":end5Notice"] = p.end5Notice;
-  }
-  if (p.end1Notice && p.end1Notice.noticeId) {
-    UpdateExpression += `#end1Notice = :end1Notice, `;
-    ExpressionAttributeNames["#end1Notice"] = "topicsSendEnd1";
-    ExpressionAttributeValues[":end1Notice"] = p.end1Notice;
+  if (p.end3Notice && p.end3Notice.noticeId) {
+    UpdateExpression += `#end3Notice = :end3Notice, `;
+    ExpressionAttributeNames["#end3Notice"] = "topicsSendEnd3";
+    ExpressionAttributeValues[":end3Notice"] = p.end3Notice;
   }
   if (p.endNotice && p.endNotice.noticeId) {
     UpdateExpression += `#endNotice = :endNotice, `;

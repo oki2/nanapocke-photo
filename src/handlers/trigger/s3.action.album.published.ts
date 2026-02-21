@@ -143,10 +143,17 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
     console.log("album.topicsSend", album.topicsSend);
 
     const now = new Date().getTime(); // 現在日時のタイムスタンプ
-    const start = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.start); // 販売開始日時
-    const end5 = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end, -5); // 販売終了日時
-    const end1 = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end, -1); // 販売終了日時
-    const end = NanapockeTopics.toJstTargetDay2000(album.salesPeriod.end); // 販売終了日時
+    const start = NanapockeTopics.toJstDateAtHour(album.salesPeriod.start, 20); // 販売開始日時
+    const end3 = NanapockeTopics.toJstDateAtHour(album.salesPeriod.end, 12, -4); // 販売終了日時 3日前 販売終了は内部的に翌日 2:00 なので、もう一日マイナスする
+    const end = NanapockeTopics.toJstDateAtHour(album.salesPeriod.end, 20, -1); // 販売終了日時 販売終了は内部的に翌日 2:00 なので、もう一日マイナスする
+
+    // 販売終了日の日付、yyyy/mm/dd 形式の文字列に変換
+    const endJstStr = end.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      weekday: "short",
+    });
 
     // 販売開始のTopics送信 ================================
     const noticeContent: Album.NanapockeTopicsT = {
@@ -161,8 +168,8 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
           classReceivedList: album.topicsClassReceivedList,
           academicYear: album.topicsAcademicYear,
           noticeTitle: "新しいアルバムの販売が開始されました",
-          noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。`,
-          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(start),
+          noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。販売期限は${endJstStr}までです。お早めにお買い求めください。`,
+          noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(start),
         }),
         sendAt: start.toISOString(),
       };
@@ -173,37 +180,22 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         classReceivedList: album.topicsClassReceivedList,
         academicYear: album.topicsAcademicYear,
         noticeTitle: "新しいアルバムの販売が開始されました",
-        noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。`,
+        noticeContent: `新しいアルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売が開始されました。販売期限は${endJstStr}までです。お早めにお買い求めください。`,
       });
     }
 
-    // 7.2 販売終了5日前の通知
-    if (now < end5.getTime()) {
-      noticeContent.end5Notice = {
+    // 7.2 販売終了3日前の通知
+    if (now < end3.getTime()) {
+      noticeContent.end3Notice = {
         noticeId: await NanapockeTopics.SendClass({
           nurseryCd: album.facilityCode,
           classReceivedList: album.topicsClassReceivedList,
           academicYear: album.topicsAcademicYear,
-          noticeTitle: "アルバムの販売終了5日前になりました",
-          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の終了5日前になりました。`,
-          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end5),
+          noticeTitle: "アルバムの販売終了3日前になりました",
+          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の終了3日前になりました。販売期限は${endJstStr}までです。お早めにお買い求めください。`,
+          noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(end3),
         }),
-        sendAt: end5.toISOString(),
-      };
-    }
-
-    // 7.3 販売終了前日の通知
-    if (now < end1.getTime()) {
-      noticeContent.end1Notice = {
-        noticeId: await NanapockeTopics.SendClass({
-          nurseryCd: album.facilityCode,
-          classReceivedList: album.topicsClassReceivedList,
-          academicYear: album.topicsAcademicYear,
-          noticeTitle: "アルバムの販売終了前日になりました",
-          noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の終了前日になりました。`,
-          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end1),
-        }),
-        sendAt: end1.toISOString(),
+        sendAt: end3.toISOString(),
       };
     }
 
@@ -216,7 +208,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
           academicYear: album.topicsAcademicYear,
           noticeTitle: "本日で販売終了するアルバムがあります",
           noticeContent: `アルバム<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/albums/${album.albumId}">${album.title}</a>の販売終了となります。お早めにお買い求めください。`,
-          noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(end),
+          noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(end),
         }),
         sendAt: end.toISOString(),
       };

@@ -55,9 +55,16 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   const payment = await Payment.get(orderData.orderId);
 
   // DL有効期限
-  const expiredAt = Payment.getDownloadExpiresAt(
+  const expired = Payment.getDownloadExpiresAtDate(
     new Date(payment.smbcProcessDate),
   );
+  // DL有効期限の日付、yyyy/mm/dd 形式の文字列に変換
+  const endJstStr = expired.toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    weekday: "short",
+  });
 
   // 注文データをS3のストレージ領域へコピー
   await S3.S3FileCopy(
@@ -152,7 +159,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
         return data.photoId;
       }),
       payment.smbcProcessDate,
-      expiredAt,
+      expired.toISOString(),
     );
   }
   // 印刷購入が存在する場合は、サムネイルのみ作成
@@ -195,22 +202,15 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
   // DL購入がある場合、最後にナナポケ通知を送る
   if (dlData.length > 0) {
     const userInfo = await User.get(payment.userId);
-    // DL期限5日前の通知
+    // DL期限3日前の通知
     await NanapockeTopics.SendUser({
       nurseryCd: payment.facilityCode,
       childrenList: [userInfo.userCode],
-      noticeTitle: "あと5日でダウンロード期限が切れる写真があります",
-      noticeContent: `期限が切れるまえに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
-      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt, -5),
-    });
-
-    // DL期限1日前の通知
-    await NanapockeTopics.SendUser({
-      nurseryCd: payment.facilityCode,
-      childrenList: [userInfo.userCode],
-      noticeTitle: "あと1日でダウンロード期限が切れる写真があります",
-      noticeContent: `期限が切れるまえに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
-      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt, -1),
+      noticeTitle: "あと3日でダウンロード期限が切れる写真があります",
+      noticeContent: `ダウンロード期限は${endJstStr}までです。<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">こちらから</a>お早めにダウンロードしてください。`,
+      noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(
+        NanapockeTopics.toJstDateAtHour(expired, 12, -4),
+      ),
     });
 
     // DL期限当日の通知
@@ -218,8 +218,10 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       nurseryCd: payment.facilityCode,
       childrenList: [userInfo.userCode],
       noticeTitle: "本日ダウンロード期限が切れる写真があります",
-      noticeContent: `忘れずに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">コチラから</a>ダウンロードしてください。`,
-      noticeSendTime: NanapockeTopics.toJstTargetDay2000Str(expiredAt),
+      noticeContent: `忘れずに<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">こちらから</a>ダウンロードしてください。`,
+      noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(
+        NanapockeTopics.toJstDateAtHour(expired, 20, -1),
+      ),
     });
   }
 

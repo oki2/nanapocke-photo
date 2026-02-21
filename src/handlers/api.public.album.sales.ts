@@ -172,23 +172,23 @@ async function salesStop(
   if (res.topicsSend) {
     const nowIso = new Date().toISOString();
 
+    console.log("res", res);
+
     // 販売開始の通知未送信の時刻の場合
     if (res.topicsSendStart?.noticeId && res.topicsSendStart.sendAt > nowIso) {
+      console.log("res.topicsSendStart.noticeId", res.topicsSendStart.noticeId);
       await NanapockeTopics.DeleteNotice(res.topicsSendStart.noticeId);
     }
 
-    // 販売終了5日前
-    if (res.topicsSendEnd5?.noticeId && res.topicsSendEnd5.sendAt > nowIso) {
-      await NanapockeTopics.DeleteNotice(res.topicsSendEnd5.noticeId);
-    }
-
-    // 販売終了前日
-    if (res.topicsSendEnd1?.noticeId && res.topicsSendEnd1.sendAt > nowIso) {
-      await NanapockeTopics.DeleteNotice(res.topicsSendEnd1.noticeId);
+    // 販売終了3日前
+    if (res.topicsSendEnd3?.noticeId && res.topicsSendEnd3.sendAt > nowIso) {
+      console.log("res.topicsSendEnd3.noticeId", res.topicsSendEnd3.noticeId);
+      await NanapockeTopics.DeleteNotice(res.topicsSendEnd3.noticeId);
     }
 
     // 販売終了当日
     if (res.topicsSendEnd?.noticeId && res.topicsSendEnd.sendAt > nowIso) {
+      console.log("res.topicsSendEnd.noticeId", res.topicsSendEnd.noticeId);
       await NanapockeTopics.DeleteNotice(res.topicsSendEnd.noticeId);
     }
   }

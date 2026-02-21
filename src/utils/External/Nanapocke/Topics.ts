@@ -211,14 +211,11 @@ export async function DeleteNotice(noticeId: string): Promise<any> {
 }
 
 /**
- * JST の当日 20:00 を UTC に戻して Date を生成する
+ * ナナポケの送信日時形式に変換える
  * @param {Date|string} input - 入力日時（UTC）
- * @returns {Date} - JST の翌日 02:00 を UTC に戻した Date
+ * @returns {string} - ナナポケの送信日時形式（YYYY-MM-DD HH:MM:SS）
  */
-export function toJstTargetDay2000(
-  input: Date | string,
-  offsetDay: number = 0,
-): Date {
+export function toNanapockeSendTimeFormat(input: Date | string): string {
   const date = typeof input === "string" ? new Date(input) : input;
 
   // 入力を UTC ミリ秒で取得
@@ -226,46 +223,49 @@ export function toJstTargetDay2000(
 
   // JST = UTC +9h
   let JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-  if (offsetDay != 0) {
-    JST_OFFSET_MS += offsetDay * 24 * 60 * 60 * 1000;
-  }
-  const jstDate = new Date(time + JST_OFFSET_MS);
-
-  // JST で年月日を取得
-  const year = jstDate.getUTCFullYear();
-  const month = jstDate.getUTCMonth();
-  const day = jstDate.getUTCDate();
-
-  // JST 翌日 20:00 を UTC に戻して Date を生成
-  const jst2000Utc = Date.UTC(year, month, day, 20, 0, 0) - JST_OFFSET_MS;
-
-  return new Date(jst2000Utc);
-}
-
-/**
- * JST の当日 yyyy-mm-dd 20:00:00 フォーマットの文字列を返す
- */
-export function toJstTargetDay2000Str(
-  input: Date | string,
-  offsetDay: number = 0,
-): string {
-  const date = typeof input === "string" ? new Date(input) : input;
-
-  // 入力を UTC ミリ秒で取得
-  const time = date.getTime();
-
-  // JST = UTC +9h
-  let JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-  if (offsetDay != 0) {
-    JST_OFFSET_MS += offsetDay * 24 * 60 * 60 * 1000;
-  }
   const jstDate = new Date(time + JST_OFFSET_MS);
 
   // JST で年月日を取得
   const year = jstDate.getUTCFullYear();
   const month = String(jstDate.getMonth() + 1).padStart(2, "0");
   const day = String(jstDate.getDate()).padStart(2, "0");
+  const hour = String(jstDate.getHours()).padStart(2, "0");
 
   // JST 翌日 02:00 を UTC に戻して Date を生成
-  return `${year}-${month}-${day} 20:00:00`;
+  return `${year}-${month}-${day} ${hour}:00:00`;
+}
+
+/**
+ * JST 上の指定された日時（YYYY-MM-DD HH:MM:SS）を UTC に戻す
+ * @param {Date|string} input - 入力日時（UTC）
+ * @param {number} hour - JST 上の時間（0-23）
+ * @param {number} [offsetDay=0] - JST 上の日付のオフセット（日数）
+ * @returns {Date} - JST 上の指定された日時を UTC に戻した Date
+ * @throws {RangeError} - hour が 0-23 の範囲外の場合
+ */
+export function toJstDateAtHour(
+  input: Date | string,
+  hour: number,
+  offsetDay: number = 0,
+): Date {
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+    throw new RangeError("hour must be an integer between 0 and 23");
+  }
+  const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const base = typeof input === "string" ? new Date(input) : input;
+  const baseMs = base.getTime();
+
+  // 1) 入力の「その瞬間」を JST に寄せた“見かけの日時”を作る（UTC APIで扱うため）
+  const jstView = new Date(baseMs + JST_OFFSET_MS);
+
+  // 2) JST 上の年月日を取り出す
+  const y = jstView.getUTCFullYear();
+  const m = jstView.getUTCMonth();
+  const d = jstView.getUTCDate();
+
+  // 3) JST の (y-m-d + offsetDay) の hour:00 を作る（これは「JSTの壁時計」をUTCで表現したもの）
+  const jstWallClockAsUtcMs = Date.UTC(y, m, d + offsetDay, hour, 0, 0);
+
+  // 4) 「JSTの壁時計」を実際の UTC インスタントに戻す
+  return new Date(jstWallClockAsUtcMs - JST_OFFSET_MS);
 }
