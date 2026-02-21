@@ -31,11 +31,11 @@ export const PRICE_TABLE = {
   SALE: "SALE",
 };
 
-export const MAX_PHOTO_COUNT = 150;
+export const MAX_PHOTO_COUNT = 99999;
 
 export const SALES_ACTION = {
   START: "START",
   END: "END",
-};
+} as const;
 
 export const DEFAULT_COVER_IMAGE = "/assets/images/album-cover.webp";

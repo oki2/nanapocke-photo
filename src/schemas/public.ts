@@ -54,24 +54,6 @@ const SalesTopicsNotSend = v.object({
   send: v.literal(false),
 });
 
-export const AlbumSalesStart = v.pipe(
-  v.object({
-    action: v.literal(AlbumConfig.SALES_ACTION.START),
-    topics: v.variant("send", [SalesTopicsSend, SalesTopicsNotSend]),
-    // topics: v.object({
-    //   send: v.boolean(),
-    //   classReceivedList: v.array(nanapocke.ClassCode),
-    //   academicYear: nanapocke.AcademicYear,
-    // }),
-  }),
-);
-
-export const AlbumSalesStop = v.pipe(
-  v.object({
-    action: v.literal(AlbumConfig.SALES_ACTION.END),
-  }),
-);
-
 /**
  * API別 =========================================================================
  */
@@ -191,13 +173,6 @@ export const AlbumPhotoListResponse = v.object({
   photos: v.array(PhotoDetail),
 });
 
-// api.public.album.sales : request
-// Signin Response 判別共用体（state が判別キー）
-export const AlbumSalesBody = v.variant("action", [
-  AlbumSalesStart,
-  AlbumSalesStop,
-]);
-
 // api.public.album.update : request
 export const AlbumEditBody = v.pipe(
   v.object({
@@ -217,6 +192,32 @@ export const AlbumEditResponse = v.object({
   url: v.optional(common.Url),
 });
 export type AlbumEditResponseT = v.InferOutput<typeof AlbumEditResponse>;
+
+// api.public.album.sales : request
+export const AlbumSalesStart = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.START),
+    topics: v.variant("send", [SalesTopicsSend, SalesTopicsNotSend]),
+    snapshot: AlbumEditBody,
+    // topics: v.object({
+    //   send: v.boolean(),
+    //   classReceivedList: v.array(nanapocke.ClassCode),
+    //   academicYear: nanapocke.AcademicYear,
+    // }),
+  }),
+);
+
+export const AlbumSalesStop = v.pipe(
+  v.object({
+    action: v.literal(AlbumConfig.SALES_ACTION.END),
+  }),
+);
+
+// Signin Response 判別共用体（state が判別キー）
+export const AlbumSalesBody = v.variant("action", [
+  AlbumSalesStart,
+  AlbumSalesStop,
+]);
 
 // api.public.photo.upload : request
 export const PhotoUploadBody = v.pipe(

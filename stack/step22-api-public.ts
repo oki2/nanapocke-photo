@@ -523,6 +523,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ["s3:PutObject"],
             resources: [
+              `${props.bucketUpload.bucketArn}/album-image-upload/*`,
               `${props.bucketUpload.bucketArn}/action/albumPublished/*`,
             ],
           }),

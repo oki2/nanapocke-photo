@@ -1,15 +1,19 @@
 import * as http from "../http";
-import {AlbumPathParameters, AlbumSalesBody} from "../schemas/public";
+import {
+  AlbumPathParameters,
+  AlbumSalesBody,
+  AlbumEditResponse,
+  AlbumEditResponseT,
+} from "../schemas/public";
 import {
   TRIGGER_ACTION,
   AlbumPublishedT,
 } from "../schemas/trigger.s3.action.router";
-import {ResultOK} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 import {AppConfig, AlbumConfig} from "../config";
 import * as Album from "../utils/Dynamo/Album";
 
-import {S3FilePut} from "../utils/S3";
+import {S3FilePut, S3PutObjectSignedUrl} from "../utils/S3";
 
 import * as NanapockeTopics from "../utils/External/Nanapocke/Topics";
 
@@ -30,11 +34,49 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const data = parseOrThrow(AlbumSalesBody, raw);
   console.log("data", data);
 
+  const result: AlbumEditResponseT = {
+    ok: true,
+  };
+
   // 販売開始・終了で処理の分離
-  let result: ActionResultT;
+  let response: ActionResultT;
   switch (data.action) {
     case AlbumConfig.SALES_ACTION.START:
-      result = await salesStart(
+      // 販売開始日・終了日の計算
+      data.snapshot.salesPeriod.start = Album.toJstToday0500(
+        data.snapshot.salesPeriod.start,
+      ).toISOString();
+      data.snapshot.salesPeriod.end = Album.toJstTomorrow0200(
+        data.snapshot.salesPeriod.end,
+      ).toISOString();
+
+      // 2. DynamoDB に Albumデータを更新
+      await Album.update(
+        authContext.facilityCode,
+        path.albumId,
+        authContext.userId,
+        data.snapshot.title,
+        data.snapshot.description ?? "",
+        data.snapshot.priceTable,
+        data.snapshot.salesPeriod,
+        data.snapshot.removeCover
+          ? AlbumConfig.IMAGE_STATUS.NONE
+          : data.snapshot.coverImageFileName
+            ? AlbumConfig.IMAGE_STATUS.PROCESSING
+            : "",
+      );
+
+      // 3. アルバム画像が存在する場合は、署名付きURLの発行 アップロードはPUTのみに絞るため、S3署名付きURLでのアップロードを行う
+      if (!data.snapshot.removeCover && data.snapshot.coverImageFileName) {
+        result.url = await S3PutObjectSignedUrl(
+          AppConfig.BUCKET_UPLOAD_NAME,
+          `${AppConfig.S3.PREFIX.ALBUM_IMAGE_UPLOAD}/${authContext.facilityCode}/${path.albumId}/${authContext.userId}/${data.snapshot.coverImageFileName}`,
+          60, // 即時アップされる想定なので、有効期限を短く1分とする
+        );
+      }
+
+      // 販売開始処理へ移行
+      response = await salesStart(
         authContext.facilityCode,
         path.albumId,
         authContext.userId,
@@ -42,31 +84,23 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       );
       break;
     case AlbumConfig.SALES_ACTION.END:
-      result = await salesStop(
+      // 販売終了処理へ移行
+      response = await salesStop(
         authContext.facilityCode,
         path.albumId,
         authContext.userId,
       );
       break;
-    default:
-      result = {
-        ok: false,
-        detail: `不明なアクション:${data.action}`,
-      };
   }
 
   // 結果がエラーの場合はエラーを出力する
-  if (!result.ok) {
+  if (!response.ok) {
     return http.badRequest({
-      detail: result.detail ?? "不明なエラー",
+      detail: response.detail ?? "不明なエラー",
     });
   }
 
-  return http.ok(
-    parseOrThrow(ResultOK, {
-      ok: true,
-    }),
-  );
+  return http.ok(parseOrThrow(AlbumEditResponse, result));
 });
 
 // 販売開始 =========================================
