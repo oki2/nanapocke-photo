@@ -454,6 +454,17 @@ export class Step72HttpApiPublicStack extends cdk.Stack {
       authorizer: AuthorizerPrincipalVeify,
     });
 
+    // アルバムの再販売の作成
+    this.httpApi.addRoutes({
+      path: "/api/facility/{facilityCode}/album/{albumId}/resale",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        "AlbumCopyResaleIntegration",
+        props.lambdaFnPublic.albumCopyResaleFn,
+      ),
+      authorizer: AuthorizerPrincipalVeify,
+    });
+
     // 指定した販売中アルバムの写真一覧を取得（保護者専用）
     this.httpApi.addRoutes({
       path: "/api/facility/{facilityCode}/album/{albumId}/photo/list",

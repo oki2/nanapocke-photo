@@ -106,7 +106,7 @@ content-type: application/json
 Authorization: Bearer {{accessToken}}
 
 ### 設定値
-@albumId = c48ef389-934c-48b0-94ed-6b90ab05acb1
+@albumId = ee93b5ca-26a9-4ea1-8bb6-557f0de041fe
 
 ### アルバム編集・更新
 # @name albumImageUploadUrl
@@ -128,6 +128,12 @@ Authorization: Bearer {{accessToken}}
 ### アルバム削除
 # @name albumImageUploadUrl
 DELETE https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}} HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{accessToken}}
+
+### アルバム再販登録
+# @name albumImageUploadUrl
+POST https://{{customDomainName}}/api/facility/{{facilityCode}}/album/{{albumId}}/resale HTTP/1.1
 content-type: application/json
 Authorization: Bearer {{accessToken}}
 

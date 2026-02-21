@@ -196,3 +196,8 @@ export function decodeCursorToken(cursor: string): CursorToken {
     throw new Error("Invalid cursor");
   return parsed as CursorToken;
 }
+
+export function truncateSafe(str: string, maxLength: number = 30): string {
+  const chars = Array.from(str); // Unicode対応
+  return chars.length > maxLength ? chars.slice(0, maxLength).join("") : str;
+}

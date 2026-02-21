@@ -421,6 +421,60 @@ export class Step22ApiPublicleStack extends cdk.Stack {
       },
     );
 
+    // アルバムの作成
+    this.lambdaFn.albumCopyResaleFn = new NodejsFunction(
+      this,
+      "ApiPublicAlbumCopyResaleFn",
+      {
+        functionName: `${functionPrefix}-ApiPublicAlbumCopyResale`,
+        description: `${functionPrefix}-ApiPublicAlbumCopyResale`,
+        entry: "src/handlers/api.public.album.copy.resale.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        architecture: lambda.Architecture.ARM_64,
+        memorySize: defaultMemorySize,
+        environment: {
+          ...defaultEnvironment,
+          TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
+          TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+          TABLE_NAME_RELATION: props.RelationTable.tableName,
+          // BUCKET_UPLOAD_NAME: props.bucketUpload.bucketName,
+        },
+        initialPolicy: [
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:GetItem",
+              "dynamodb:PutItem",
+              "dynamodb:UpdateItem",
+            ],
+            resources: [props.AlbumCatalogTable.tableArn],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: [
+              "dynamodb:PutItem",
+              "dynamodb:Query",
+              "dynamodb:BatchWriteItem",
+            ],
+            resources: [
+              props.RelationTable.tableArn,
+              `${props.RelationTable.tableArn}/index/lsi1_index`,
+            ],
+          }),
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ["dynamodb:GetItem", "dynamodb:UpdateItem"],
+            resources: [props.PhotoCatalogTable.tableArn],
+          }),
+          // new cdk.aws_iam.PolicyStatement({
+          //   effect: cdk.aws_iam.Effect.ALLOW,
+          //   actions: ["s3:PutObject"],
+          //   resources: [`${props.bucketUpload.bucketArn}/album-image-upload/*`],
+          // }),
+        ],
+      },
+    );
     // アルバム一覧の取得
     this.lambdaFn.albumListFn = new NodejsFunction(
       this,
