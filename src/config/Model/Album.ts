@@ -37,3 +37,5 @@ export const SALES_ACTION = {
   START: "START",
   END: "END",
 };
+
+export const DEFAULT_COVER_IMAGE = "/assets/images/album-cover.webp";

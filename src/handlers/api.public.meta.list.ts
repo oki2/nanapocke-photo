@@ -6,6 +6,7 @@ import {MetaListResponse} from "../schemas/public";
 import {parseOrThrow} from "../libs/validate";
 
 import * as Album from "../utils/Dynamo/Album";
+import * as Photo from "../utils/Dynamo/Photo";
 import * as Tag from "../utils/Dynamo/Tag";
 import * as User from "../utils/Dynamo/User";
 import * as Facility from "../utils/Dynamo/Facility";
@@ -17,8 +18,8 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("authContext", authContext);
 
   // === Step.1 タグ履歴を取得 =========== //
-  const tags = await Tag.historyList(authContext.facilityCode);
-  console.log("tags", tags);
+  // const tags = await Tag.historyList(authContext.facilityCode);
+  // console.log("tags", tags);
 
   // === Step.2 アルバム一覧を取得 =========== //
   const albums = await Album.list(authContext.facilityCode);
@@ -28,29 +29,41 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   const classList = await Facility.classList(authContext.facilityCode);
   console.log("classList", classList);
 
-  // === Step.4 園長の場合はスタッフ一覧と年度を取得 ========== //
+  // === Step.4 年度一覧を取得 =========== //
+  const noeYear = getAacademicYearJST();
+  const tagYear = [String(noeYear), String(noeYear - 1)];
+
+  // === Step.5 園長の場合はスタッフ一覧と年度を取得 ========== //
   let staff: any[] | undefined = undefined;
   let academicYear: any[] | undefined = undefined;
+  let albumUnsetPhoto: boolean | undefined = undefined;
 
   if (authContext.userRole === UserConfig.ROLE.PRINCIPAL) {
     staff = await User.staffList(authContext.facilityCode);
     console.log("staff", staff);
 
-    const noeYear = getAacademicYearJST();
-    academicYear = [String(noeYear), String(noeYear - 1)];
+    academicYear = tagYear;
     console.log("academicYear", academicYear);
+
+    // 未割当写真の有無チェック
+    const unsetPhotoCount = await Photo.unsetPhotoCount(
+      authContext.facilityCode,
+    );
+    albumUnsetPhoto = unsetPhotoCount > 0;
   }
 
   return http.ok(
     parseOrThrow(MetaListResponse, {
       tags: [
+        ...tagYear,
         ...classList.map((item: any) => item.className),
-        ...tags.map((item: any) => item.tag),
+        // ...tags.map((item: any) => item.tag),
       ],
       albums: albums,
       staff: staff,
       classList: classList,
       academicYear: academicYear,
+      albumUnsetPhoto: albumUnsetPhoto,
     }),
   );
 });

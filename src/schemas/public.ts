@@ -384,6 +384,11 @@ export const PhotoJoinAlbumBody = v.object({
   album: PhotoJoinAlbumMode,
 });
 
+// api.public.photo.batch-delete : requestBody
+export const PhotoBatchDelete = v.object({
+  selectedIds: v.array(common.PhotoId),
+});
+
 // api.public.meta.list : response
 const MetaAlbum = v.object({
   albumId: common.AlbumId,
@@ -405,6 +410,7 @@ export const MetaListResponse = v.object({
   staff: v.optional(v.array(MetaStaff)),
   classList: v.optional(v.array(MetaClass)),
   academicYear: v.optional(v.array(nanapocke.AcademicYear)),
+  albumUnsetPhoto: v.optional(v.boolean()),
 });
 export type MetaListResponseT = v.InferOutput<typeof MetaListResponse>;
 

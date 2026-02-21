@@ -56,10 +56,10 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       cover: {
         imageStatus: album.coverImageStatus ?? AlbumConfig.IMAGE_STATUS.NONE,
         imageUrl:
-          album.coverImageStatus === AlbumConfig.IMAGE_STATUS.VALID &&
+          // album.coverImageStatus === AlbumConfig.IMAGE_STATUS.VALID &&
           album.coverImage
             ? `/thumbnail/${authContext.facilityCode}/album/${album.albumId}/${album.coverImage}`
-            : "",
+            : AlbumConfig.DEFAULT_COVER_IMAGE,
         ...(album.photoCount ? {photoCount: album.photoCount} : {}),
       },
     });

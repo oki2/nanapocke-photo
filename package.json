@@ -24,6 +24,8 @@
     "sandbox:front:studio:deploy:exec": "aws s3 cp work/static-file/frontend/studio-sandbox s3://nanaphoto-sandbox-publiccfd/studio/ --recursive --profile sandbox",
     "sandbox:front:member:deploy:dryrun": "aws s3 cp work/static-file/frontend/member-sandbox s3://nanaphoto-sandbox-publiccfd/member/ --recursive --dryrun --profile sandbox",
     "sandbox:front:member:deploy:exec": "aws s3 cp work/static-file/frontend/member-sandbox s3://nanaphoto-sandbox-publiccfd/member/ --recursive --profile sandbox",
+    "sandbox:album-cover:deploy:dryrun": "aws s3 cp work/static-file/cfd-common/assets/images/album-cover.webp s3://nanaphoto-sandbox-publiccfd/assets/images/album-cover.webp  --dryrun --content-type image/webp --profile sandbox",
+    "sandbox:album-cover:deploy:exec": "aws s3 cp work/static-file/cfd-common/assets/images/album-cover.webp s3://nanaphoto-sandbox-publiccfd/assets/images/album-cover.webp --content-type image/webp --profile sandbox",
     "sandbox:front:cache:clear": "aws cloudfront create-invalidation --distribution-id E1E5SZ96LRM8TJ --paths \"/admin/*\" \"/studio/*\" \"/member/*\"",
     "stg:front:admin:deploy:dryrun": "aws s3 cp work/static-file/frontend/admin-stg s3://nanaphoto-stg-publiccfd/admin/ --recursive --dryrun --profile nanaphoto-stg",
     "stg:front:admin:deploy:exec": "aws s3 cp work/static-file/frontend/admin-stg s3://nanaphoto-stg-publiccfd/admin/ --recursive --profile nanaphoto-stg",

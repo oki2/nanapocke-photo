@@ -150,6 +150,18 @@ export async function get(
   return result.Item;
 }
 
+export async function batchGet(
+  facilityCode: string,
+  photoIds: string[],
+): Promise<Record<string, any>[]> {
+  const keys = photoIds.map((photoId) => ({
+    pk: getPk(facilityCode),
+    sk: getSk(photoId),
+  }));
+
+  return await batchGetAll(PhotoConfig.TABLE_NAME, keys, docClient());
+}
+
 export async function create(
   facilityCode: string,
   userId: string,
@@ -1096,4 +1108,29 @@ export async function photoManualDelete(
 
   // 2. アルバムの紐付けを削除
   Relation.deleteRelationPhotoAlbums(facilityCode, photoId);
+}
+
+/**
+ * アルバム未設定写真の枚数を取得
+ *
+ * @param {string} facilityCode - Facility code.
+ * @returns {Promise<number>} - Promise of count of unset photos.
+ */
+export async function unsetPhotoCount(facilityCode: string): Promise<any> {
+  const command = new QueryCommand({
+    TableName: PhotoConfig.TABLE_NAME,
+    KeyConditionExpression: "#GsiUnsetUploadPK = :GsiUnsetUploadPK",
+    IndexName: "GsiUnsetUpload_Index",
+    Select: "COUNT",
+    ExpressionAttributeNames: {
+      "#GsiUnsetUploadPK": "GsiUnsetUploadPK",
+    },
+    ExpressionAttributeValues: {
+      ":GsiUnsetUploadPK": getGsiUnsetUploadPk(facilityCode),
+    },
+  });
+
+  // コマンド実行
+  const result = await docClient().send(command);
+  return result.Count ?? 0;
 }

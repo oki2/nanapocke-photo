@@ -925,6 +925,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         TABLE_NAME_MAIN: props.MainTable.tableName,
         TABLE_NAME_NANAPOCKE_USER: props.NanapockeUserTable.tableName,
         TABLE_NAME_ALBUM_CATALOG: props.AlbumCatalogTable.tableName,
+        TABLE_NAME_PHOTO_CATALOG: props.PhotoCatalogTable.tableName,
       },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
@@ -937,6 +938,8 @@ export class Step22ApiPublicleStack extends cdk.Stack {
             `${props.AlbumCatalogTable.tableArn}/index/lsi1_index`,
             props.NanapockeUserTable.tableArn,
             `${props.NanapockeUserTable.tableArn}/index/lsi1_index`,
+            props.PhotoCatalogTable.tableArn,
+            `${props.PhotoCatalogTable.tableArn}/index/GsiUnsetUpload_Index`,
           ],
         }),
       ],
