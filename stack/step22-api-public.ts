@@ -125,6 +125,7 @@ export class Step22ApiPublicleStack extends cdk.Stack {
         architecture: lambda.Architecture.ARM_64,
         memorySize: defaultMemorySize,
         environment: {
+          ...defaultEnvironment,
           MAIN_REGION: process.env.CDK_DEFAULT_REGION || "",
           NANAPOCKE_AUTHPOOL_ID: props.NanapockeAuthPool.userPoolId,
           NANAPOCKE_AUTHPOOL_CLIENT_ID:

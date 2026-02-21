@@ -20,12 +20,14 @@ export function GetSignedCookie(
 ): string[] {
   // ワイルドカード指定の場合、カスタムポリシー対応が必要
   // 手っ取り早くカスタムポリシーにする為、アクセス許可開始日（dateGreaterThan）も設定する
-  // 現在時刻だとミスる可能性があるため、60秒前にする
-  const CLOCK_SKEW_SECONDS = 60;
+  // インスタンス間の時差がある可能性を考慮し、現在時刻の300秒前 ～ maxAge＋300秒後 にする
+  const CLOCK_SKEW_SECONDS = 300;
 
   const now = new Date();
   const notBefore = new Date(now.getTime() - CLOCK_SKEW_SECONDS * 1000);
-  const expires = new Date(now.getTime() + maxAge * 1000);
+  const expires = new Date(
+    now.getTime() + (maxAge + CLOCK_SKEW_SECONDS) * 1000,
+  );
 
   const cookies = getSignedCookies({
     url: `https://${domain}${targetPath}*`,
