@@ -209,7 +209,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
       noticeTitle: "あと3日でダウンロード期限が切れる写真があります",
       noticeContent: `ダウンロード期限は${endJstStr}までです。<a href="https://${AppConfig.NANAPHOTO_FQDN}/member/orders/${orderData.orderId}">こちらから</a>お早めにダウンロードしてください。`,
       noticeSendTime: NanapockeTopics.toNanapockeSendTimeFormat(
-        NanapockeTopics.toJstDateAtHour(expired, 12, -4),
+        NanapockeTopics.toJstDateAtHour(expired, 12, -3), // DL期限を0日とするため、 2日前となる
       ),
     });
 

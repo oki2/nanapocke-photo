@@ -144,7 +144,7 @@ export const handler: EventBridgeHandler<string, Detail, any> = async (
 
     const now = new Date().getTime(); // 現在日時のタイムスタンプ
     const start = NanapockeTopics.toJstDateAtHour(album.salesPeriod.start, 20); // 販売開始日時
-    const end3 = NanapockeTopics.toJstDateAtHour(album.salesPeriod.end, 12, -4); // 販売終了日時 3日前 販売終了は内部的に翌日 2:00 なので、もう一日マイナスする
+    const end3 = NanapockeTopics.toJstDateAtHour(album.salesPeriod.end, 12, -3); // 販売終了日時 3日前、販売終了日を0日とするため -2日 販売終了は内部的に翌日 2:00 なので、もう一日マイナスする
     const end = NanapockeTopics.toJstDateAtHour(album.salesPeriod.end, 20, -1); // 販売終了日時 販売終了は内部的に翌日 2:00 なので、もう一日マイナスする
 
     // 販売終了日の日付、yyyy/mm/dd 形式の文字列に変換
