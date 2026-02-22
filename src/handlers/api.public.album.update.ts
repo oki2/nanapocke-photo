@@ -26,12 +26,12 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   console.log("data", data);
 
   // 販売開始日・終了日の計算
-  data.salesPeriod.start = Album.toJstToday0500(
-    data.salesPeriod.start,
-  ).toISOString();
-  data.salesPeriod.end = Album.toJstTomorrow0200(
-    data.salesPeriod.end,
-  ).toISOString();
+  data.salesPeriod.start = data.salesPeriod.start
+    ? Album.toJstToday0500(data.salesPeriod.start).toISOString()
+    : "";
+  data.salesPeriod.end = data.salesPeriod.end
+    ? Album.toJstTomorrow0200(data.salesPeriod.end).toISOString()
+    : "";
 
   // 2. DynamoDB に Albumデータを更新
   await Album.update(

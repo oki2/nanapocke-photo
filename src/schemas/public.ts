@@ -113,8 +113,8 @@ export type IdTokenPayloadT = v.InferOutput<typeof IdTokenPayload>;
 // api.public.album.create : request
 export const AlbumCreateBody = v.pipe(
   v.object({
-    title: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.string(), ""),
+    title: common.AlbumTitle,
+    description: v.optional(common.AlbumDescription, ""),
     priceTable: PriceTable,
     salesPeriod: v.optional(SalesPeriod, {
       start: "",
@@ -130,7 +130,7 @@ export type AlbumCreateBodyT = v.InferOutput<typeof AlbumCreateBody>;
 export const AlbumCreateResponse = v.pipe(
   v.object({
     albumId: common.AlbumId,
-    title: v.pipe(v.string(), v.minLength(1)),
+    title: common.AlbumTitle,
     url: v.optional(common.Url),
   }),
 );
@@ -176,8 +176,8 @@ export const AlbumPhotoListResponse = v.object({
 // api.public.album.update : request
 export const AlbumEditBody = v.pipe(
   v.object({
-    title: v.pipe(v.string(), v.minLength(1)),
-    description: v.optional(v.string(), ""),
+    title: common.AlbumTitle,
+    description: v.optional(common.AlbumDescription, ""),
     priceTable: PriceTable,
     salesPeriod: SalesPeriod,
     coverImageFileName: v.optional(v.string(), ""),

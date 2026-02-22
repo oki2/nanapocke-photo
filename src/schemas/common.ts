@@ -50,6 +50,9 @@ export const Name = v.pipe(v.string(), v.minLength(1));
 
 export const Url = v.pipe(v.string());
 
+export const AlbumTitle = v.pipe(v.string(), v.minLength(1), v.maxLength(30));
+export const AlbumDescription = v.pipe(v.string(), v.maxLength(60));
+
 // 写真タイプ
 export const PhotoPriceTier = v.picklist(Object.values(PhotoConfig.PRICE_TIER));
 
