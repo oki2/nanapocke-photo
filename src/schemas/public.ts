@@ -359,7 +359,7 @@ const PhotoJoinScopeModeFilter = v.object({
 });
 const PhotoJoinScopeMode = v.variant("mode", [
   PhotoJoinScopeModeChecked,
-  PhotoJoinScopeModeFilter,
+  // PhotoJoinScopeModeFilter,
 ]);
 
 const PhotoJoinAlbumModeAdd = v.object({

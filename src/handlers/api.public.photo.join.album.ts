@@ -48,7 +48,19 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
       delAlbums.push(...data.album.albums);
       break;
     case PhotoConfig.PHOTO_JOIN_ALBUM.SET:
-      // ※実装は後で
+      const tmp = await getChangeList(
+        authContext.facilityCode,
+        data.scope.selectedIds[0],
+        data.album.albums,
+        draftIds,
+      );
+      if (!tmp.ok) {
+        return http.badRequest({
+          detail: "指定したアルバムの編集は許可されていません",
+        });
+      }
+      addAlbums.push(...tmp.addList);
+      delAlbums.push(...tmp.delList);
       break;
   }
 
@@ -57,40 +69,40 @@ export const handler = http.withHttp(async (event: any = {}): Promise<any> => {
   if (data.scope.mode === PhotoConfig.PHOTO_JOIN_SCOPE.CHECKED) {
     // ID指定の場合
     photoIds = data.scope.selectedIds;
-  } else if (data.scope.mode === PhotoConfig.PHOTO_JOIN_SCOPE.FILTER) {
-    const sequenceIds = sequenceIdSplitter(data.scope.filters.sequenceIds);
-    const tags = tagSplitter(data.scope.filters.tags);
+    // } else if (data.scope.mode === PhotoConfig.PHOTO_JOIN_SCOPE.FILTER) {
+    //   const sequenceIds = sequenceIdSplitter(data.scope.filters.sequenceIds);
+    //   const tags = tagSplitter(data.scope.filters.tags);
 
-    const filter: Photo.FilterOptions = {
-      photographer:
-        data.scope.filters.photographer == "ALL"
-          ? ""
-          : data.scope.filters.photographer,
-      tags: tags, // AND 条件（すべて含む）
-      // photoIds: photoIds, // OR 条件（すべて含む）
-      // priceTier: {},
-      shootingAt: {},
-      createdAt: {},
-    };
-    if (data.scope.filters.dateType === PhotoConfig.DATE_TYPE.UPLOAD) {
-      filter.createdAt = {
-        from: data.scope.filters.dateFrom,
-        to: data.scope.filters.dateTo,
-      };
-    } else if (data.scope.filters.dateType === PhotoConfig.DATE_TYPE.SHOOTING) {
-      filter.shootingAt = {
-        from: data.scope.filters.dateFrom,
-        to: data.scope.filters.dateTo,
-      };
-    }
+    //   const filter: Photo.FilterOptions = {
+    //     photographer:
+    //       data.scope.filters.photographer == "ALL"
+    //         ? ""
+    //         : data.scope.filters.photographer,
+    //     tags: tags, // AND 条件（すべて含む）
+    //     // photoIds: photoIds, // OR 条件（すべて含む）
+    //     // priceTier: {},
+    //     shootingAt: {},
+    //     createdAt: {},
+    //   };
+    //   if (data.scope.filters.dateType === PhotoConfig.DATE_TYPE.UPLOAD) {
+    //     filter.createdAt = {
+    //       from: data.scope.filters.dateFrom,
+    //       to: data.scope.filters.dateTo,
+    //     };
+    //   } else if (data.scope.filters.dateType === PhotoConfig.DATE_TYPE.SHOOTING) {
+    //     filter.shootingAt = {
+    //       from: data.scope.filters.dateFrom,
+    //       to: data.scope.filters.dateTo,
+    //     };
+    //   }
 
-    // 検索条件を指定する場合
-    photoIds = await getPhotoIdsByFilter({
-      facilityCode: authContext.facilityCode,
-      sequenceIds: sequenceIds,
-      albumId: data.scope.filters.albumId,
-      filter: filter,
-    });
+    //   // 検索条件を指定する場合
+    //   photoIds = await getPhotoIdsByFilter({
+    //     facilityCode: authContext.facilityCode,
+    //     sequenceIds: sequenceIds,
+    //     albumId: data.scope.filters.albumId,
+    //     filter: filter,
+    //   });
   }
 
   // 6. DynamoDB に写真とアルバムの紐付け情報を登録
@@ -225,4 +237,52 @@ async function getAlbumPhoto(
   console.log("res", res);
 
   return res.items.map((p: any) => p.photoId);
+}
+
+type ChangeListT = {
+  ok: boolean;
+  addList: string[];
+  delList: string[];
+};
+
+async function getChangeList(
+  facilityCode: string,
+  photoId: string,
+  newAlbumIds: string[],
+  draftIds: string[],
+): Promise<ChangeListT> {
+  const addList = [];
+  const delList = [];
+
+  // 1. 写真に設定されているアルバムID を取得
+  const currentAlbumIds = await Relation.getAlbumIds(facilityCode, photoId);
+  console.log("currentAlbumIds", currentAlbumIds);
+
+  // 2. newAlbumIds にあって currentAlbumIds にない場合は追加
+  for (const albumId of newAlbumIds) {
+    if (!currentAlbumIds.includes(albumId)) {
+      addList.push(albumId);
+    }
+  }
+
+  // 3. currentAlbumIds にあって newAlbumIds にない場合は削除
+  for (const albumId of currentAlbumIds) {
+    if (!newAlbumIds.includes(albumId)) {
+      delList.push(albumId);
+    }
+  }
+
+  // 4. 追加/削除リストのアルバムIDと draftIds を比較、draftIds に存在しないものが選択されている場合は編集不可が選択されているのでNG
+  for (const albumId of addList) {
+    if (!draftIds.includes(albumId)) {
+      return {ok: false, addList: [], delList: []};
+    }
+  }
+  for (const albumId of delList) {
+    if (!draftIds.includes(albumId)) {
+      return {ok: false, addList: [], delList: []};
+    }
+  }
+
+  return {ok: true, addList, delList};
 }

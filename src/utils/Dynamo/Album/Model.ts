@@ -8,7 +8,7 @@
  * gsi5 : 自身がアップした写真：アップロード日ソート
  */
 
-import {docClient} from "../dynamo";
+import {docClient, batchGetAll} from "../dynamo";
 import {
   PutCommand,
   QueryCommand,
@@ -121,6 +121,24 @@ export async function list(facilityCode: string): Promise<any> {
   // コマンド実行
   const result = await docClient().send(command);
   return result.Items;
+}
+
+/**
+ * 指定したアルバムIDの一覧を取得
+ * @param facilityCode - the facility code of the albums.
+ * @param albumIds - the list of album IDs to fetch.
+ * @returns a list of albums, or an empty list if no albums are found.
+ */
+export async function batchGet(
+  facilityCode: string,
+  albumIds: string[],
+): Promise<any> {
+  const keys = albumIds.map((albumId) => ({
+    pk: getPk(facilityCode),
+    sk: getSk(albumId),
+  }));
+
+  return await batchGetAll(AlbumConfig.TABLE_NAME, keys, docClient());
 }
 
 export async function update(
